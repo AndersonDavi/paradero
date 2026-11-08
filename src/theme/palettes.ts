@@ -66,7 +66,7 @@ export const DARK: Palette = {
   onInk: "#09090B",
   shadow: "0 1px 2px rgba(0,0,0,0.6)",
   shadowSoft: "0 1px 2px rgba(0,0,0,0.5)",
-  shadowUp: "0 -1px 0 rgba(250,250,250,0.06)",
+  shadowUp: "0 0 0 rgba(0,0,0,0)",
   fadeTo: "#605F5F",
 };
 
@@ -86,7 +86,7 @@ export const HIGH_LIGHT: Palette = {
   onInk: "#FFFFFF",
   shadow: "0 0 0 rgba(0,0,0,0)",
   shadowSoft: "0 0 0 rgba(0,0,0,0)",
-  shadowUp: "0 -1px 0 #000000",
+  shadowUp: "0 0 0 rgba(0,0,0,0)",
   fadeTo: "#000000",
 };
 
@@ -106,7 +106,7 @@ export const HIGH_DARK: Palette = {
   onInk: "#000000",
   shadow: "0 0 0 rgba(0,0,0,0)",
   shadowSoft: "0 0 0 rgba(0,0,0,0)",
-  shadowUp: "0 -1px 0 #FFFFFF",
+  shadowUp: "0 0 0 rgba(0,0,0,0)",
   fadeTo: "#FFFFFF",
 };
 

@@ -91,9 +91,9 @@ export default function Home() {
         enableDynamicSizing={false}
         animatedPosition={position}
         topInset={insets.top}
-        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet }}
+        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp }}
         handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
-        style={{ boxShadow: p.shadowUp }}>
+>
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
           <View style={styles.hello}>
             <Text variant="eyebrow" tone="faint">
