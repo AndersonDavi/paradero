@@ -4,7 +4,7 @@
 
 Un bien público digital de [Croma](https://usecroma.com) · Datos abiertos de TransMilenio · Licencia MIT · [Privacidad](https://transmi.usecroma.com/paradero/privacidad) · No es una app oficial del Distrito.
 
-![Paradero: onboarding, paraderos cercanos, próximos buses y recorrido de una ruta en Bogotá](.github/assets/hero.jpg)
+![Paradero con la identidad de Croma: inicio y paraderos cercanos en modo claro, próximos buses de un paradero y recorrido de la ruta B10 en modo oscuro](.github/assets/hero.jpg)
 
 ## Un bien común, para el Estado y para la gente
 
