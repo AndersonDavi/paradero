@@ -1,4 +1,7 @@
-/** The privacy policy, written once and shown in the app and on the web. Every claim here must match the code. */
+/**
+ * The privacy policy shown in the app. The public copy lives at transmi.usecroma.com/paradero/privacidad
+ * (croma-labs/transmilenio-live); change both together. Every claim here must match the code.
+ */
 export const PRIVACY_UPDATED = "8 de noviembre de 2026";
 
 export const PRIVACY_TITLE = "Tu privacidad, en pocas palabras.";

@@ -1,7 +1,4 @@
-import { privacyPage } from "@/server/privacy-page";
-
+/** The privacy policy lives on Croma's TransMilenio site; this old address keeps working. */
 export function GET() {
-  return new Response(privacyPage(), {
-    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "public, max-age=3600" },
-  });
+  return Response.redirect("https://transmi.usecroma.com/paradero/privacidad", 308);
 }
