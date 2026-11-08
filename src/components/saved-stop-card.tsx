@@ -3,12 +3,13 @@ import { router } from "expo-router";
 import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
-import { useStop } from "@/lib/api";
+import { prefetchStop, useStop } from "@/lib/api";
 import type { SavedStop } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { radius, size, space } from "@/theme/tokens";
 
 import { Minutes } from "./minutes";
+import { Bone } from "./skeleton";
 import { RouteBadge } from "./route-badge";
 import { Text } from "./text";
 
@@ -23,12 +24,13 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
     <PressableScale
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${next.map((a) => `${a.code} en ${a.minutes ?? "?"} minutos`).join(". ")}`}
+      onPressIn={() => prefetchStop(saved.id)}
       onPress={() => {
         void Haptics.selectionAsync();
         router.push({ pathname: "/stop/[id]", params: { id: saved.id } });
       }}
       style={[styles.card, { width, backgroundColor: p.elevated, borderColor: p.border, boxShadow: p.shadowSoft }]}>
-      <View style={{ gap: 2 }}>
+      <View style={styles.titles}>
         <Text variant="headline" numberOfLines={1}>
           {title}
         </Text>
@@ -37,11 +39,7 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
         </Text>
       </View>
       <View style={styles.list}>
-        {isLoading && (
-          <Text variant="caption" tone="muted">
-            Buscando buses…
-          </Text>
-        )}
+        {isLoading && [0, 1].map((i) => <Bone key={i} width={i === 0 ? "60%" : "75%"} height={size.icon.md} />)}
         {!isLoading && next.length === 0 && (
           <Text variant="caption" tone="muted">
             Sin buses próximos
@@ -50,7 +48,7 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
         {next.map((a, i) => (
           <View key={`${a.code}-${i}`} style={styles.line}>
             <RouteBadge code={a.code} system={a.system} size="sm" />
-            <Minutes value={a.minutes} size={20} />
+            <Minutes value={a.minutes} size="sm" />
           </View>
         ))}
       </View>
@@ -59,7 +57,8 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
 }
 
 const styles = StyleSheet.create({
-  card: { padding: space.lg, borderRadius: radius.xl, borderCurve: "continuous", gap: space.md, minHeight: 132, borderWidth: StyleSheet.hairlineWidth },
-  list: { gap: space.sm },
-  line: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: space.sm },
+  card: { padding: space[4], borderRadius: radius.xl, borderCurve: "continuous", gap: space[3], borderWidth: StyleSheet.hairlineWidth },
+  titles: { gap: space[0.5] },
+  list: { gap: space[2] },
+  line: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: space[2] },
 });

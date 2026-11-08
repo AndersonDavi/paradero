@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { useLargeText } from "@/lib/accessibility";
 import { clock, spokenArrival } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
 import { radius, space } from "@/theme/tokens";
@@ -13,6 +14,7 @@ import { Text } from "./text";
 /** The one answer most riders open the app for, set large and quiet. */
 export function NextBus({ arrival }: { arrival: Arrival }) {
   const p = usePalette();
+  const large = useLargeText();
   return (
     <View
       accessible
@@ -28,22 +30,25 @@ export function NextBus({ arrival }: { arrival: Arrival }) {
           </Text>
         )}
       </View>
-      <View style={styles.main}>
-        <View style={{ flex: 1, gap: space.sm + 2 }}>
+      <View style={large ? styles.stack : styles.main}>
+        <View style={large ? styles.lines : styles.grow}>
           <RouteBadge code={arrival.code} system={arrival.system} size="lg" solid />
           <Text variant="title" numberOfLines={2}>
             {arrival.name}
           </Text>
           <Pace arrival={arrival} />
         </View>
-        <Minutes value={arrival.minutes} size={52} />
+        <Minutes value={arrival.minutes} size="lg" />
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.xl, borderCurve: "continuous", borderWidth: StyleSheet.hairlineWidth, padding: space.xl - 2, gap: space.lg },
-  top: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  main: { flexDirection: "row", alignItems: "flex-end", gap: space.lg },
+  card: { borderRadius: radius.xl, borderCurve: "continuous", borderWidth: StyleSheet.hairlineWidth, padding: space[6], gap: space[4] },
+  top: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: space[2] },
+  main: { flexDirection: "row", alignItems: "flex-end", gap: space[4] },
+  stack: { gap: space[4] },
+  grow: { flex: 1, gap: space[3] },
+  lines: { gap: space[3] },
 });

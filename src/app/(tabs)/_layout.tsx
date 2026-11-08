@@ -1,12 +1,11 @@
 import { NativeTabs } from "expo-router/native-tabs";
-import { useColorScheme } from "react-native";
-
+import { usePalette } from "@/theme/colors";
 import { fonts } from "@/theme/tokens";
 
 export default function TabsLayout() {
-  const dark = useColorScheme() === "dark";
+  const p = usePalette();
   return (
-    <NativeTabs tintColor={dark ? "#F4F6FA" : "#0E1A33"} minimizeBehavior="onScrollDown" labelStyle={{ fontFamily: fonts[600] }}>
+    <NativeTabs tintColor={p.ink} minimizeBehavior="onScrollDown" labelStyle={{ fontFamily: fonts[600] }}>
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>Cerca</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={require("@/assets/images/tabs/tab-nearby.png")} renderingMode="template" />

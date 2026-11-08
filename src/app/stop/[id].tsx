@@ -1,11 +1,14 @@
 import * as Haptics from "expo-haptics";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
 import { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
 import { AlertCard } from "@/components/alert-card";
+import { Button } from "@/components/button";
+import { Chip } from "@/components/chip";
+import { DetailScreen } from "@/components/detail-screen";
 import { ArrivalRow } from "@/components/arrival-row";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
@@ -17,16 +20,18 @@ import { Empty } from "@/components/state";
 import { StopTile } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
-import { useStop } from "@/lib/api";
+import { announce } from "@/lib/accessibility";
+import { knownStop, useStop } from "@/lib/api";
 import { toggleStop, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { layout, radius, size, space } from "@/theme/tokens";
 
 export default function StopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const p = usePalette();
-  const { height } = useWindowDimensions();
   const { data, isLoading, isError, refetch } = useStop(id);
+  const [early] = useState(() => knownStop(id));
+  const stop = data?.stop ?? early;
   const saved = useIsSaved("stop", id);
   const [only, setOnly] = useState<string | null>(null);
 
@@ -40,10 +45,11 @@ export default function StopScreen() {
     void Haptics.notificationAsync(added ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
     if (added) toast.success("Paradero guardado", { description: "Lo verás arriba en Cerca, con sus próximos buses." });
     else toast("Lo quitamos de tus paraderos");
+    announce(added ? "Paradero guardado. Lo verás arriba en Cerca." : "Lo quitamos de tus paraderos.");
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: p.background }}>
+    <>
       {data && (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
@@ -55,58 +61,49 @@ export default function StopScreen() {
         </Stack.Toolbar>
       )}
 
-      <View style={{ height: Math.round(height * 0.36) }}>
-        {data && (
-          <TransitMap
-            center={{ lat: data.stop.lat, lon: data.stop.lon }}
-            zoom={15.5}
-            stops={[data.stop]}
-            buses={data.feed.live ? data.incoming.filter((b) => !only || b.code === only) : []}
-            padding={{ top: 90, right: 24, bottom: 40, left: 24 }}
-          />
+      <DetailScreen
+        map={
+          stop && (
+            <TransitMap
+              center={{ lat: stop.lat, lon: stop.lon }}
+              zoom={15.5}
+              stops={[stop]}
+              buses={data?.feed.live ? data.incoming.filter((b) => !only || b.code === only) : []}
+              padding={layout.mapInset}
+            />
+          )
+        }>
+        {stop && (
+          <View style={styles.header}>
+            <StopTile kind={stop.kind} tier="lg" />
+            <View style={styles.titles}>
+              <Text variant="title" accessibilityRole="header" numberOfLines={2}>
+                {stop.name}
+              </Text>
+              <View style={styles.meta}>
+                <Text variant="caption" tone="muted">
+                  {stop.kind === "station" ? "Estación TransMilenio" : "Paradero SITP"}
+                </Text>
+                {stop.accessible && (
+                  <View style={styles.meta}>
+                    <Icon name={icons.wheelchair} color={p.faint} size="xs" />
+                    <Text variant="caption" tone="muted">
+                      Accesible
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
         )}
-      </View>
-
-      <ScrollView style={[styles.sheet, { backgroundColor: p.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
         {isError && <Empty title="No pudimos cargar este paradero" body="Revisa tu conexión. Si sigue fallando, puede que TransMilenio no esté respondiendo." action="Reintentar" onAction={() => void refetch()} />}
 
         {data && (
           <>
-            <View style={styles.header}>
-              <StopTile kind={data.stop.kind} size={52} />
-              <View style={{ flex: 1, gap: 4 }}>
-                <Text variant="title" accessibilityRole="header" numberOfLines={2}>
-                  {data.stop.name}
-                </Text>
-                <View style={styles.meta}>
-                  <Text variant="caption" tone="muted">
-                    {data.stop.kind === "station" ? "Estación TransMilenio" : "Paradero SITP"}
-                  </Text>
-                  {data.stop.accessible && (
-                    <View style={styles.meta}>
-                      <Icon name={icons.wheelchair} color={p.faint} size={12} />
-                      <Text variant="caption" tone="muted">
-                        Accesible
-                      </Text>
-                    </View>
-                  )}
-                </View>
-              </View>
-            </View>
-
             {codes.length > 1 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={styles.bleed}>
-                <PressableScale
-                  accessibilityRole="button"
-                  accessibilityLabel="Ver todas las rutas"
-                  accessibilityState={{ selected: !only }}
-                  onPress={() => setOnly(null)}
-                  style={[styles.all, { backgroundColor: !only ? p.ink : p.fillStrong }]}>
-                  <Text variant="caption" weight={600} tone={!only ? "inverse" : "default"}>
-                    Todas
-                  </Text>
-                </PressableScale>
+                <Chip label="Todas" accessibilityLabel="Ver todas las rutas" selected={!only} onPress={() => setOnly(null)} />
                 {codes.map((c) => {
                   const a = data.arrivals.find((x) => x.code === c)!;
                   const on = only === c;
@@ -160,19 +157,26 @@ export default function StopScreen() {
             </View>
           </>
         )}
-      </ScrollView>
-    </View>
+        {stop && (
+          <Button
+            variant="quiet"
+            height="md"
+            label="¿Algo está mal aquí?"
+            accessibilityLabel="Reportar un problema con este paradero"
+            onPress={() => router.push({ pathname: "/report", params: { stopId: stop.id, stopName: stop.name } })}
+          />
+        )}
+      </DetailScreen>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  sheet: { flex: 1, marginTop: -28, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderCurve: "continuous" },
-  content: { padding: space.lg, paddingTop: space.xl, gap: space.lg + 2, paddingBottom: 80 },
-  header: { flexDirection: "row", alignItems: "center", gap: space.md + 2 },
-  meta: { flexDirection: "row", alignItems: "center", gap: space.xs + 2, flexWrap: "wrap" },
-  bleed: { marginHorizontal: -space.lg },
-  filters: { gap: space.sm, alignItems: "center", paddingHorizontal: space.lg },
-  all: { paddingHorizontal: space.lg, height: 34, justifyContent: "center", borderRadius: radius.pill },
-  chip: { padding: 2, borderRadius: 11, borderWidth: 2 },
-  heading: { marginBottom: space.xs },
+  header: { flexDirection: "row", alignItems: "center", gap: space[3] },
+  titles: { flex: 1, gap: space[1] },
+  meta: { flexDirection: "row", alignItems: "center", gap: space[1.5], flexWrap: "wrap" },
+  bleed: { marginHorizontal: -layout.gutter },
+  filters: { gap: space[2], alignItems: "center", paddingHorizontal: layout.gutter },
+  chip: { padding: space[0.5], borderRadius: radius.md, borderWidth: size.line.rule, borderCurve: "continuous" },
+  heading: { marginBottom: space[1] },
 });

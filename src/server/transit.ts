@@ -65,19 +65,30 @@ export function search(query: string): Promise<SearchResult> {
   });
 }
 
+let feedDown = false;
+
+function within<T>(work: Promise<T>, ms: number, fallback: T): Promise<T> {
+  const late = new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms));
+  return Promise.race([work.catch(() => fallback), late]);
+}
+
 function alertsFor(filter: { stop_id: string } | { route: string }): Promise<Alert[]> {
-  return alertsCache(JSON.stringify(filter), async () => toAlerts(await croma("alerts", filter, s.alerts))).catch(() => []);
+  return within(alertsCache(JSON.stringify(filter), async () => toAlerts(await croma("alerts", filter, s.alerts))), 1200, []);
 }
 
 export async function stopDetail(stopId: string): Promise<StopDetail | null> {
-  const [lookup, next, alerts] = await Promise.all([
-    stopCache(stopId, () => croma("stop", { stop_id: stopId }, s.stopLookup)),
+  const found = stopCache(stopId, () => croma("stop", { stop_id: stopId }, s.stopLookup));
+  const around = found.then((l) => (feedDown ? [] : l.found && l.stop ? within(incomingTo(toStop(l.stop), l.stop.routes.map((r) => r.route_id)), 1500, []) : []));
+  const [lookup, next, alerts, incoming] = await Promise.all([
+    found,
     arrivalsCache(stopId, () => croma("stop-arrivals", { stop_id: stopId, limit: 30 }, s.arrivals)),
     alertsFor({ stop_id: stopId }),
+    around,
   ]);
   if (!lookup.found || !lookup.stop) return null;
   const stop = toStop(lookup.stop);
-  const incoming = await incomingTo(stop, lookup.stop.routes.map((r) => r.route_id)).catch(() => []);
+  const live = isLive(next.as_of, next.live);
+  feedDown = !live;
 
   const arrivals: Arrival[] = next.arrivals.map((a) => {
     const route = describeRoute({ id: a.route_id ?? "", shortName: a.route_code ?? null, longName: a.route_name ?? null, system: a.system ?? null });
@@ -96,7 +107,7 @@ export async function stopDetail(stopId: string): Promise<StopDetail | null> {
   });
 
   return {
-    feed: { asOf: next.as_of, live: isLive(next.as_of, next.live) },
+    feed: { asOf: next.as_of, live },
     stop,
     arrivals,
     incoming,
@@ -135,7 +146,7 @@ async function loadRoute(routeId: string) {
   const main = [...r.patterns].sort((a, b) => b.trips_per_week - a.trips_per_week)[0];
   const ref = describeRoute({ id: r.route_id, shortName: r.short_name ?? null, longName: r.long_name ?? null, system: r.system ?? null });
 
-  const hours = await croma("routes-search", { query: r.short_name ?? "", per_page: 10 }, s.routesSearch).catch(() => null);
+  const hours = await within(croma("routes-search", { query: r.short_name ?? "", per_page: 10 }, s.routesSearch), 1500, null);
   const own = hours?.routes.find((x) => x.route_id === r.route_id);
 
   return {

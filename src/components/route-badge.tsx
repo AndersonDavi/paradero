@@ -19,7 +19,11 @@ export function RouteBadge({ code, system, size = "md", solid = false }: { code:
     <View
       accessible
       accessibilityLabel={`Ruta ${spokenCode(code)}, ${systems[system].label}`}
-      style={[styles.badge, { backgroundColor: solid ? p.ink : p.fillStrong, paddingHorizontal: s.padX, paddingVertical: s.padY, borderRadius: s.r, gap: s.dot }]}>
+      style={[
+        styles.badge,
+        { paddingHorizontal: s.padX, paddingVertical: s.padY, borderRadius: s.r, gap: s.dot },
+        solid ? { backgroundColor: p.ink } : { borderColor: p.border, borderWidth: StyleSheet.hairlineWidth * 2 },
+      ]}>
       <View style={{ width: s.dot, height: s.dot, borderRadius: s.dot, backgroundColor: systems[system].dot }} />
       <Text maxFontSizeMultiplier={1.5} numberOfLines={1} style={[styles.text, { color: solid ? p.onInk : p.text, fontSize: s.font, lineHeight: s.font * 1.2 }]}>
         {code}
@@ -30,5 +34,5 @@ export function RouteBadge({ code, system, size = "md", solid = false }: { code:
 
 const styles = StyleSheet.create({
   badge: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", borderCurve: "continuous" },
-  text: { fontFamily: fonts[600], fontVariant: ["tabular-nums"], letterSpacing: -0.2 },
+  text: { fontFamily: fonts.mono, fontVariant: ["tabular-nums"] },
 });

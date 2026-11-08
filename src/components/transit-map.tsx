@@ -52,7 +52,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
 
       {path && path.length > 1 && (
         <GeoJSONSource id="path" data={{ type: "Feature", geometry: { type: "LineString", coordinates: path }, properties: {} }}>
-          <Layer id="path-casing" type="line" layout={{ "line-cap": "round", "line-join": "round" }} paint={{ "line-color": p.dark ? "#000" : "#fff", "line-width": 9 }} />
+          <Layer id="path-casing" type="line" layout={{ "line-cap": "round", "line-join": "round" }} paint={{ "line-color": p.background, "line-width": 9 }} />
           <Layer id="path-line" type="line" layout={{ "line-cap": "round", "line-join": "round" }} paint={{ "line-color": line, "line-width": 4.5 }} />
         </GeoJSONSource>
       )}
@@ -80,7 +80,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
       {buses.length > 0 && (
         <GeoJSONSource id="buses" data={busData}>
           <Layer id="buses-halo" type="circle" paint={{ "circle-radius": 11, "circle-color": line, "circle-opacity": 0.14 }} />
-          <Layer id="buses-dot" type="circle" paint={{ "circle-radius": 5.5, "circle-color": line, "circle-stroke-color": p.dark ? "#0E1A33" : "#FFFFFF", "circle-stroke-width": 2 }} />
+          <Layer id="buses-dot" type="circle" paint={{ "circle-radius": 5.5, "circle-color": line, "circle-stroke-color": p.background, "circle-stroke-width": 2 }} />
         </GeoJSONSource>
       )}
 

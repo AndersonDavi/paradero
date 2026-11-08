@@ -1,25 +1,31 @@
-import { Stack } from "expo-router";
-import { PressableScale } from "pressto";
-import { useDeferredValue, useRef, useState } from "react";
+import { Stack, useLocalSearchParams } from "expo-router";
+import { useDeferredValue, useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import type { SearchBarCommands } from "react-native-screens";
 
+import { Chip } from "@/components/chip";
 import { RouteRow } from "@/components/route-row";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
 import { StopRow } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { useSearch } from "@/lib/api";
-import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { motion } from "@/theme/motion";
+import { layout, space } from "@/theme/tokens";
 
 const EXAMPLES = ["K635", "B10", "Portal Norte", "Calle 72", "H710", "TransMiCable"];
 
 export default function Search() {
-  const p = usePalette();
-  const [text, setText] = useState("");
+  const { q } = useLocalSearchParams<{ q?: string }>();
+  const [text, setText] = useState(q ?? "");
   const bar = useRef<SearchBarCommands>(null);
+
+  useEffect(() => {
+    if (!q) return;
+    const t = setTimeout(() => bar.current?.setText(q), 350);
+    return () => clearTimeout(t);
+  }, [q]);
   const query = useDeferredValue(text);
   const { data, isFetching, isError, refetch } = useSearch(query);
   const typed = query.trim().length >= 2;
@@ -46,18 +52,14 @@ export default function Search() {
       />
       <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
         {!typed && (
-          <Animated.View entering={FadeIn.duration(250)} style={styles.hint}>
+          <Animated.View entering={motion.appear()} style={styles.hint}>
             <Text variant="title">Escribe la ruta como aparece en el bus</Text>
             <Text variant="callout" tone="muted">
               También encontramos las rutas SITP que van en pareja, como la K635 y la H635, aunque TransMilenio las publique juntas.
             </Text>
             <View style={styles.chips}>
               {EXAMPLES.map((e) => (
-                <PressableScale key={e} accessibilityRole="button" accessibilityLabel={`Buscar ${e}`} onPress={() => pick(e)} style={[styles.chip, { borderColor: p.separator }]}>
-                  <Text variant="callout" weight={500}>
-                    {e}
-                  </Text>
-                </PressableScale>
+                <Chip key={e} label={e} accessibilityLabel={`Buscar ${e}`} onPress={() => pick(e)} />
               ))}
             </View>
           </Animated.View>
@@ -94,10 +96,9 @@ export default function Search() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 120 },
-  hint: { padding: space.lg, gap: space.sm + 2 },
-  chips: { flexDirection: "row", flexWrap: "wrap", gap: space.sm, marginTop: space.sm },
-  chip: { paddingHorizontal: space.lg, height: 38, justifyContent: "center", borderRadius: radius.pill, borderWidth: StyleSheet.hairlineWidth },
-  section: { marginTop: space.md },
-  label: { paddingHorizontal: space.lg, paddingVertical: space.sm },
+  content: { paddingBottom: layout.tabBarClearance },
+  hint: { padding: space[4], gap: space[3] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2], marginTop: space[2] },
+  section: { marginTop: space[3] },
+  label: { paddingHorizontal: space[4], paddingVertical: space[2] },
 });

@@ -12,7 +12,8 @@
       "number-flow-react-native": [
         "./node_modules/number-flow-react-native/lib/typescript/index.d.ts"
       ]
-    }
+    },
+    "allowImportingTsExtensions": true
   },
   "include": [
     "**/*.ts",

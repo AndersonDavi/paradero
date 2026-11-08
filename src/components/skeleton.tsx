@@ -3,9 +3,9 @@ import { StyleSheet, View, type DimensionValue } from "react-native";
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTiming } from "react-native-reanimated";
 
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { radius, size, space, type } from "@/theme/tokens";
 
-function Bone({ width, height, round = 8 }: { width: DimensionValue; height: number; round?: number }) {
+export function Bone({ width, height, round = radius.sm }: { width: DimensionValue; height: number; round?: number }) {
   const p = usePalette();
   return <View style={{ width, height, borderRadius: round, backgroundColor: p.fillStrong }} />;
 }
@@ -23,25 +23,25 @@ export function SkeletonList({ rows = 4, kind = "stop" }: { rows?: number; kind?
       {Array.from({ length: rows }, (_, i) =>
         kind === "stop" ? (
           <View key={i} style={styles.stop}>
-            <Bone width={44} height={44} round={radius.md} />
-            <View style={{ flex: 1, gap: 8 }}>
-              <Bone width="62%" height={16} />
-              <Bone width="40%" height={12} />
-              <View style={{ flexDirection: "row", gap: 6 }}>
-                <Bone width={44} height={22} round={7} />
-                <Bone width={44} height={22} round={7} />
-                <Bone width={56} height={22} round={7} />
+            <Bone width={size.tile.md} height={size.tile.md} round={radius.md} />
+            <View style={styles.lines}>
+              <Bone width="62%" height={type.headline.fontSize} />
+              <Bone width="40%" height={type.caption.fontSize} />
+              <View style={styles.badges}>
+                {BADGES.map((w, j) => (
+                  <Bone key={j} width={w} height={type.headline.lineHeight} />
+                ))}
               </View>
             </View>
           </View>
         ) : (
           <View key={i} style={styles.arrival}>
-            <Bone width={56} height={28} round={8} />
-            <View style={{ flex: 1, gap: 6 }}>
-              <Bone width="70%" height={15} />
-              <Bone width="35%" height={12} />
+            <Bone width={size.control.lg} height={size.control.sm - space[2]} />
+            <View style={styles.lines}>
+              <Bone width="70%" height={type.headline.fontSize} />
+              <Bone width="35%" height={type.caption.fontSize} />
             </View>
-            <Bone width={40} height={30} />
+            <Bone width={size.control.sm} height={size.control.sm - space[1.5]} />
           </View>
         ),
       )}
@@ -49,8 +49,12 @@ export function SkeletonList({ rows = 4, kind = "stop" }: { rows?: number; kind?
   );
 }
 
+const BADGES = [size.tile.md, size.tile.md, size.control.lg] as const;
+
 const styles = StyleSheet.create({
-  list: { gap: space.xs },
-  stop: { flexDirection: "row", gap: space.md, paddingHorizontal: space.lg, paddingVertical: space.md, alignItems: "center" },
-  arrival: { flexDirection: "row", gap: space.md, paddingVertical: space.md, alignItems: "center" },
+  lines: { flex: 1, gap: space[2] },
+  badges: { flexDirection: "row", gap: space[1.5] },
+  list: { gap: space[1] },
+  stop: { flexDirection: "row", gap: space[3], paddingHorizontal: space[4], paddingVertical: space[3], alignItems: "center" },
+  arrival: { flexDirection: "row", gap: space[3], paddingVertical: space[3], alignItems: "center" },
 });

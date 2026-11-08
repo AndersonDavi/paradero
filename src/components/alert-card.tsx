@@ -19,7 +19,7 @@ export function AlertCard({ alerts }: { alerts: Alert[] }) {
         </Text>
       </View>
       {alerts.slice(0, 3).map((a) => (
-        <View key={a.id} style={{ gap: 2 }}>
+        <View key={a.id} style={styles.item}>
           <Text variant="headline">
             {a.title}
             {a.routes.length > 0 ? `  ·  ${a.routes.slice(0, 3).join(", ")}` : ""}
@@ -34,6 +34,7 @@ export function AlertCard({ alerts }: { alerts: Alert[] }) {
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.lg, borderCurve: "continuous", padding: space.lg, gap: space.md },
-  head: { flexDirection: "row", alignItems: "center", gap: space.sm },
+  card: { borderRadius: radius.lg, borderCurve: "continuous", padding: space[4], gap: space[3] },
+  head: { flexDirection: "row", alignItems: "center", gap: space[2] },
+  item: { gap: space[0.5] },
 });

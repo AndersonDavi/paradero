@@ -15,13 +15,13 @@ Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
 ```bash
 npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add: resolves SDK-compatible versions
 npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
+npm run check               # typecheck + lint + design tokens: run before every PR
+npm run deploy:api          # check, export, scan for leaked secrets, deploy the API to EAS Hosting
 npx expo-doctor             # diagnose dependency and config issues
 npx expo install --fix      # fix incompatible package versions
 ```
 
-Run lint and typecheck before declaring any task done.
+Run `npm run check` before declaring any task done. CI runs the same command.
 
 ## Navigation & Routing
 
@@ -49,4 +49,4 @@ Docs: https://docs.expo.dev/eas/index.md
 - Layout: `src/app` routes and `+api.ts` server routes, `src/server` talks to Croma (key only there), `src/transit` pure domain logic shared by both, `src/components` UI, `src/lib` client state.
 - Route codes: the feed joins paired SITP routes (`HK635` = K635 + H635). Use `describeRoute` in `src/transit/codes.ts`; `feedCode` is for API calls, `code`/`aliases` for anything a rider sees.
 - No code from paid templates (e.g. Code with Beto's platano): this repo is MIT and must stay redistributable.
-- Before a PR: `npx tsc --noEmit` and `npx eslint src`.
+- Design system: read `docs/DESIGN.md` before touching UI. No raw numbers or colors in `src/app` or `src/components`; `npm run check` fails on them.

@@ -3,23 +3,22 @@ import { router } from "expo-router";
 import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
+import { prefetchStop } from "@/lib/api";
 import { distanceText } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { size, space } from "@/theme/tokens";
 import type { Stop } from "@/transit/types";
 
 import { StationGlyph, StopSignGlyph } from "./glyphs";
 import { Icon, icons } from "./icon";
 import { RouteBadge } from "./route-badge";
 import { Text } from "./text";
+import { Tile } from "./tile";
 
-export function StopTile({ kind, size = 44 }: { kind: Stop["kind"]; size?: number }) {
+export function StopTile({ kind, tier = "md" }: { kind: Stop["kind"]; tier?: keyof typeof size.tile }) {
   const p = usePalette();
-  return (
-    <View style={[styles.tile, { width: size, height: size, backgroundColor: p.surface }]}>
-      {kind === "station" ? <StationGlyph size={size * 0.46} color={p.text} /> : <StopSignGlyph size={size * 0.48} color={p.text} cut={p.surface} />}
-    </View>
-  );
+  const glyph = size.glyph[tier];
+  return <Tile tier={tier}>{kind === "station" ? <StationGlyph size={glyph} color={p.text} /> : <StopSignGlyph size={glyph} color={p.text} cut={p.surface} />}</Tile>;
 }
 
 export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | null }) {
@@ -34,6 +33,7 @@ export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | nu
       accessibilityRole="button"
       accessibilityLabel={`${kind} ${title}${stop.distanceM ? `, a ${stop.distanceM} metros` : ""}. ${stop.routes.length} rutas.`}
       accessibilityHint="Abre las próximas llegadas"
+      onPressIn={() => prefetchStop(stop.id)}
       onPress={() => {
         void Haptics.selectionAsync();
         router.push({ pathname: "/stop/[id]", params: { id: stop.id } });
@@ -45,7 +45,7 @@ export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | nu
           <Text variant="headline" numberOfLines={1} style={{ flexShrink: 1 }}>
             {title}
           </Text>
-          {stop.accessible && <Icon name={icons.wheelchair} color={p.faint} size={13} />}
+          {stop.accessible && <Icon name={icons.wheelchair} color={p.faint} size="xs" />}
         </View>
         <Text variant="caption" tone="muted" numberOfLines={1}>
           {[kind, distanceText(stop.distanceM), nickname ? stop.name : null].filter(Boolean).join("  ·  ")}
@@ -61,15 +61,14 @@ export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | nu
           )}
         </View>
       </View>
-      <Icon name={icons.chevron} color={p.faint} size={12} />
+      <Icon name={icons.chevron} color={p.faint} size="xs" />
     </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: "row", alignItems: "center", gap: space.md + 2, paddingHorizontal: space.lg, paddingVertical: space.md },
-  tile: { borderRadius: radius.md, alignItems: "center", justifyContent: "center", borderCurve: "continuous" },
-  body: { flex: 1, gap: 4 },
-  title: { flexDirection: "row", alignItems: "center", gap: 6 },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: 4, alignItems: "center", marginTop: 2 },
+  row: { flexDirection: "row", alignItems: "center", gap: space[3], paddingHorizontal: space[4], paddingVertical: space[3] },
+  body: { flex: 1, gap: space[1] },
+  title: { flexDirection: "row", alignItems: "center", gap: space[1.5] },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: space[1], alignItems: "center", marginTop: space[0.5] },
 });

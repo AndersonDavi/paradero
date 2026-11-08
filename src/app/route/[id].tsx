@@ -2,10 +2,12 @@ import * as Haptics from "expo-haptics";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
 import { useEffect, useRef } from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
 import { AlertCard } from "@/components/alert-card";
+import { Button } from "@/components/button";
+import { DetailScreen } from "@/components/detail-screen";
 import { FeedStatus } from "@/components/feed-status";
 import { BusGlyph } from "@/components/glyphs";
 import { RouteBadge } from "@/components/route-badge";
@@ -14,15 +16,16 @@ import { Empty } from "@/components/state";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
+import { announce } from "@/lib/accessibility";
 import { useRoute } from "@/lib/api";
+import { BOGOTA } from "@/lib/location";
 import { toggleRoute, useIsSaved } from "@/lib/saved";
 import { systems, usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { layout, radius, size, space } from "@/theme/tokens";
 
 export default function RouteScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const p = usePalette();
-  const { height } = useWindowDimensions();
   const map = useRef<MapHandle>(null);
   const { data, isLoading, isError, refetch } = useRoute(id);
   const saved = useIsSaved("route", id);
@@ -40,6 +43,7 @@ export default function RouteScreen() {
     void Haptics.notificationAsync(added ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
     if (added) toast.success("Ruta guardada", { description: "La encuentras en Guardados." });
     else toast("La quitamos de tus rutas");
+    announce(added ? "Ruta guardada. La encuentras en Guardados." : "La quitamos de tus rutas.");
   };
 
   const tint = p.ink;
@@ -47,7 +51,7 @@ export default function RouteScreen() {
   const buses = data?.feed.live ? data.buses : [];
 
   return (
-    <View style={{ flex: 1, backgroundColor: p.background }}>
+    <>
       {data && (
         <Stack.Toolbar placement="right">
           <Stack.Toolbar.Button
@@ -59,23 +63,22 @@ export default function RouteScreen() {
         </Stack.Toolbar>
       )}
 
-      <View style={{ height: Math.round(height * 0.42) }}>
-        {data && (
-          <TransitMap
-            ref={map}
-            center={data.stops[0] ?? { lat: 4.65, lon: -74.08 }}
-            zoom={12}
-            path={data.path}
-            system={data.route.system}
-            stops={data.stops.map((s) => ({ ...s, kind: "stop" as const }))}
-            buses={buses}
-            padding={{ top: 100, right: 32, bottom: 56, left: 32 }}
-            onStopPress={(stopId) => router.push({ pathname: "/stop/[id]", params: { id: stopId } })}
-          />
-        )}
-      </View>
-
-      <ScrollView style={[styles.sheet, { backgroundColor: p.background }]} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <DetailScreen
+        map={
+          data && (
+            <TransitMap
+              ref={map}
+              center={data.stops[0] ?? BOGOTA}
+              zoom={12}
+              path={data.path}
+              system={data.route.system}
+              stops={data.stops.map((s) => ({ ...s, kind: "stop" as const }))}
+              buses={buses}
+              padding={layout.mapInset}
+              onStopPress={(stopId) => router.push({ pathname: "/stop/[id]", params: { id: stopId } })}
+            />
+          )
+        }>
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
         {isError && <Empty title="No pudimos cargar esta ruta" body="Revisa tu conexión e intenta de nuevo." action="Reintentar" onAction={() => void refetch()} />}
 
@@ -83,7 +86,7 @@ export default function RouteScreen() {
           <>
             <View style={styles.header}>
               <RouteBadge code={data.route.code} system={data.route.system} size="lg" solid />
-              <Text variant="serif" accessibilityRole="header">
+              <Text variant="heading" accessibilityRole="header">
                 {data.route.name}
               </Text>
               <Text variant="callout" tone="muted">
@@ -100,7 +103,7 @@ export default function RouteScreen() {
             <FeedStatus feed={data.feed} />
 
             <View style={[styles.note, { backgroundColor: p.surface }]}>
-              <BusGlyph size={22} color={p.text} cut={p.surface} />
+              <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
               <Text variant="callout" tone="muted" style={{ flex: 1 }}>
                 {!data.feed.live
                   ? "TransMilenio no está publicando posiciones, así que no dibujamos buses que podrían no estar ahí."
@@ -139,8 +142,17 @@ export default function RouteScreen() {
             </View>
           </>
         )}
-      </ScrollView>
-    </View>
+        {data && (
+          <Button
+            variant="quiet"
+            height="md"
+            label="¿Algo está mal en esta ruta?"
+            accessibilityLabel="Reportar un problema con esta ruta"
+            onPress={() => router.push({ pathname: "/report", params: { routeId: data.route.id, routeCode: data.route.code } })}
+          />
+        )}
+      </DetailScreen>
+    </>
   );
 }
 
@@ -159,16 +171,14 @@ function Fact({ label, value }: { label: string; value: string }) {
 }
 
 const styles = StyleSheet.create({
-  sheet: { flex: 1, marginTop: -28, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, borderCurve: "continuous" },
-  content: { padding: space.lg, paddingTop: space.xl, gap: space.lg + 2, paddingBottom: 80 },
-  header: { gap: space.sm },
-  facts: { flexDirection: "row", gap: space.sm },
-  fact: { flex: 1, padding: space.md + 2, borderRadius: radius.lg, borderCurve: "continuous", gap: 4, borderWidth: StyleSheet.hairlineWidth },
-  note: { flexDirection: "row", alignItems: "center", gap: space.md, padding: space.lg, borderRadius: radius.lg, borderCurve: "continuous" },
-  heading: { marginBottom: space.sm },
-  stopRow: { flexDirection: "row", alignItems: "center", gap: space.md + 2, minHeight: 46 },
-  rail: { width: 18, alignItems: "center", alignSelf: "stretch" },
-  line: { width: 2, flex: 1 },
-  node: { width: 9, height: 9, borderRadius: 5, borderWidth: 2 },
-  edgeNode: { width: 13, height: 13, borderRadius: 7, borderWidth: 3 },
+  header: { gap: space[2] },
+  facts: { flexDirection: "row", gap: space[2] },
+  fact: { flex: 1, padding: space[3], borderRadius: radius.lg, borderCurve: "continuous", gap: space[1], borderWidth: StyleSheet.hairlineWidth },
+  note: { flexDirection: "row", alignItems: "center", gap: space[3], padding: space[4], borderRadius: radius.lg, borderCurve: "continuous" },
+  heading: { marginBottom: space[2] },
+  stopRow: { flexDirection: "row", alignItems: "center", gap: space[3], minHeight: size.control.md },
+  rail: { width: size.icon.md, alignItems: "center", alignSelf: "stretch" },
+  line: { width: size.line.rule, flex: 1 },
+  node: { width: size.dot.md, height: size.dot.md, borderRadius: radius.pill, borderWidth: size.line.rule },
+  edgeNode: { width: size.icon.xs, height: size.icon.xs, borderRadius: radius.pill, borderWidth: size.line.bar },
 });

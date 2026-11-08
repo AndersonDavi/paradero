@@ -2,7 +2,7 @@
   "expo": {
     "name": "Paradero",
     "slug": "paradero",
-    "version": "1.0.0",
+    "version": "0.0.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "paradero",
@@ -12,12 +12,17 @@
       "bundleIdentifier": "co.usecroma.paradero",
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Paradero usa tu ubicación solo mientras la tienes abierta, para mostrarte los paraderos y estaciones cerca de ti. No la guardamos."
+        "NSLocationWhenInUseUsageDescription": "Paradero usa tu ubicación solo mientras la tienes abierta, para mostrarte los paraderos y estaciones cerca de ti. No la guardamos.",
+        "ITSAppUsesNonExemptEncryption": false,
+        "CFBundleDevelopmentRegion": "es",
+        "CFBundleLocalizations": [
+          "es"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#0E1A33",
+        "backgroundColor": "#09090B",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -43,9 +48,13 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#0E1A33",
+          "backgroundColor": "#FDFCFC",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 120,
+          "dark": {
+            "backgroundColor": "#09090B",
+            "image": "./assets/images/splash-icon-dark.png"
+          }
         }
       ],
       "expo-sqlite",
@@ -62,6 +71,14 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {
+        "origin": "https://paradero.expo.app",
+        "asyncRoutes": {
+          "web": true
+        }
+      }
     }
   }
 }

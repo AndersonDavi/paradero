@@ -33,7 +33,7 @@ Publicamos un mapa con cada bus de TransMilenio en vivo y recibimos más de 150 
 - **Sin publicidad, nunca.**
 - **Tu ubicación no se guarda.** Se pide con una explicación, solo con la app abierta, y sale del teléfono redondeada a una cuadra.
 - **Honestidad con el dato.** Si TransMilenio deja de publicar posiciones, lo ves en pantalla.
-- **Para todas las personas.** Lectores de pantalla con frases completas, letra que crece con el teléfono, paraderos accesibles marcados.
+- **Para todas las personas.** Cumple WCAG 2.2 AA, como pide la Resolución 1519 de 2020 a los servicios digitales del Estado, y tiene alto contraste AAA. Sigue la accesibilidad del teléfono: VoiceOver y TalkBack con frases completas, texto grande que reorganiza la pantalla en vez de cortarla, negrita, más contraste, menos movimiento y menos transparencia. Los paraderos accesibles van marcados.
 - **Cuida tus datos móviles.** Respuestas compactas y nada se actualiza en segundo plano.
 
 ## Estándar de Bienes Públicos Digitales
@@ -49,7 +49,7 @@ Paradero está construida para cumplir los nueve indicadores del [Digital Public
 | 5. Documentación | Este README, [`docs/PLAN.md`](docs/PLAN.md) y [`AGENTS.md`](AGENTS.md) |
 | 6. Extracción de datos | Los datos son los abiertos de TransMilenio (GTFS y GTFS-RT) y la API del proyecto responde JSON |
 | 7. Privacidad y ley | No recolecta datos personales. Pensada para la Ley 1581 de 2012 de protección de datos |
-| 8. Estándares | GTFS, GTFS-Realtime, OpenStreetMap y pautas de accesibilidad de iOS y Android |
+| 8. Estándares | GTFS, GTFS-Realtime, OpenStreetMap, WCAG 2.2 AA (contraste comprobado en cada cambio) y pautas de accesibilidad de iOS y Android |
 | 9. No hacer daño | Sin anuncios, sin rastreo, sin datos personales y sin presentar horarios como si fueran en vivo |
 
 ## Correrla
@@ -82,7 +82,7 @@ La llave de la API vive solo en el servidor. Cada respuesta se comparte unos seg
 | `GET /api/routes/:id` | Recorrido, paradas, buses en vía y novedades |
 | `GET /api/health` | Si TransMilenio está publicando en vivo |
 
-Expo SDK 58 · Expo Router con pestañas nativas · Liquid Glass · MapLibre · TanStack Query · SQLite local · Zod · Inter Tight e Instrument Serif.
+Expo SDK 58 · Expo Router con pestañas nativas · Liquid Glass · MapLibre · TanStack Query · SQLite local · Zod · con la identidad de Croma (Geist, Geist Mono y Victor Mono), en claro y oscuro.
 
 ## Lo que sigue
 
@@ -94,7 +94,7 @@ Expo SDK 58 · Expo Router con pestañas nativas · Liquid Glass · MapLibre · 
 
 ## Contribuir
 
-La construimos con la gente que la usa. Si diseñas, programas, haces UX, accesibilidad o seguridad, o tomas el SITP todos los días y tienes una idea, abre un [issue](https://github.com/croma-labs/paradero/issues).
+La construimos con la gente que la usa. Si diseñas, programas, haces UX, accesibilidad o seguridad, o tomas el SITP todos los días y tienes una idea, abre un [issue](https://github.com/croma-labs/paradero/issues). Desde la app también puedes reportar sin cuenta: llega aquí como un issue público con la etiqueta `reporte ciudadano`, sin tu correo ni tu teléfono.
 
 - Español claro, como hablaría un vecino.
 - Cada dato dice de dónde viene y qué tan fresco es.
@@ -104,6 +104,8 @@ La construimos con la gente que la usa. Si diseñas, programas, haces UX, accesi
 ## Licencia
 
 [MIT](LICENSE). La elegimos porque es la forma más simple de que una entidad pública o sus contratistas adopten el código sin trámites, y porque un bien común no debería pedir permiso para usarse.
+
+Las fuentes Geist, Geist Mono y Victor Mono vienen con la [SIL Open Font License 1.1](https://openfontlicense.org).
 
 Los datos de transporte son de TransMilenio S.A. Los mapas son de [CARTO](https://carto.com/attributions) y © colaboradores de [OpenStreetMap](https://www.openstreetmap.org/copyright). Las fotos del onboarding son imágenes generadas con IA, no personas reales.
 

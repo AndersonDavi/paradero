@@ -1,16 +1,19 @@
-import { InstrumentSerif_400Regular } from "@expo-google-fonts/instrument-serif";
-import { InterTight_400Regular, InterTight_500Medium, InterTight_600SemiBold, InterTight_700Bold, useFonts } from "@expo-google-fonts/inter-tight";
+import { Geist_400Regular, Geist_500Medium, Geist_600SemiBold, Geist_700Bold, useFonts } from "@expo-google-fonts/geist";
+import { GeistMono_500Medium } from "@expo-google-fonts/geist-mono";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
-import { LogBox, useColorScheme } from "react-native";
+import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Toaster } from "sonner-native";
 
 import { queryClient } from "@/lib/api";
+import "@/lib/accessibility";
+import "@/lib/appearance";
 import { useOnboarded } from "@/lib/onboarding";
+import { usePalette } from "@/theme/colors";
 import { fonts } from "@/theme/tokens";
 
 LogBox.ignoreLogs(["[Reanimated] Dependencies should only be used on the web", "Sending `onAnimatedValueUpdate`"]);
@@ -19,9 +22,16 @@ void SplashScreen.preventAutoHideAsync();
 SplashScreen.setOptions({ fade: true, duration: 250 });
 
 export default function RootLayout() {
-  const dark = useColorScheme() === "dark";
+  const palette = usePalette();
   const onboarded = useOnboarded();
-  const [loaded, failed] = useFonts({ InterTight_400Regular, InterTight_500Medium, InterTight_600SemiBold, InterTight_700Bold, InstrumentSerif_400Regular });
+  const [loaded, failed] = useFonts({
+    Geist_400Regular,
+    Geist_500Medium,
+    Geist_600SemiBold,
+    Geist_700Bold,
+    GeistMono_500Medium,
+    "VictorMono-Bold": require("../../assets/fonts/VictorMono-Bold.ttf"),
+  });
 
   useEffect(() => {
     if (loaded || failed) void SplashScreen.hideAsync();
@@ -29,10 +39,10 @@ export default function RootLayout() {
 
   if (!loaded && !failed) return null;
 
-  const base = dark ? DarkTheme : DefaultTheme;
+  const base = palette.dark ? DarkTheme : DefaultTheme;
   const theme = {
     ...base,
-    colors: { ...base.colors, primary: dark ? "#F4F6FA" : "#0E1A33", background: dark ? "#070D1C" : "#FFFFFF", card: dark ? "#070D1C" : "#FFFFFF", text: dark ? "#F4F6FA" : "#0E1A33" },
+    colors: { ...base.colors, primary: palette.ink, background: palette.background, card: palette.background, text: palette.text },
     fonts: {
       regular: { fontFamily: fonts[400], fontWeight: "400" as const },
       medium: { fontFamily: fonts[500], fontWeight: "500" as const },
@@ -51,6 +61,7 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
               <Stack.Screen name="stop/[id]" options={{ headerTransparent: true, title: "" }} />
               <Stack.Screen name="route/[id]" options={{ headerTransparent: true, title: "" }} />
+              <Stack.Screen name="report" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
             </Stack.Protected>
             <Stack.Protected guard={!onboarded}>
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />

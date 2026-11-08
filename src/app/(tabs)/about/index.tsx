@@ -1,17 +1,21 @@
 import Constants from "expo-constants";
+import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import { PressableScale } from "pressto";
 import { ScrollView, StyleSheet, View } from "react-native";
 
+import { Button } from "@/components/button";
+import { Chip } from "@/components/chip";
+import { CromaWordmark } from "@/components/croma-mark";
 import { FeedStatus } from "@/components/feed-status";
-import { StopSignGlyph } from "@/components/glyphs";
 import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
 import { useHealth } from "@/lib/api";
+import { setAppearance, setContrast, useAppearance, useContrast, type Appearance, type Contrast } from "@/lib/appearance";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { layout, size, space } from "@/theme/tokens";
 
 const REPO = "https://github.com/croma-labs/paradero";
+const CROMA = "https://usecroma.com";
 
 const PROMISES = [
   { icon: icons.person, title: "Sin cuenta", body: "Abres la app y ya. No pedimos correo, teléfono ni cédula." },
@@ -21,20 +25,42 @@ const PROMISES = [
   { icon: icons.code, title: "Código abierto", body: "Cualquiera puede revisarlo, mejorarlo o llevárselo. Licencia MIT." },
 ];
 
+const APPEARANCES: { value: Appearance; label: string }[] = [
+  { value: "system", label: "Automática" },
+  { value: "light", label: "Clara" },
+  { value: "dark", label: "Oscura" },
+];
+
+const CONTRASTS: { value: Contrast; label: string }[] = [
+  { value: "system", label: "Contraste del teléfono" },
+  { value: "high", label: "Alto contraste" },
+];
+
 export default function About() {
   const p = usePalette();
   const health = useHealth();
+  const appearance = useAppearance();
+  const contrast = useContrast();
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       <View style={styles.hero}>
-        <View style={[styles.mark, { backgroundColor: p.ink }]}>
-          <StopSignGlyph size={24} color={p.onInk} cut={p.ink} />
+        <View style={styles.mark}>
+          <CromaWordmark height={size.icon.md} color={p.text} />
         </View>
         <Text variant="eyebrow" tone="faint">
-          Bienes Públicos Digitales · Croma
+          Bienes Públicos Digitales ·{" "}
+          <Text
+            variant="eyebrow"
+            tone="muted"
+            accessibilityRole="link"
+            accessibilityHint="Abre la página de Croma"
+            onPress={() => WebBrowser.openBrowserAsync(CROMA)}
+            style={{ textDecorationLine: "underline" }}>
+            Croma
+          </Text>
         </Text>
-        <Text variant="serif">Bogotá merece la mejor app para moverse.</Text>
+        <Text variant="heading">Bogotá merece la mejor app para moverse.</Text>
         <Text variant="body" tone="muted">
           Paradero es gratis, abierta y de todos. La ponemos a disposición de la Alcaldía de Bogotá y de TransMilenio para que la adopten, la mantengan y la hagan suya.
         </Text>
@@ -47,8 +73,8 @@ export default function About() {
         <View>
           {PROMISES.map((item, i) => (
             <View key={item.title} style={[styles.promise, { borderTopColor: p.separator, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth }]}>
-              <Icon name={item.icon} color={p.text} size={17} weight="medium" />
-              <View style={{ flex: 1, gap: 2 }}>
+              <Icon name={item.icon} color={p.text} size="sm" weight="medium" />
+              <View style={styles.promiseText}>
                 <Text variant="headline">{item.title}</Text>
                 <Text variant="callout" tone="muted">
                   {item.body}
@@ -74,31 +100,55 @@ export default function About() {
           Hazla mejor con nosotros
         </Text>
         <Text variant="body" tone="muted">
-          Si una ruta no aparece, una hora está mal o se te ocurre algo que te haría la vida más fácil, cuéntanos.
+          Si una ruta no aparece, una hora está mal o se te ocurre algo que te haría la vida más fácil, cuéntanos. No necesitas cuenta.
         </Text>
-        <PressableScale accessibilityRole="link" accessibilityLabel="Reportar un problema o una idea" onPress={() => void WebBrowser.openBrowserAsync(`${REPO}/issues/new`)} style={[styles.button, { backgroundColor: p.ink }]}>
-          <Text variant="headline" tone="inverse">
-            Reportar un problema o una idea
-          </Text>
-        </PressableScale>
-        <PressableScale accessibilityRole="link" accessibilityLabel="Ver el código" onPress={() => void WebBrowser.openBrowserAsync(REPO)} style={[styles.button, { borderColor: p.separator, borderWidth: StyleSheet.hairlineWidth }]}>
-          <Text variant="headline">Ver el código</Text>
-        </PressableScale>
+        <Button label="Reportar un problema o una idea" onPress={() => router.push("/report")} />
+        <Button role="link" variant="secondary" label="Ver el código" onPress={() => void WebBrowser.openBrowserAsync(REPO)} />
       </View>
 
-      <Text variant="caption" tone="faint" style={styles.footer}>
-        Paradero {Constants.expoConfig?.version}  ·  Hecho en Bogotá por Croma y la comunidad
-      </Text>
+      <View style={styles.section}>
+        <Text variant="eyebrow" tone="faint">
+          Apariencia y accesibilidad
+        </Text>
+        <View style={styles.choices}>
+          {APPEARANCES.map((a) => (
+            <Chip key={a.value} label={a.label} accessibilityLabel={`Apariencia: ${a.label}`} selected={appearance === a.value} onPress={() => setAppearance(a.value)} />
+          ))}
+        </View>
+        <View style={styles.choices}>
+          {CONTRASTS.map((c) => (
+            <Chip key={c.value} label={c.label} accessibilityLabel={`Contraste: ${c.label}`} selected={contrast === c.value} onPress={() => setContrast(c.value)} />
+          ))}
+        </View>
+        <Text variant="callout" tone="muted">
+          Paradero sigue la accesibilidad de tu teléfono: texto grande, negrita, más contraste, menos movimiento, menos transparencia y lectores de pantalla como VoiceOver y TalkBack.
+        </Text>
+      </View>
+
+      <View style={styles.section}>
+        <View style={styles.footer}>
+          <Text variant="chrome" tone="faint">
+            + Infraestructura de datos públicos
+          </Text>
+          <Text variant="chrome" tone="faint">
+            usecroma.com +
+          </Text>
+        </View>
+        <Text variant="caption" tone="faint">
+          Paradero {Constants.expoConfig?.version} · Hecho en Bogotá por Croma y la comunidad
+        </Text>
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  content: { paddingHorizontal: space.xl - 4, paddingTop: space.md, paddingBottom: 120, gap: space.xxl + 8 },
-  hero: { gap: space.md },
-  mark: { width: 44, height: 44, borderRadius: 13, alignItems: "center", justifyContent: "center", marginBottom: space.sm, borderCurve: "continuous" },
-  section: { gap: space.md },
-  promise: { flexDirection: "row", gap: space.lg, paddingVertical: space.lg, alignItems: "flex-start" },
-  button: { height: 54, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
-  footer: { textAlign: "center" },
+  content: { paddingHorizontal: space[5], paddingTop: space[3], paddingBottom: layout.tabBarClearance, gap: space[10] },
+  hero: { gap: space[3] },
+  mark: { marginBottom: space[2] },
+  section: { gap: space[3] },
+  promise: { flexDirection: "row", gap: space[4], paddingVertical: space[4], alignItems: "flex-start" },
+  promiseText: { flex: 1, gap: space[0.5] },
+  choices: { flexDirection: "row", gap: space[2] },
+  footer: { flexDirection: "row", justifyContent: "space-between", gap: space[2] },
 });

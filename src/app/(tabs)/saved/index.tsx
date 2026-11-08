@@ -6,7 +6,7 @@ import { SavedStopCard } from "@/components/saved-stop-card";
 import { Empty } from "@/components/state";
 import { Text } from "@/components/text";
 import { useSaved, type SavedRoute, type SavedStop } from "@/lib/saved";
-import { space } from "@/theme/tokens";
+import { layout, space } from "@/theme/tokens";
 
 export default function Saved() {
   const saved = useSaved();
@@ -52,8 +52,8 @@ export default function Saved() {
 }
 
 const styles = StyleSheet.create({
-  content: { paddingBottom: 120 },
-  section: { marginTop: space.md },
-  label: { paddingHorizontal: space.lg, paddingVertical: space.sm },
-  grid: { paddingHorizontal: space.lg, gap: space.md },
+  content: { paddingBottom: layout.tabBarClearance },
+  section: { marginTop: space[3] },
+  label: { paddingHorizontal: space[4], paddingVertical: space[2] },
+  grid: { paddingHorizontal: space[4], gap: space[3] },
 });

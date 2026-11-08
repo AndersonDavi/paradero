@@ -3,6 +3,9 @@ import { z } from "zod";
 const BASE_URL = process.env.CROMA_API_URL ?? "https://api.croma.run";
 const STALE_AFTER_MS = 5 * 60_000;
 
+/** A rider is waiting on the other end, so a slow upstream fails fast instead of hanging the screen. */
+const TIMEOUT_MS = 8_000;
+
 export class CromaError extends Error {
   constructor(
     readonly code: string,
@@ -25,9 +28,11 @@ export async function croma<S extends z.ZodType>(endpoint: string, body: Record<
       method: "POST",
       headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-  } catch {
-    throw new CromaError("network", "Could not reach Croma.");
+  } catch (error) {
+    const slow = error instanceof DOMException && error.name === "TimeoutError";
+    throw new CromaError(slow ? "timeout" : "network", slow ? "Croma took too long to answer." : "Could not reach Croma.", slow ? 504 : 502);
   }
 
   const json: unknown = await res.json().catch(() => null);

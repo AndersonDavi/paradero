@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { useLargeText } from "@/lib/accessibility";
 import { since } from "@/lib/format";
 import { signal, usePalette } from "@/theme/colors";
 import { radius, space } from "@/theme/tokens";
@@ -21,6 +22,7 @@ function useTick(ms: number) {
 /** Says where every time comes from. Riders forgive old data; they don't forgive being told it is live when it isn't. */
 export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined; floating?: boolean }) {
   const p = usePalette();
+  const large = useLargeText();
   useTick(5_000);
   if (!feed) return null;
 
@@ -36,9 +38,11 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
           <Text variant="caption" weight={600}>
             {title}
           </Text>
-          <Text variant="caption" tone="muted" numberOfLines={1} style={{ flexShrink: 1 }}>
-            {feed.live ? since(feed.asOf) : "sin datos en vivo"}
-          </Text>
+          {!large && (
+            <Text variant="caption" tone="muted" numberOfLines={1} style={styles.shrink}>
+              {feed.live ? since(feed.asOf) : "sin datos en vivo"}
+            </Text>
+          )}
         </View>
       </Glass>
     );
@@ -60,7 +64,8 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
 }
 
 const styles = StyleSheet.create({
-  floating: { borderRadius: radius.pill, overflow: "hidden" },
-  pill: { flexDirection: "row", alignItems: "center", gap: space.sm, paddingVertical: 9, paddingHorizontal: 14 },
-  inline: { flexDirection: "row", alignItems: "flex-start", gap: space.md, padding: space.md + 2, borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderCurve: "continuous", paddingTop: space.md + 4 },
+  floating: { borderRadius: radius.pill, overflow: "hidden", maxWidth: "100%" },
+  shrink: { flexShrink: 1 },
+  pill: { flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: space[2], paddingHorizontal: space[3] },
+  inline: { flexDirection: "row", alignItems: "flex-start", gap: space[3], padding: space[3], borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderCurve: "continuous", paddingTop: space[4] },
 });

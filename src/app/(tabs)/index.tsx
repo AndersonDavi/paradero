@@ -2,14 +2,15 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { PressableScale } from "pressto";
-import { useRef } from "react";
-import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
+import { useEffect, useRef } from "react";
+import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { FeedStatus } from "@/components/feed-status";
 import { Glass } from "@/components/glass";
 import { Icon, icons } from "@/components/icon";
+import { Rail } from "@/components/rail";
 import { SavedStopCard } from "@/components/saved-stop-card";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
@@ -17,12 +18,12 @@ import { StopRow } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
-import { useHealth, useNearby } from "@/lib/api";
+import { prefetchStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
 import { BOGOTA, useLocation } from "@/lib/location";
 import { useSaved, type SavedStop } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { layout, radius, size, space } from "@/theme/tokens";
 
 const SNAPS = ["30%", "58%", "92%"];
 
@@ -41,25 +42,31 @@ export default function Home() {
   const anchor = here ?? (outside ? BOGOTA : null);
   const nearby = useNearby(anchor);
   const stops = nearby.data?.stops ?? [];
+  const closest = stops.slice(0, 3).map((s) => s.id).join(",");
+  useEffect(() => {
+    if (closest) closest.split(",").forEach(prefetchStop);
+  }, [closest]);
 
   const locateStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: position.value - 64 }],
+    transform: [{ translateY: position.value - size.control.lg - space[2] }],
     opacity: interpolate(position.value, [height * 0.25, height * 0.4], [0, 1], "clamp"),
   }));
 
   return (
     <View style={[styles.screen, { backgroundColor: p.background }]}>
+      <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
       <TransitMap
         key={anchor ? `${anchor.lat.toFixed(3)},${anchor.lon.toFixed(3)}` : "city"}
         ref={map}
         center={anchor ?? BOGOTA}
         zoom={anchor ? 16 : 12}
         stops={stops}
-        padding={{ top: insets.top + 64, right: 0, bottom: height * 0.58, left: 0 }}
+        padding={{ top: insets.top + size.control.lg + space[2], right: 0, bottom: height * 0.58, left: 0 }}
         onStopPress={(id) => router.push({ pathname: "/stop/[id]", params: { id } })}
       />
+      </View>
 
-      <View pointerEvents="box-none" style={[styles.top, { top: insets.top + space.sm }]}>
+      <View pointerEvents="box-none" style={[styles.top, { top: insets.top + space[2] }]}>
         <FeedStatus feed={health.data?.feed} floating />
       </View>
 
@@ -73,7 +80,7 @@ export default function Home() {
             else void retry();
           }}>
           <Glass interactive style={styles.locateGlass}>
-            <Icon name={icons.location} color={p.text} size={19} />
+            <Icon name={icons.location} color={p.text} size="md" />
           </Glass>
         </PressableScale>
       </Animated.View>
@@ -84,15 +91,15 @@ export default function Home() {
         enableDynamicSizing={false}
         animatedPosition={position}
         topInset={insets.top}
-        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.xxl }}
-        handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: 36 }}
-        style={styles.sheet}>
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 110 }} showsVerticalScrollIndicator={false}>
+        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet }}
+        handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
+        style={{ boxShadow: p.shadowUp }}>
+        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
           <View style={styles.hello}>
-            <Text variant="caption" tone="muted">
+            <Text variant="eyebrow" tone="faint">
               {greeting()}
             </Text>
-            <Text variant="serif">¿Para dónde vas?</Text>
+            <Text variant="heading">¿Para dónde vas?</Text>
           </View>
 
           <PressableScale
@@ -100,7 +107,7 @@ export default function Home() {
             accessibilityLabel="Buscar una ruta, estación o paradero"
             onPress={() => router.navigate("/search")}
             style={[styles.where, { backgroundColor: p.surface }]}>
-            <Icon name={icons.search} color={p.text} size={19} weight="bold" />
+            <Icon name={icons.search} color={p.text} size="md" weight="bold" />
             <Text variant="body" tone="muted">
               Ruta, estación o paradero
             </Text>
@@ -109,11 +116,11 @@ export default function Home() {
           {savedStops.length > 0 && (
             <View style={styles.section}>
               <SectionTitle title="Tus paraderos" />
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.cards}>
+              <Rail>
                 {savedStops.slice(0, 6).map((s) => (
-                  <SavedStopCard key={s.id} saved={s} width={228} />
+                  <SavedStopCard key={s.id} saved={s} width={layout.cardWidth} />
                 ))}
-              </ScrollView>
+              </Rail>
             </View>
           )}
 
@@ -166,24 +173,23 @@ function SectionTitle({ title, detail }: { title: string; detail?: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  top: { position: "absolute", left: space.lg, right: space.lg, alignItems: "flex-start" },
-  locate: { position: "absolute", top: 0, right: space.lg },
-  locateGlass: { width: 50, height: 50, borderRadius: 25, alignItems: "center", justifyContent: "center" },
-  sheet: { boxShadow: "0 -10px 40px rgba(1,14,36,0.10)" },
-  hello: { paddingHorizontal: space.lg, paddingTop: space.xs, gap: 2 },
+  top: { position: "absolute", left: space[4], right: space[4], alignItems: "flex-start" },
+  locate: { position: "absolute", top: 0, right: space[4] },
+  locateGlass: { width: size.control.md, height: size.control.md, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
+  hello: { paddingHorizontal: layout.gutter, paddingTop: space[1], gap: space[0.5] },
   where: {
-    marginHorizontal: space.lg,
-    marginTop: space.lg,
+    marginHorizontal: space[4],
+    marginTop: space[4],
     flexDirection: "row",
     alignItems: "center",
-    gap: space.md,
-    paddingHorizontal: space.lg + 2,
-    height: 56,
+    gap: space[3],
+    paddingHorizontal: space[5],
+    minHeight: size.control.lg,
+    paddingVertical: space[3],
     borderRadius: radius.lg,
     borderCurve: "continuous",
   },
-  section: { marginTop: space.xl, gap: space.xs },
-  sectionTitle: { paddingHorizontal: space.lg, marginBottom: space.xs, gap: 2 },
-  note: { paddingHorizontal: space.lg, marginBottom: space.sm },
-  cards: { paddingHorizontal: space.lg, gap: space.md },
+  section: { marginTop: space[6], gap: space[1] },
+  sectionTitle: { paddingHorizontal: layout.gutter, marginBottom: space[1], gap: space[0.5] },
+  note: { paddingHorizontal: space[4], marginBottom: space[2] },
 });

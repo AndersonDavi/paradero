@@ -1,10 +1,20 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
 import type { ColorValue } from "react-native";
 
+import { size as sizes } from "@/theme/tokens";
+
 type Name = Extract<SymbolViewProps["name"], { ios?: unknown }>;
 
-export function Icon({ name, size = 20, color, weight = "semibold" }: { name: Name; size?: number; color: ColorValue; weight?: "regular" | "medium" | "semibold" | "bold" }) {
-  return <SymbolView name={name} size={size} tintColor={color} weight={weight} resizeMode="scaleAspectFit" style={{ width: size, height: size }} />;
+interface IconProps {
+  name: Name;
+  color: ColorValue;
+  size?: keyof typeof sizes.icon;
+  weight?: "regular" | "medium" | "semibold" | "bold";
+}
+
+export function Icon({ name, color, size = "md", weight = "semibold" }: IconProps) {
+  const side = sizes.icon[size];
+  return <SymbolView name={name} size={side} tintColor={color} weight={weight} resizeMode="scaleAspectFit" style={{ width: side, height: side }} />;
 }
 
 export const icons = {
@@ -28,4 +38,6 @@ export const icons = {
   code: { ios: "chevron.left.forwardslash.chevron.right", android: "code" },
   sparkles: { ios: "sparkles", android: "auto_awesome" },
   lock: { ios: "lock.fill", android: "lock" },
+  check: { ios: "checkmark", android: "check" },
+  flag: { ios: "exclamationmark.bubble", android: "feedback" },
 } satisfies Record<string, Name>;
