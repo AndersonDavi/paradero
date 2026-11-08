@@ -17,6 +17,7 @@ npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add: resol
 npx expo start              # start the dev server
 npm run check               # typecheck + lint + design tokens: run before every PR
 npm run deploy:api          # check, export, scan for leaked secrets, deploy the API to EAS Hosting
+npm run release:ios         # build for TestFlight; the GitHub release notes for this version become "What to Test"
 npx expo-doctor             # diagnose dependency and config issues
 npx expo install --fix      # fix incompatible package versions
 ```

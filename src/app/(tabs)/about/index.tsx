@@ -104,6 +104,7 @@ export default function About() {
         </Text>
         <Button label="Reportar un problema o una idea" onPress={() => router.push("/report")} />
         <Button role="link" variant="secondary" label="Ver el código" onPress={() => void WebBrowser.openBrowserAsync(REPO)} />
+        <Button role="link" variant="quiet" height="md" label="Privacidad" accessibilityLabel="Leer la política de privacidad" onPress={() => router.push("/privacidad")} />
       </View>
 
       <View style={styles.section}>

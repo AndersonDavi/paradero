@@ -2,7 +2,7 @@
 
 **Tu bus, sin adivinar.** La app abierta para moverse en Bogotá: TransMilenio, SITP, alimentadores y TransMiCable en un solo lugar.
 
-Un bien público digital de [Croma](https://usecroma.com) · Datos abiertos de TransMilenio · Licencia MIT · No es una app oficial del Distrito.
+Un bien público digital de [Croma](https://usecroma.com) · Datos abiertos de TransMilenio · Licencia MIT · [Privacidad](https://paradero.expo.app/politica-de-privacidad) · No es una app oficial del Distrito.
 
 ![Paradero: onboarding, paraderos cercanos, próximos buses y recorrido de una ruta en Bogotá](.github/assets/hero.jpg)
 

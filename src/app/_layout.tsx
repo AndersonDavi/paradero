@@ -63,6 +63,7 @@ export default function RootLayout() {
               <Stack.Screen name="route/[id]" options={{ headerTransparent: true, title: "" }} />
               <Stack.Screen name="report" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
             </Stack.Protected>
+            <Stack.Screen name="privacidad" options={{ title: "Privacidad", headerTransparent: process.env.EXPO_OS === "ios" }} />
             <Stack.Protected guard={!onboarded}>
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
             </Stack.Protected>
