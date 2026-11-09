@@ -2,7 +2,7 @@
   "expo": {
     "name": "Paradero",
     "slug": "paradero",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "paradero",
@@ -10,7 +10,7 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "bundleIdentifier": "co.usecroma.paradero",
-      "supportsTablet": true,
+      "supportsTablet": false,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Paradero usa tu ubicación solo mientras la tienes abierta, para mostrarte los paraderos y estaciones cerca de ti. No la guardamos.",
         "ITSAppUsesNonExemptEncryption": false,
