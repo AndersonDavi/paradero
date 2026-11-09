@@ -206,6 +206,8 @@ export const pt: Messages = {
     pending: "Uma recarga on-line aparece aqui quando você a carrega em um validador ou ponto de recarga.",
     number: "Número do cartão",
     movements: "Últimas movimentações",
+    owed: (amount) => `O cartão ficou devendo ${amount}. Será descontado na próxima recarga.`,
+    undated: "Sem data",
     noMovements: "O cartão não tem movimentações salvas.",
     kinds: { trip: "Viagem", topup: "Recarga", topupCancelled: "Recarga cancelada", other: "Movimentação" },
     after: (balance) => `Ficou em ${balance}`,

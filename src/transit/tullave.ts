@@ -112,3 +112,23 @@ export function parseCard(r: CardResponses): Card {
 export function groupNumber(number: string): string {
   return number.replace(/(.{4})(?=.)/g, "$1 ").toUpperCase();
 }
+
+export type MonthGroup = { month: string | null; movements: Movement[] };
+
+/** Movements in the order the card keeps them (newest first), split by calendar month. Undated ones go last. */
+export function byMonth(movements: Movement[]): MonthGroup[] {
+  const groups: MonthGroup[] = [];
+  const undated: Movement[] = [];
+  for (const m of movements) {
+    if (!m.at) {
+      undated.push(m);
+      continue;
+    }
+    const month = m.at.slice(0, 7);
+    const last = groups[groups.length - 1];
+    if (last?.month === month) last.movements.push(m);
+    else groups.push({ month, movements: [m] });
+  }
+  if (undated.length > 0) groups.push({ month: null, movements: undated });
+  return groups;
+}

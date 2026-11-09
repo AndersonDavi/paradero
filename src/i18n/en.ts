@@ -206,6 +206,8 @@ export const en: Messages = {
     pending: "An online top-up shows here once you load it at a validator or a top-up point.",
     number: "Card number",
     movements: "Recent activity",
+    owed: (amount) => `The card owes ${amount}. It comes off your next top-up.`,
+    undated: "No date",
     noMovements: "The card has no saved activity.",
     kinds: { trip: "Trip", topup: "Top-up", topupCancelled: "Top-up cancelled", other: "Activity" },
     after: (balance) => `Left ${balance}`,

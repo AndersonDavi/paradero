@@ -205,6 +205,8 @@ export const zh: Messages = {
     pending: "在线充值需要在验票机或充值点写入卡内后才会显示在这里。",
     number: "卡号",
     movements: "最近记录",
+    owed: (amount) => `卡内欠款 ${amount}，将从下次充值中扣除。`,
+    undated: "无日期",
     noMovements: "卡内没有保存的记录。",
     kinds: { trip: "乘车", topup: "充值", topupCancelled: "充值已取消", other: "记录" },
     after: (balance) => `余额 ${balance}`,

@@ -206,6 +206,8 @@ export const fr: Messages = {
     pending: "Une recharge en ligne apparaît ici une fois chargée sur un valideur ou un point de recharge.",
     number: "Numéro de la carte",
     movements: "Derniers mouvements",
+    owed: (amount) => `La carte doit ${amount}. Ce montant sera déduit de votre prochaine recharge.`,
+    undated: "Sans date",
     noMovements: "La carte n’a aucun mouvement enregistré.",
     kinds: { trip: "Trajet", topup: "Recharge", topupCancelled: "Recharge annulée", other: "Mouvement" },
     after: (balance) => `Reste ${balance}`,

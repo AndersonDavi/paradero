@@ -206,6 +206,8 @@ export const ja: Messages = {
     pending: "オンラインでのチャージは、改札機やチャージ機でカードに反映するとここに表示されます。",
     number: "カード番号",
     movements: "最近の利用履歴",
+    owed: (amount) => `カードは ${amount} の未払いがあります。次回のチャージから差し引かれます。`,
+    undated: "日付なし",
     noMovements: "カードに保存された履歴はありません。",
     kinds: { trip: "乗車", topup: "チャージ", topupCancelled: "チャージ取消", other: "利用" },
     after: (balance) => `残高 ${balance}`,

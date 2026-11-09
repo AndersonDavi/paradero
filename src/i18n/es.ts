@@ -209,6 +209,8 @@ export const es = {
     pending: "Una recarga en línea aparece aquí cuando la cargas en un validador o un punto de recarga.",
     number: "Número de la tarjeta",
     movements: "Últimos movimientos",
+    owed: (amount: string) => `La tarjeta quedó debiendo ${amount}. Se descuenta de tu próxima recarga.`,
+    undated: "Sin fecha",
     noMovements: "La tarjeta no tiene movimientos guardados.",
     kinds: { trip: "Viaje", topup: "Recarga", topupCancelled: "Recarga anulada", other: "Movimiento" },
     after: (balance: string) => `Quedó en ${balance}`,

@@ -206,6 +206,8 @@ export const de: Messages = {
     pending: "Eine Online-Aufladung erscheint hier, sobald du sie an einem Validator oder einer Ladestelle auf die Karte lädst.",
     number: "Kartennummer",
     movements: "Letzte Bewegungen",
+    owed: (amount) => `Die Karte steht mit ${amount} im Minus. Das wird mit der nächsten Aufladung verrechnet.`,
+    undated: "Ohne Datum",
     noMovements: "Auf der Karte sind keine Bewegungen gespeichert.",
     kinds: { trip: "Fahrt", topup: "Aufladung", topupCancelled: "Aufladung storniert", other: "Bewegung" },
     after: (balance) => `Rest ${balance}`,

@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
@@ -15,7 +15,7 @@ import { clock } from "@/lib/format";
 import { canReadCards, cancelRead, cardTime, pesos, readCard, ReadError } from "@/lib/tullave";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
-import { groupNumber, type Card, type Movement } from "@/transit/tullave";
+import { byMonth, groupNumber, type Card, type Movement } from "@/transit/tullave";
 
 const SIGN: Record<Movement["kind"], string> = { trip: "−", topup: "+", topupCancelled: "−", other: "" };
 
@@ -46,6 +46,13 @@ export default function CardScreen() {
     },
   });
 
+  const { mutate } = read;
+  const started = useRef(false);
+  useEffect(() => {
+    if (!supported || started.current) return;
+    started.current = true;
+    mutate();
+  }, [supported, mutate]);
   useEffect(() => cancelRead, []);
 
   const failure = read.error ? failureOf(read.error, t) : null;
@@ -124,6 +131,15 @@ function Result({ balance, number, movements, at }: { balance: number; number: s
         </Text>
       </View>
 
+      {balance < 0 && (
+        <View style={styles.note}>
+          <Icon name={icons.warning} color={p.faint} size="xs" />
+          <Text variant="callout" style={styles.grow}>
+            {t.card.owed(pesos(-balance))}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.note}>
         <Icon name={icons.info} color={p.faint} size="xs" />
         <Text variant="caption" tone="muted" style={styles.grow}>
@@ -151,8 +167,15 @@ function Result({ balance, number, movements, at }: { balance: number; number: s
             {t.card.noMovements}
           </Text>
         )}
-        {movements.map((m, i) => (
-          <MovementRow key={`${m.at ?? i}-${i}`} movement={m} first={i === 0} />
+        {byMonth(movements).map((group) => (
+          <View key={group.month ?? "undated"} style={styles.month}>
+            <Text variant="headline" weight={600} accessibilityRole="header">
+              {group.month ? cardTime(`${group.month}-01T12:00:00`, "month") : t.card.undated}
+            </Text>
+            {group.movements.map((m, i) => (
+              <MovementRow key={`${m.at ?? "undated"}-${i}`} movement={m} first={i === 0} />
+            ))}
+          </View>
         ))}
       </View>
     </View>
@@ -165,13 +188,14 @@ function MovementRow({ movement, first }: { movement: Movement; first: boolean }
   const large = useLargeText();
   const kind = t.card.kinds[movement.kind];
   const amount = `${SIGN[movement.kind]}${pesos(movement.amount)}`;
-  const when = movement.at ? cardTime(movement.at) : "";
+  const when = movement.at ? cardTime(movement.at, "row") : "";
+  const spoken = movement.at ? cardTime(movement.at, "spoken") : "";
   const after = pesos(movement.balanceAfter);
 
   return (
     <View
       accessible
-      accessibilityLabel={t.card.speech.movement(kind, pesos(movement.amount), when, after)}
+      accessibilityLabel={t.card.speech.movement(kind, pesos(movement.amount), spoken, after)}
       style={[styles.row, large && styles.stack, !first && { borderTopWidth: size.line.hair, borderTopColor: p.border }]}>
       <View style={styles.grow}>
         <Text variant="headline">{kind}</Text>
@@ -209,6 +233,7 @@ const styles = StyleSheet.create({
   result: { gap: space[5] },
   balance: { gap: space[1] },
   block: { gap: space[2] },
+  month: { marginTop: space[3] },
   note: { flexDirection: "row", gap: space[2], alignItems: "flex-start" },
   row: { flexDirection: "row", alignItems: "flex-start", gap: space[3], paddingVertical: space[3] },
   stack: { flexDirection: "column", gap: space[1] },

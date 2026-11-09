@@ -47,20 +47,28 @@ const money = new Map<string, Intl.NumberFormat>();
 export function pesos(value: number): string {
   let f = money.get(tag());
   if (!f) {
-    f = new Intl.NumberFormat(tag(), { style: "currency", currency: "COP", maximumFractionDigits: 0, minimumFractionDigits: 0 });
+    f = new Intl.NumberFormat(tag(), { style: "currency", currency: "COP", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0, minimumFractionDigits: 0 });
     money.set(tag(), f);
   }
   return f.format(value);
 }
 
-const when = new Map<string, Intl.DateTimeFormat>();
+const formats = new Map<string, Intl.DateTimeFormat>();
+
+const OPTIONS = {
+  month: { month: "long", year: "numeric" },
+  row: { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" },
+  spoken: { weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "numeric", minute: "2-digit" },
+} satisfies Record<string, Intl.DateTimeFormatOptions>;
 
 /** The card writes Bogotá wall-clock time, so it is shown as written, never shifted to another zone. */
-export function cardTime(at: string): string {
-  let f = when.get(tag());
+export function cardTime(at: string, kind: keyof typeof OPTIONS): string {
+  const key = `${tag()}:${kind}`;
+  let f = formats.get(key);
   if (!f) {
-    f = new Intl.DateTimeFormat(tag(), { day: "numeric", month: "short", hour: "numeric", minute: "2-digit", timeZone: "UTC" });
-    when.set(tag(), f);
+    f = new Intl.DateTimeFormat(tag(), { ...OPTIONS[kind], timeZone: "UTC" });
+    formats.set(key, f);
   }
-  return f.format(new Date(`${at}Z`));
+  const text = f.format(new Date(`${at}Z`));
+  return kind === "month" ? text.charAt(0).toLocaleUpperCase(tag()) + text.slice(1) : text;
 }
