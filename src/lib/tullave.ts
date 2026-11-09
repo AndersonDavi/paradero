@@ -61,14 +61,19 @@ export function cancelRead() {
 
 const money = new Map<string, Intl.NumberFormat>();
 
-/** "$ 12.300" in Colombia, written the way each language writes pesos. */
+/**
+ * "$ 12.300" in Spanish, "$12,300" in English: the "$" Bogotá uses, with each language's digits.
+ * Written by hand because Hermes ignores `currencyDisplay: "narrowSymbol"` and prints "COP".
+ */
 export function pesos(value: number): string {
   let f = money.get(tag());
   if (!f) {
-    f = new Intl.NumberFormat(tag(), { style: "currency", currency: "COP", currencyDisplay: "narrowSymbol", maximumFractionDigits: 0, minimumFractionDigits: 0 });
+    f = new Intl.NumberFormat(tag(), { maximumFractionDigits: 0 });
     money.set(tag(), f);
   }
-  return f.format(value);
+  const sign = value < 0 ? "-" : "";
+  const space = tag().startsWith("es") ? " " : "";
+  return `${sign}$${space}${f.format(Math.abs(value))}`;
 }
 
 const formats = new Map<string, Intl.DateTimeFormat>();
