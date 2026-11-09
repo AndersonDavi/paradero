@@ -2,26 +2,31 @@ import { Stack } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Text } from "@/components/text";
-import { PRIVACY_SECTIONS, PRIVACY_TITLE, PRIVACY_UPDATED } from "@/content/privacy";
+import { tag, useT } from "@/i18n";
 import { usePalette } from "@/theme/colors";
 import { layout, space } from "@/theme/tokens";
 
-/** The privacy policy, in the same plain Spanish as the app. Linked from Bien público and from the App Store. */
+/** When the policy last changed. Every claim in it must match the code; change both together, and the public copy on transmi.usecroma.com. */
+const UPDATED = "2026-11-08T12:00:00-05:00";
+
+/** The privacy policy, in the same plain words as the app. Linked from Bien público and from the App Store. */
 export default function Privacy() {
   const p = usePalette();
+  const t = useT();
+  const updated = new Intl.DateTimeFormat(tag(), { day: "numeric", month: "long", year: "numeric", timeZone: "America/Bogota" }).format(new Date(UPDATED));
   return (
     <ScrollView style={{ backgroundColor: p.background }} contentContainerStyle={styles.content} contentInsetAdjustmentBehavior="automatic">
-      <Stack.Screen options={{ title: "Privacidad" }} />
+      <Stack.Screen options={{ title: t.privacy.screen }} />
       <View style={styles.head}>
         <Text variant="eyebrow" tone="faint">
-          Paradero · Bien público digital de Croma
+          {t.privacy.eyebrow}
         </Text>
-        <Text variant="heading">{PRIVACY_TITLE}</Text>
+        <Text variant="heading">{t.privacy.title}</Text>
         <Text variant="callout" tone="muted">
-          Actualizada el {PRIVACY_UPDATED}.
+          {t.privacy.updated(updated)}
         </Text>
       </View>
-      {PRIVACY_SECTIONS.map((s) => (
+      {t.privacy.sections.map((s) => (
         <View key={s.title} style={styles.section}>
           <Text variant="title">{s.title}</Text>
           <Text variant="body" tone="muted">

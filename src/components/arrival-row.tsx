@@ -38,7 +38,7 @@ export function ArrivalRow({ arrival, first, index = 0 }: { arrival: Arrival; fi
       style={[styles.row, large && styles.stack, !first && { borderTopColor: p.separator, borderTopWidth: StyleSheet.hairlineWidth }]}>
       <View style={styles.body}>
         <RouteBadge code={arrival.code} system={arrival.system} size="sm" />
-        <Text variant="headline" weight={500} numberOfLines={1}>
+        <Text variant="headline" weight={500} numberOfLines={large ? undefined : 1}>
           {arrival.name}
         </Text>
         <Pace arrival={arrival} />

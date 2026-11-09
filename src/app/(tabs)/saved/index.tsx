@@ -5,11 +5,13 @@ import { RouteRow } from "@/components/route-row";
 import { SavedStopCard } from "@/components/saved-stop-card";
 import { Empty } from "@/components/state";
 import { Text } from "@/components/text";
+import { useT } from "@/i18n";
 import { useSaved, type SavedRoute, type SavedStop } from "@/lib/saved";
 import { layout, space } from "@/theme/tokens";
 
 export default function Saved() {
   const saved = useSaved();
+  const t = useT();
   const stops = saved.filter((s): s is SavedStop => s.type === "stop");
   const routes = saved.filter((s): s is SavedRoute => s.type === "route");
 
@@ -17,17 +19,17 @@ export default function Saved() {
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
       {saved.length === 0 && (
         <Empty
-          title="Guarda el paradero de tu casa y el del trabajo"
-          body="Toca la estrella en cualquier paradero o ruta. Aparecen aquí y en Cerca con sus próximos buses, sin buscarlos cada mañana. Se guardan solo en tu teléfono."
-          action="Buscar mi paradero"
+          title={t.saved.empty.title}
+          body={t.saved.empty.body}
+          action={t.saved.empty.action}
           onAction={() => router.navigate("/search")}
         />
       )}
 
       {stops.length > 0 && (
         <View style={styles.section}>
-          <Text variant="eyebrow" tone="faint" style={styles.label}>
-            Paraderos
+          <Text variant="eyebrow" tone="faint" accessibilityRole="header" style={styles.label}>
+            {t.saved.stops}
           </Text>
           <View style={styles.grid}>
             {stops.map((s) => (
@@ -39,8 +41,8 @@ export default function Saved() {
 
       {routes.length > 0 && (
         <View style={styles.section}>
-          <Text variant="eyebrow" tone="faint" style={styles.label}>
-            Rutas
+          <Text variant="eyebrow" tone="faint" accessibilityRole="header" style={styles.label}>
+            {t.saved.routes}
           </Text>
           {routes.map((r) => (
             <RouteRow key={r.id} route={r} />

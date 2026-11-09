@@ -3,6 +3,8 @@ import { router } from "expo-router";
 import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
+import { useT } from "@/i18n";
+import { useLargeText } from "@/lib/accessibility";
 import { prefetchStop } from "@/lib/api";
 import { distanceText } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
@@ -25,14 +27,24 @@ export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | nu
   const p = usePalette();
   const shown = stop.routes.slice(0, 5);
   const more = stop.routes.length - shown.length;
-  const kind = stop.kind === "station" ? "Estación" : "Paradero";
+  const t = useT();
+  const large = useLargeText();
+  const kind = stop.kind === "station" ? t.common.station : t.common.stop;
   const title = nickname ?? stop.name;
+  const walk = distanceText(stop.distanceM);
+  const label = [
+    t.speech.stop(kind, title, stop.distanceM, stop.routes.length),
+    stop.accessible ? t.common.accessible : null,
+    stop.routes.slice(0, 5).map((r) => r.code).join(", "),
+  ]
+    .filter(Boolean)
+    .join(". ");
 
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={`${kind} ${title}${stop.distanceM ? `, a ${stop.distanceM} metros` : ""}. ${stop.routes.length} rutas.`}
-      accessibilityHint="Abre las próximas llegadas"
+      accessibilityLabel={label}
+      accessibilityHint={t.stopRow.open}
       onPressIn={() => prefetchStop(stop.id)}
       onPress={() => {
         void Haptics.selectionAsync();
@@ -42,13 +54,13 @@ export function StopRow({ stop, nickname }: { stop: Stop; nickname?: string | nu
       <StopTile kind={stop.kind} />
       <View style={styles.body}>
         <View style={styles.title}>
-          <Text variant="headline" numberOfLines={1} style={{ flexShrink: 1 }}>
+          <Text variant="headline" numberOfLines={large ? undefined : 1} style={{ flexShrink: 1 }}>
             {title}
           </Text>
           {stop.accessible && <Icon name={icons.wheelchair} color={p.faint} size="xs" />}
         </View>
-        <Text variant="caption" tone="muted" numberOfLines={1}>
-          {[kind, distanceText(stop.distanceM), nickname ? stop.name : null].filter(Boolean).join("  ·  ")}
+        <Text variant="caption" tone="muted" numberOfLines={large ? undefined : 1}>
+          {[kind, walk, nickname ? stop.name : null].filter(Boolean).join("  ·  ")}
         </Text>
         <View style={styles.badges}>
           {shown.map((r) => (

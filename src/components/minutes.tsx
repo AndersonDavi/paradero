@@ -1,6 +1,7 @@
 import { NumberFlow } from "number-flow-react-native";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 
+import { useT } from "@/i18n";
 import { signal, usePalette } from "@/theme/colors";
 import { fonts, space, type } from "@/theme/tokens";
 
@@ -24,6 +25,7 @@ const DESCENT = 0.21;
 /** Minutes roll digit by digit as the bus gets closer, like a departures board. */
 export function Minutes({ value, size = "md" }: { value: number | null; size?: keyof typeof SIZES }) {
   const p = usePalette();
+  const t = useT();
   const { fontScale } = useWindowDimensions();
   const px = (SIZES[size] * Math.min(fontScale, GROWTH[size])) / fontScale;
 
@@ -38,17 +40,17 @@ export function Minutes({ value, size = "md" }: { value: number | null; size?: k
     return (
       <View style={styles.now}>
         <Dot color={signal.live} pulse />
-        <Text variant="headline">Llegando</Text>
+        <Text variant="headline">{t.time.arriving}</Text>
       </View>
     );
   }
   return (
     <View style={styles.row}>
       <View style={{ marginTop: -px * ROOM }}>
-        <NumberFlow value={Math.min(value, 99)} respectMotionPreference style={{ fontFamily: fonts[500], fontSize: px, lineHeight: px * (1 + ROOM), color: p.text, fontVariant: ["tabular-nums"] }} />
+        <NumberFlow value={Math.min(value, 999)} respectMotionPreference style={{ fontFamily: fonts[500], fontSize: px, lineHeight: px * (1 + ROOM), color: p.text, fontVariant: ["tabular-nums"] }} />
       </View>
       <Text variant="caption" tone="muted" style={{ marginBottom: (px - type.caption.fontSize) * DESCENT }}>
-        min
+        {t.time.min}
       </Text>
     </View>
   );

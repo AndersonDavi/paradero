@@ -16,7 +16,13 @@
         "ITSAppUsesNonExemptEncryption": false,
         "CFBundleDevelopmentRegion": "es",
         "CFBundleLocalizations": [
-          "es"
+          "es",
+          "en",
+          "pt",
+          "fr",
+          "de",
+          "ja",
+          "zh-Hans"
         ]
       }
     },
@@ -79,6 +85,15 @@
           "web": true
         }
       }
+    },
+    "locales": {
+      "es": "./locales/es.json",
+      "en": "./locales/en.json",
+      "pt": "./locales/pt.json",
+      "fr": "./locales/fr.json",
+      "de": "./locales/de.json",
+      "ja": "./locales/ja.json",
+      "zh-Hans": "./locales/zh-Hans.json"
     }
   }
 }

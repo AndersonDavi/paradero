@@ -11,6 +11,8 @@ import { Chip } from "@/components/chip";
 import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
 import { Tile } from "@/components/tile";
+import { useT } from "@/i18n";
+import { announce, useAccessibility } from "@/lib/accessibility";
 import { ApiError, sendReport } from "@/lib/api";
 import { usePalette } from "@/theme/colors";
 import { fonts, layout, radius, size, space, type } from "@/theme/tokens";
@@ -21,10 +23,12 @@ const MAX = 2000;
 
 export default function Report() {
   const p = usePalette();
+  const t = useT();
+  const { screenReader } = useAccessibility();
   const params = useLocalSearchParams<{ kind?: ReportKind; stopId?: string; stopName?: string; routeId?: string; routeCode?: string }>();
   const [kind, setKind] = useState<ReportKind>(params.kind && params.kind in REPORT_KINDS ? params.kind : params.stopId || params.routeId ? "time" : "idea");
   const [message, setMessage] = useState("");
-  const about = params.routeCode ? `la ruta ${params.routeCode}` : params.stopName ? params.stopName : null;
+  const about = params.routeCode ? t.report.route(params.routeCode) : params.stopName ? params.stopName : null;
 
   const send = useMutation({
     mutationFn: () =>
@@ -34,8 +38,14 @@ export default function Report() {
         context: { stopId: params.stopId, stopName: params.stopName, routeId: params.routeId, routeCode: params.routeCode },
         app: { version: Constants.expoConfig?.version ?? "0", platform: Platform.OS === "ios" || Platform.OS === "android" ? Platform.OS : "web" },
       }),
-    onSuccess: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success),
-    onError: () => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error),
+    onSuccess: (issue) => {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      announce(`${t.report.thanks} ${t.report.published(issue.number)}`);
+    },
+    onError: (error) => {
+      void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+      announce(error instanceof ApiError && error.status === 429 ? t.report.tooMany : t.report.failed);
+    },
   });
 
   if (send.data) {
@@ -46,36 +56,41 @@ export default function Report() {
           <Icon name={icons.check} color={p.text} size="lg" />
         </Tile>
         <Text variant="heading" style={styles.center}>
-          Gracias, ya nos llegó.
+          {t.report.thanks}
         </Text>
         <Text variant="callout" tone="muted" style={[styles.center, styles.readable]}>
-          Quedó publicado como el reporte #{issue.number}. Cualquiera puede ver cómo avanza, también la Alcaldía y TransMilenio.
+          {t.report.published(issue.number)}
         </Text>
         <View style={styles.actions}>
-          <Button label="Listo" onPress={() => router.back()} />
-          <Button variant="quiet" height="md" role="link" label="Ver el reporte" onPress={() => void WebBrowser.openBrowserAsync(issue.url)} />
+          <Button label={t.common.done} onPress={() => router.back()} />
+          <Button variant="quiet" height="md" role="link" label={t.report.view} onPress={() => void WebBrowser.openBrowserAsync(issue.url)} />
         </View>
       </View>
     );
   }
 
   const short = message.trim().length < MIN;
-  const failure = send.error instanceof ApiError && send.error.status === 429 ? "Enviaste varios reportes seguidos. Intenta en un rato." : send.error ? "No pudimos enviarlo. Revisa tu conexión e intenta de nuevo." : null;
+  const failure = send.error instanceof ApiError && send.error.status === 429 ? t.report.tooMany : send.error ? t.report.failed : null;
 
   return (
     <ScrollView style={{ backgroundColor: p.background }} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
-      <View style={styles.head}>
-        <Text variant="title">Cuéntanos qué pasó</Text>
-        <Text variant="callout" tone="muted">
-          {about ? `Sobre ${about}. ` : ""}No necesitas cuenta ni dejar tus datos.
-        </Text>
+      <View style={styles.top}>
+        <View style={[styles.head, styles.grow]}>
+          <Text variant="title">{t.report.title}</Text>
+          <Text variant="callout" tone="muted">
+            {about ? t.report.about(about) : ""}
+            {t.report.anonymous}
+          </Text>
+        </View>
+        <Button variant="quiet" height="md" hug label={t.common.close} onPress={() => router.back()} />
       </View>
 
-      <View style={styles.kinds}>
+      <View accessibilityRole="radiogroup" style={styles.kinds}>
         {(Object.keys(REPORT_KINDS) as ReportKind[]).map((k) => (
           <Chip
             key={k}
-            label={REPORT_KINDS[k]}
+            radio
+            label={t.report.kinds[k]}
             selected={kind === k}
             onPress={() => {
               void Haptics.selectionAsync();
@@ -85,39 +100,56 @@ export default function Report() {
         ))}
       </View>
 
+      <Text variant="headline" nativeID="report-field">
+        {t.report.field}
+      </Text>
       <TextInput
         value={message}
         onChangeText={setMessage}
-        placeholder={kind === "idea" ? "¿Qué te haría la vida más fácil?" : "Qué viste, dónde y a qué hora"}
+        placeholder={kind === "idea" ? t.report.ideaPlaceholder : t.report.placeholder}
         placeholderTextColor={p.faint}
         multiline
-        autoFocus
+        autoFocus={!screenReader}
         maxLength={MAX}
         textAlignVertical="top"
-        accessibilityLabel="Tu reporte"
+        accessibilityLabel={t.report.field}
+        accessibilityLabelledBy="report-field"
+        accessibilityHint={short ? t.report.minimum(MIN) : undefined}
         style={[styles.input, { backgroundColor: p.surface, color: p.text }]}
       />
 
       <View style={styles.note}>
         <Icon name={icons.info} color={p.faint} size="xs" />
         <Text variant="caption" tone="muted" style={styles.grow}>
-          Tu reporte será público para que todos puedan seguirlo. No escribas tu nombre, teléfono ni cédula; si se cuelan, los ocultamos.
+          {t.report.public}
         </Text>
       </View>
 
+      {short && message.length > 0 && (
+        <Text variant="caption" tone="muted">
+          {t.report.minimum(MIN)}
+        </Text>
+      )}
+
       {failure && (
-        <Text variant="callout" tone="muted" accessibilityRole="alert">
+        <Text variant="callout" tone="muted" accessibilityRole="alert" accessibilityLiveRegion="assertive">
           {failure}
         </Text>
       )}
 
-      <Button label={send.isPending ? "Enviando…" : "Enviar reporte"} disabled={short || send.isPending} onPress={() => send.mutate()} />
+      <Button
+        label={send.isPending ? t.report.sending : t.report.send}
+        accessibilityHint={short ? t.report.minimum(MIN) : undefined}
+        disabled={short || send.isPending}
+        onPress={() => send.mutate()}
+      />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   content: { padding: layout.gutter, paddingTop: space[6], gap: space[5], paddingBottom: layout.screenEnd },
+  top: { flexDirection: "row", alignItems: "flex-start", gap: space[2] },
   head: { gap: space[1] },
   kinds: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   input: {

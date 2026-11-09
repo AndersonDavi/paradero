@@ -7,7 +7,7 @@ const WORDMARK = "M630.5 248.7h9.8v28.3h-9.8Z M1632.8 202.5h9.8v51.3h-9.8Z M1604
 /** The Croma symbol: a ring of data bars. */
 export function CromaSymbol({ size, color }: { size: number; color: string }) {
   return (
-    <Svg width={size} height={(size * 50.824) / 57.4629} viewBox="0 0 57.4629 50.824" accessibilityLabel="Croma">
+    <Svg width={size} height={(size * 50.824) / 57.4629} viewBox="0 0 57.4629 50.824" accessible accessibilityRole="image" accessibilityLabel="Croma">
       <Path d={SYMBOL} fill={color} stroke={color} strokeWidth={0.5} />
     </Svg>
   );
@@ -16,7 +16,7 @@ export function CromaSymbol({ size, color }: { size: number; color: string }) {
 /** The Croma wordmark, drawn in bars like the symbol. */
 export function CromaWordmark({ height, color }: { height: number; color: string }) {
   return (
-    <Svg width={(height * 1785.9) / 317.6} height={height} viewBox="0 0 1785.9 317.6" accessibilityLabel="Croma">
+    <Svg width={(height * 1785.9) / 317.6} height={height} viewBox="0 0 1785.9 317.6" accessible accessibilityRole="image" accessibilityLabel="Croma">
       <Path d={WORDMARK} fill={color} />
     </Svg>
   );

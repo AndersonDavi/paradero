@@ -20,8 +20,10 @@ import { Empty } from "@/components/state";
 import { StopTile } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
-import { announce } from "@/lib/accessibility";
+import { useT } from "@/i18n";
+import { announce, useLargeText } from "@/lib/accessibility";
 import { knownStop, useStop } from "@/lib/api";
+import { spokenCode } from "@/lib/format";
 import { toggleStop, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -29,6 +31,8 @@ import { layout, radius, size, space } from "@/theme/tokens";
 export default function StopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const p = usePalette();
+  const t = useT();
+  const large = useLargeText();
   const { data, isLoading, isError, refetch } = useStop(id);
   const [early] = useState(() => knownStop(id));
   const stop = data?.stop ?? early;
@@ -43,9 +47,9 @@ export default function StopScreen() {
     if (!data) return;
     const added = toggleStop(data.stop);
     void Haptics.notificationAsync(added ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
-    if (added) toast.success("Paradero guardado", { description: "Lo verás arriba en Cerca, con sus próximos buses." });
-    else toast("Lo quitamos de tus paraderos");
-    announce(added ? "Paradero guardado. Lo verás arriba en Cerca." : "Lo quitamos de tus paraderos.");
+    if (added) toast.success(t.stop.saved.title, { description: t.stop.saved.body });
+    else toast(t.stop.removed);
+    announce(added ? `${t.stop.saved.title}. ${t.stop.saved.body}` : t.stop.removed);
   };
 
   return (
@@ -55,7 +59,7 @@ export default function StopScreen() {
           <Stack.Toolbar.Button
             icon={saved ? "star.fill" : "star"}
             tintColor={p.text}
-            accessibilityLabel={saved ? "Quitar de tus paraderos" : "Guardar este paradero"}
+            accessibilityLabel={saved ? t.stop.unsave : t.stop.save}
             onPress={save}
           />
         </Stack.Toolbar>
@@ -77,18 +81,18 @@ export default function StopScreen() {
           <View style={styles.header}>
             <StopTile kind={stop.kind} tier="lg" />
             <View style={styles.titles}>
-              <Text variant="title" accessibilityRole="header" numberOfLines={2}>
+              <Text variant="title" accessibilityRole="header" numberOfLines={large ? undefined : 2}>
                 {stop.name}
               </Text>
               <View style={styles.meta}>
                 <Text variant="caption" tone="muted">
-                  {stop.kind === "station" ? "Estación TransMilenio" : "Paradero SITP"}
+                  {stop.kind === "station" ? t.stop.station : t.stop.sitp}
                 </Text>
                 {stop.accessible && (
                   <View style={styles.meta}>
                     <Icon name={icons.wheelchair} color={p.faint} size="xs" />
                     <Text variant="caption" tone="muted">
-                      Accesible
+                      {t.common.accessible}
                     </Text>
                   </View>
                 )}
@@ -97,13 +101,13 @@ export default function StopScreen() {
           </View>
         )}
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
-        {isError && <Empty title="No pudimos cargar este paradero" body="Revisa tu conexión. Si sigue fallando, puede que TransMilenio no esté respondiendo." action="Reintentar" onAction={() => void refetch()} />}
+        {isError && <Empty title={t.stop.failed.title} body={t.stop.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
 
         {data && (
           <>
             {codes.length > 1 && (
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={styles.bleed}>
-                <Chip label="Todas" accessibilityLabel="Ver todas las rutas" selected={!only} onPress={() => setOnly(null)} />
+                <Chip label={t.stop.all} accessibilityLabel={`${t.stop.all}, ${t.stop.allLabel}`} selected={!only} onPress={() => setOnly(null)} />
                 {codes.map((c) => {
                   const a = data.arrivals.find((x) => x.code === c)!;
                   const on = only === c;
@@ -111,13 +115,14 @@ export default function StopScreen() {
                     <PressableScale
                       key={c}
                       accessibilityRole="button"
-                      accessibilityLabel={`Ver solo la ruta ${c}`}
+                      accessibilityLabel={`${c}, ${t.stop.only(spokenCode(c))}`}
                       accessibilityState={{ selected: on }}
+                      hitSlop={space[1]}
                       onPress={() => {
                         void Haptics.selectionAsync();
                         setOnly(on ? null : c);
                       }}
-                      style={[styles.chip, { borderColor: on ? p.ink : "transparent", opacity: only && !on ? 0.5 : 1 }]}>
+                      style={[styles.chip, { borderColor: on ? p.ink : only ? p.separator : "transparent" }]}>
                       <RouteBadge code={c} system={a.system} />
                     </PressableScale>
                   );
@@ -128,7 +133,7 @@ export default function StopScreen() {
             {next ? (
               <NextBus arrival={next} />
             ) : (
-              <Empty title="No hay buses próximos" body="Puede que el servicio de estas rutas haya terminado por hoy. Mira el horario de cada ruta abajo." />
+              <Empty title={t.stop.none.title} body={t.stop.none.body} />
             )}
 
             <FeedStatus feed={data.feed} />
@@ -137,7 +142,7 @@ export default function StopScreen() {
             {later.length > 0 && (
               <View>
                 <Text variant="title" style={styles.heading}>
-                  Más tarde
+                  {t.stop.later}
                 </Text>
                 {later.slice(0, 10).map((a, i) => (
                   <ArrivalRow key={`${a.code}-${a.at}-${i}`} arrival={a} first={i === 0} index={i} />
@@ -147,7 +152,7 @@ export default function StopScreen() {
 
             <View>
               <Text variant="title" style={styles.heading}>
-                Rutas que paran aquí
+                {t.stop.routesHere}
               </Text>
               <View style={styles.bleed}>
                 {data.stop.routes.map((r) => (
@@ -161,8 +166,7 @@ export default function StopScreen() {
           <Button
             variant="quiet"
             height="md"
-            label="¿Algo está mal aquí?"
-            accessibilityLabel="Reportar un problema con este paradero"
+            label={t.stop.report}
             onPress={() => router.push({ pathname: "/report", params: { stopId: stop.id, stopName: stop.name } })}
           />
         )}

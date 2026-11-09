@@ -55,8 +55,13 @@ export interface Arrival {
 export interface Alert {
   id: string;
   effect: string;
+  /** Spanish sentences, kept for app versions that predate translations. */
   title: string;
   detail: string;
+  /** Where it happens, as stop names. Two places mean "between", one means "near". */
+  places?: string[];
+  /** TransMilenio's own words when it names no stops. Shown as written, like stop names. */
+  note?: string | null;
   routes: string[];
   until: string | null;
 }

@@ -63,7 +63,7 @@ const RING = [
 /** The Paradero mark: a stop sign inside a ring of data bars, the same drawing as the app icon. */
 export function ParaderoMark({ size, color, ring }: { size: number; color: string; ring: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessibilityLabel="Paradero">
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessible accessibilityRole="image" accessibilityLabel="Paradero">
       <Defs>
         <Mask id="sign" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
           <Rect width="1024" height="1024" fill="black" />

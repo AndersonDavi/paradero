@@ -9,6 +9,7 @@ import { LogBox } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Toaster } from "sonner-native";
 
+import { useT } from "@/i18n";
 import { queryClient } from "@/lib/api";
 import "@/lib/accessibility";
 import "@/lib/appearance";
@@ -24,6 +25,7 @@ SplashScreen.setOptions({ fade: true, duration: 250 });
 export default function RootLayout() {
   const palette = usePalette();
   const onboarded = useOnboarded();
+  const t = useT();
   const [loaded, failed] = useFonts({
     Geist_400Regular,
     Geist_500Medium,
@@ -63,7 +65,7 @@ export default function RootLayout() {
               <Stack.Screen name="route/[id]" options={{ headerTransparent: true, title: "" }} />
               <Stack.Screen name="report" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
             </Stack.Protected>
-            <Stack.Screen name="privacidad" options={{ title: "Privacidad", headerTransparent: process.env.EXPO_OS === "ios" }} />
+            <Stack.Screen name="privacidad" options={{ title: t.privacy.screen, headerTransparent: process.env.EXPO_OS === "ios" }} />
             <Stack.Protected guard={!onboarded}>
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
             </Stack.Protected>

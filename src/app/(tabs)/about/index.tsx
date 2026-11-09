@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
@@ -9,6 +10,7 @@ import { CromaWordmark } from "@/components/croma-mark";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
+import { LANGUAGES, setLanguage, useLanguageChoice, useT, type Language, type LanguageChoice } from "@/i18n";
 import { useHealth } from "@/lib/api";
 import { setAppearance, setContrast, useAppearance, useContrast, type Appearance, type Contrast } from "@/lib/appearance";
 import { usePalette } from "@/theme/colors";
@@ -18,29 +20,24 @@ const REPO = "https://github.com/croma-labs/paradero";
 const CROMA = "https://usecroma.com";
 
 const PROMISES = [
-  { icon: icons.person, title: "Sin cuenta", body: "Abres la app y ya. No pedimos correo, teléfono ni cédula." },
-  { icon: icons.noAds, title: "Sin publicidad, nunca", body: "Moverte por tu ciudad no debería venir con anuncios." },
-  { icon: icons.location, title: "Tu ubicación no se guarda", body: "Solo la usamos con la app abierta, redondeada a una cuadra." },
-  { icon: icons.clock, title: "Te decimos qué es en vivo", body: "Si TransMilenio deja de publicar, lo ves en pantalla y usamos el horario publicado." },
-  { icon: icons.code, title: "Código abierto", body: "Cualquiera puede revisarlo, mejorarlo o llevárselo. Licencia MIT." },
-];
+  { icon: icons.person, key: "account" },
+  { icon: icons.noAds, key: "ads" },
+  { icon: icons.location, key: "location" },
+  { icon: icons.clock, key: "live" },
+  { icon: icons.code, key: "code" },
+] as const;
 
-const APPEARANCES: { value: Appearance; label: string }[] = [
-  { value: "system", label: "Automática" },
-  { value: "light", label: "Clara" },
-  { value: "dark", label: "Oscura" },
-];
-
-const CONTRASTS: { value: Contrast; label: string }[] = [
-  { value: "system", label: "Contraste del teléfono" },
-  { value: "high", label: "Alto contraste" },
-];
+const APPEARANCES: Appearance[] = ["system", "light", "dark"];
+const CONTRASTS: Contrast[] = ["system", "high"];
+const CHOICES: LanguageChoice[] = ["system", ...(Object.keys(LANGUAGES) as Language[])];
 
 export default function About() {
   const p = usePalette();
   const health = useHealth();
   const appearance = useAppearance();
   const contrast = useContrast();
+  const language = useLanguageChoice();
+  const t = useT();
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -49,35 +46,36 @@ export default function About() {
           <CromaWordmark height={size.icon.md} color={p.text} />
         </View>
         <Text variant="eyebrow" tone="faint">
-          Bienes Públicos Digitales ·{" "}
+          {t.about.publicGoods} ·{" "}
           <Text
             variant="eyebrow"
             tone="muted"
             accessibilityRole="link"
-            accessibilityHint="Abre la página de Croma"
+            accessibilityHint={t.about.cromaHint}
             onPress={() => WebBrowser.openBrowserAsync(CROMA)}
+            suppressHighlighting
             style={{ textDecorationLine: "underline" }}>
             Croma
           </Text>
         </Text>
-        <Text variant="heading">Bogotá merece la mejor app para moverse.</Text>
+        <Text variant="heading">{t.about.title}</Text>
         <Text variant="body" tone="muted">
-          Paradero es gratis, abierta y de todos. La ponemos a disposición de la Alcaldía de Bogotá y de TransMilenio para que la adopten, la mantengan y la hagan suya.
+          {t.about.intro}
         </Text>
       </View>
 
       <View style={styles.section}>
-        <Text variant="eyebrow" tone="faint">
-          Lo que te prometemos
+        <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+          {t.about.promisesTitle}
         </Text>
         <View>
           {PROMISES.map((item, i) => (
-            <View key={item.title} style={[styles.promise, { borderTopColor: p.separator, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth }]}>
+            <View key={item.key} accessible style={[styles.promise, { borderTopColor: p.separator, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth }]}>
               <Icon name={item.icon} color={p.text} size="sm" weight="medium" />
               <View style={styles.promiseText}>
-                <Text variant="headline">{item.title}</Text>
+                <Text variant="headline">{t.about.promises[item.key].title}</Text>
                 <Text variant="callout" tone="muted">
-                  {item.body}
+                  {t.about.promises[item.key].body}
                 </Text>
               </View>
             </View>
@@ -86,60 +84,79 @@ export default function About() {
       </View>
 
       <View style={styles.section}>
-        <Text variant="eyebrow" tone="faint">
-          De dónde salen los datos
+        <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+          {t.about.dataTitle}
         </Text>
         <Text variant="body" tone="muted">
-          De los datos abiertos de TransMilenio: la posición de cada bus cada 20 segundos, los horarios y las novedades del servicio. Croma los organiza para que cualquiera pueda construir sobre ellos.
+          {t.about.data}
         </Text>
         <FeedStatus feed={health.data?.feed} />
       </View>
 
       <View style={styles.section}>
-        <Text variant="eyebrow" tone="faint">
-          Hazla mejor con nosotros
+        <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+          {t.about.helpTitle}
         </Text>
         <Text variant="body" tone="muted">
-          Si una ruta no aparece, una hora está mal o se te ocurre algo que te haría la vida más fácil, cuéntanos. No necesitas cuenta.
+          {t.about.help}
         </Text>
-        <Button label="Reportar un problema o una idea" onPress={() => router.push("/report")} />
-        <Button role="link" variant="secondary" label="Ver el código" onPress={() => void WebBrowser.openBrowserAsync(REPO)} />
-        <Button role="link" variant="quiet" height="md" label="Privacidad" accessibilityLabel="Leer la política de privacidad" onPress={() => router.push("/privacidad")} />
+        <Button label={t.about.report} onPress={() => router.push("/report")} />
+        <Button role="link" variant="secondary" label={t.about.code} onPress={() => void WebBrowser.openBrowserAsync(REPO)} />
+        <Button role="link" variant="quiet" height="md" label={t.about.privacy} onPress={() => router.push("/privacidad")} />
       </View>
 
       <View style={styles.section}>
-        <Text variant="eyebrow" tone="faint">
-          Apariencia y accesibilidad
+        <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+          {t.about.settingsTitle}
         </Text>
-        <View style={styles.choices}>
+        <Choices label={t.about.language.label}>
+          {CHOICES.map((c) => {
+            const label = c === "system" ? t.about.language.system : LANGUAGES[c].name;
+            return <Chip key={c} radio label={label} accessibilityLabel={`${label}, ${t.about.language.label}`} selected={language === c} onPress={() => setLanguage(c)} />;
+          })}
+        </Choices>
+        <Choices label={t.about.appearance.label}>
           {APPEARANCES.map((a) => (
-            <Chip key={a.value} label={a.label} accessibilityLabel={`Apariencia: ${a.label}`} selected={appearance === a.value} onPress={() => setAppearance(a.value)} />
+            <Chip key={a} radio label={t.about.appearance[a]} accessibilityLabel={`${t.about.appearance[a]}, ${t.about.appearance.label}`} selected={appearance === a} onPress={() => setAppearance(a)} />
           ))}
-        </View>
-        <View style={styles.choices}>
+        </Choices>
+        <Choices label={t.about.contrast.label}>
           {CONTRASTS.map((c) => (
-            <Chip key={c.value} label={c.label} accessibilityLabel={`Contraste: ${c.label}`} selected={contrast === c.value} onPress={() => setContrast(c.value)} />
+            <Chip key={c} radio label={t.about.contrast[c]} accessibilityLabel={`${t.about.contrast[c]}, ${t.about.contrast.label}`} selected={contrast === c} onPress={() => setContrast(c)} />
           ))}
-        </View>
+        </Choices>
         <Text variant="callout" tone="muted">
-          Paradero sigue la accesibilidad de tu teléfono: texto grande, negrita, más contraste, menos movimiento, menos transparencia y lectores de pantalla como VoiceOver y TalkBack.
+          {t.about.accessibility}
         </Text>
       </View>
 
       <View style={styles.section}>
         <View style={styles.footer}>
           <Text variant="chrome" tone="faint">
-            + Infraestructura de datos públicos
+            {t.about.footerLeft}
           </Text>
           <Text variant="chrome" tone="faint">
             usecroma.com +
           </Text>
         </View>
         <Text variant="caption" tone="faint">
-          Paradero {Constants.expoConfig?.version} · Hecho en Bogotá por Croma y la comunidad
+          {t.about.version(Constants.expoConfig?.version ?? "")}
         </Text>
       </View>
     </ScrollView>
+  );
+}
+
+function Choices({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <View style={styles.group}>
+      <Text variant="caption" tone="muted">
+        {label}
+      </Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.choices}>
+        {children}
+      </View>
+    </View>
   );
 }
 
@@ -150,6 +167,7 @@ const styles = StyleSheet.create({
   section: { gap: space[3] },
   promise: { flexDirection: "row", gap: space[4], paddingVertical: space[4], alignItems: "flex-start" },
   promiseText: { flex: 1, gap: space[0.5] },
-  choices: { flexDirection: "row", gap: space[2] },
+  group: { gap: space[2] },
+  choices: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   footer: { flexDirection: "row", justifyContent: "space-between", gap: space[2] },
 });

@@ -1,4 +1,4 @@
-import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetHandle, BottomSheetScrollView, type BottomSheetHandleProps } from "@gorhom/bottom-sheet";
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { PressableScale } from "pressto";
@@ -18,6 +18,8 @@ import { StopRow } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
+import { useT } from "@/i18n";
+import { useAccessibility } from "@/lib/accessibility";
 import { prefetchStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
 import { BOGOTA, useLocation } from "@/lib/location";
@@ -29,6 +31,8 @@ const SNAPS = ["30%", "58%", "92%"];
 
 export default function Home() {
   const p = usePalette();
+  const t = useT();
+  const { screenReader } = useAccessibility();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const map = useRef<MapHandle>(null);
@@ -70,10 +74,10 @@ export default function Home() {
         <FeedStatus feed={health.data?.feed} floating />
       </View>
 
-      <Animated.View style={[styles.locate, locateStyle]}>
+      <Animated.View style={[styles.locate, locateStyle]} pointerEvents={screenReader ? "none" : "box-none"} accessibilityElementsHidden={screenReader} importantForAccessibility={screenReader ? "no-hide-descendants" : "auto"}>
         <PressableScale
           accessibilityRole="button"
-          accessibilityLabel="Centrar el mapa en tu ubicación"
+          accessibilityLabel={t.home.locate}
           onPress={() => {
             void Haptics.selectionAsync();
             if (anchor) map.current?.flyTo(anchor.lat, anchor.lon, 16);
@@ -86,6 +90,7 @@ export default function Home() {
       </Animated.View>
 
       <BottomSheet
+        accessible={false}
         index={1}
         snapPoints={SNAPS}
         enableDynamicSizing={false}
@@ -93,29 +98,30 @@ export default function Home() {
         topInset={insets.top}
         backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp }}
         handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
+        handleComponent={QuietHandle}
 >
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
           <View style={styles.hello}>
             <Text variant="eyebrow" tone="faint">
               {greeting()}
             </Text>
-            <Text variant="heading">¿Para dónde vas?</Text>
+            <Text variant="heading">{t.home.question}</Text>
           </View>
 
           <PressableScale
-            accessibilityRole="search"
-            accessibilityLabel="Buscar una ruta, estación o paradero"
+            accessibilityRole="button"
+            accessibilityLabel={t.home.searchLabel}
             onPress={() => router.navigate("/search")}
             style={[styles.where, { backgroundColor: p.surface }]}>
             <Icon name={icons.search} color={p.text} size="md" weight="bold" />
             <Text variant="body" tone="muted">
-              Ruta, estación o paradero
+              {t.home.searchPlaceholder}
             </Text>
           </PressableScale>
 
           {savedStops.length > 0 && (
             <View style={styles.section}>
-              <SectionTitle title="Tus paraderos" />
+              <SectionTitle title={t.home.yourStops} />
               <Rail>
                 {savedStops.slice(0, 6).map((s) => (
                   <SavedStopCard key={s.id} saved={s} width={layout.cardWidth} />
@@ -126,28 +132,28 @@ export default function Home() {
 
           <View style={styles.section}>
             <SectionTitle
-              title={outside ? "En Chapinero" : "Cerca de ti"}
-              detail={stops.length > 0 ? `${stops.length} paraderos a menos de 700 m` : undefined}
+              title={outside ? t.home.fallbackArea : t.home.nearYou}
+              detail={stops.length > 0 ? t.home.count(stops.length) : undefined}
             />
             {outside && (
               <Text variant="callout" weight={400} tone="muted" style={styles.note}>
-                Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba.
+                {t.home.outside}
               </Text>
             )}
             {state.status === "loading" && <SkeletonList rows={4} />}
             {state.status === "denied" && (
               <Empty
-                title="Sin tu ubicación, igual te llevamos"
-                body="Busca cualquier ruta o paradero. Si activas la ubicación, te mostramos los que tienes a una cuadra. Nunca la guardamos."
-                action="Activar ubicación"
+                title={t.home.denied.title}
+                body={t.home.denied.body}
+                action={t.home.denied.action}
                 onAction={() => void retry()}
               />
             )}
             {anchor && nearby.isLoading && <SkeletonList rows={4} />}
             {anchor && nearby.isError && (
-              <Empty title="No pudimos cargar los paraderos" body="Revisa tu conexión. Lo intentamos de nuevo apenas vuelva." action="Reintentar" onAction={() => void nearby.refetch()} />
+              <Empty title={t.home.failed.title} body={t.home.failed.body} action={t.common.retry} onAction={() => void nearby.refetch()} />
             )}
-            {anchor && nearby.data && stops.length === 0 && <Empty title="No hay paraderos a 700 m" body="Busca el nombre de una estación o la ruta que tomas." />}
+            {anchor && nearby.data && stops.length === 0 && <Empty title={t.home.none.title} body={t.home.none.body} />}
             {stops.map((stop) => (
               <StopRow key={stop.id} stop={stop} nickname={savedStops.find((s) => s.id === stop.id)?.nickname} />
             ))}
@@ -156,6 +162,11 @@ export default function Home() {
       </BottomSheet>
     </View>
   );
+}
+
+/** The grabber is for fingers. Screen readers scroll the sheet's list directly, so the handle stays out of their way. */
+function QuietHandle(props: BottomSheetHandleProps) {
+  return <BottomSheetHandle {...props} accessible={false} />;
 }
 
 function SectionTitle({ title, detail }: { title: string; detail?: string }) {

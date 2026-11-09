@@ -2,6 +2,7 @@ import { Camera, GeoJSONSource, Layer, Map, UserLocation, type CameraRef } from 
 import { forwardRef, useImperativeHandle, useMemo, useRef } from "react";
 import { StyleSheet } from "react-native";
 
+import { useAccessibility } from "@/lib/accessibility";
 import { usePalette } from "@/theme/colors";
 
 import type { MapHandle, TransitMapProps } from "./transit-map.types";
@@ -21,15 +22,17 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   ref,
 ) {
   const p = usePalette();
+  const { reduceMotion } = useAccessibility();
+  const glide = reduceMotion ? 0 : 700;
   const camera = useRef<CameraRef>(null);
 
   useImperativeHandle(ref, () => ({
-    flyTo: (lat, lon, z = 16) => camera.current?.flyTo({ center: [lon, lat], zoom: z, duration: 700 }),
+    flyTo: (lat, lon, z = 16) => camera.current?.flyTo({ center: [lon, lat], zoom: z, duration: glide }),
     fit: (coords) => {
       if (coords.length < 2) return;
       const lons = coords.map((c) => c[0]);
       const lats = coords.map((c) => c[1]);
-      camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ?? { top: 60, right: 40, bottom: 320, left: 40 }, duration: 700 });
+      camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ?? { top: 60, right: 40, bottom: 320, left: 40 }, duration: glide });
     },
   }));
 
@@ -84,7 +87,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
         </GeoJSONSource>
       )}
 
-      {showUser && <UserLocation animated accuracy />}
+      {showUser && <UserLocation animated={!reduceMotion} accuracy />}
     </Map>
   );
 });

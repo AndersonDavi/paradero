@@ -1,5 +1,7 @@
 import { StyleSheet, View } from "react-native";
 
+import { useT } from "@/i18n";
+import { alertText } from "@/lib/alerts";
 import { signal, usePalette } from "@/theme/colors";
 import { radius, space } from "@/theme/tokens";
 import type { Alert } from "@/transit/types";
@@ -9,26 +11,30 @@ import { Text } from "./text";
 
 export function AlertCard({ alerts }: { alerts: Alert[] }) {
   const p = usePalette();
+  const t = useT();
   if (alerts.length === 0) return null;
   return (
     <View accessibilityRole="alert" style={[styles.card, { backgroundColor: p.surface }]}>
       <View style={styles.head}>
         <Dot color={signal.late} />
         <Text variant="caption" weight={600}>
-          {alerts.length === 1 ? "Novedad en el servicio" : `${alerts.length} novedades en el servicio`}
+          {t.alerts.heading(alerts.length)}
         </Text>
       </View>
-      {alerts.slice(0, 3).map((a) => (
-        <View key={a.id} style={styles.item}>
-          <Text variant="headline">
-            {a.title}
-            {a.routes.length > 0 ? `  ·  ${a.routes.slice(0, 3).join(", ")}` : ""}
-          </Text>
-          <Text variant="callout" tone="muted">
-            {a.detail}
-          </Text>
-        </View>
-      ))}
+      {alerts.slice(0, 3).map((a) => {
+        const { title, detail } = alertText(a);
+        return (
+          <View key={a.id} style={styles.item}>
+            <Text variant="headline">
+              {title}
+              {a.routes.length > 0 ? `  ·  ${a.routes.slice(0, 3).join(", ")}` : ""}
+            </Text>
+            <Text variant="callout" tone="muted">
+              {detail}
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }

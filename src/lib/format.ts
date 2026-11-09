@@ -1,64 +1,81 @@
+import { t, tag } from "@/i18n";
+import { sayable } from "@/transit/codes";
 import type { Arrival, Feed } from "@/transit/types";
 
-export function minutesText(minutes: number | null): string {
-  if (minutes == null) return "–";
-  if (minutes <= 0) return "Ya";
-  if (minutes >= 60) return `${Math.floor(minutes / 60)} h ${minutes % 60}`;
-  return `${minutes}`;
-}
+const ZONE = "America/Bogota";
+const formats = new Map<string, Intl.DateTimeFormat>();
 
-export function minutesUnit(minutes: number | null): string {
-  if (minutes == null || minutes <= 0 || minutes >= 60) return "";
-  return "min";
+function format(kind: "time" | "day" | "hour"): Intl.DateTimeFormat {
+  const key = `${tag()}:${kind}`;
+  let f = formats.get(key);
+  if (!f) {
+    const options: Intl.DateTimeFormatOptions =
+      kind === "time" ? { hour: "numeric", minute: "2-digit" } : kind === "day" ? { day: "numeric", month: "long" } : { hour: "numeric", hourCycle: "h23" };
+    f = new Intl.DateTimeFormat(tag(), { ...options, timeZone: ZONE });
+    formats.set(key, f);
+  }
+  return f;
 }
 
 export function punctuality(a: Arrival): { text: string; tone: "live" | "late" | "early" | "schedule" } {
-  if (a.basis === "scheduled") return { text: "Según horario", tone: "schedule" };
+  const pace = t().pace;
+  if (a.basis === "scheduled") return { text: pace.scheduled, tone: "schedule" };
   const d = a.delaySeconds;
-  if (d == null || Math.abs(d) < 60) return { text: "A tiempo", tone: "live" };
+  if (d == null || Math.abs(d) < 60) return { text: pace.onTime, tone: "live" };
   const m = Math.round(Math.abs(d) / 60);
-  return d > 0 ? { text: `${m} min tarde`, tone: "late" } : { text: `${m} min antes`, tone: "early" };
+  return d > 0 ? { text: pace.late(m), tone: "late" } : { text: pace.early(m), tone: "early" };
+}
+
+/** When a bus comes, in words a screen reader can say. */
+export function spokenWhen(minutes: number | null): string {
+  const speech = t().speech;
+  if (minutes == null) return t().time.unknown;
+  return minutes <= 0 ? speech.arriving : speech.arrivesIn(minutes);
+}
+
+/** "K 635 o H 635": a paired code as people would say it. */
+export function spokenCode(code: string): string {
+  return code.split(" · ").map(sayable).join(t().speech.or);
+}
+
+export function spokenRoute(aliases: string[]): string {
+  return t().speech.route(aliases.map(sayable).join(t().speech.or));
 }
 
 export function spokenArrival(a: Arrival): string {
-  const when = a.minutes == null ? "sin hora estimada" : a.minutes <= 0 ? "está llegando" : `llega en ${a.minutes} ${a.minutes === 1 ? "minuto" : "minutos"}`;
-  const code = a.aliases.join(" o ").replace(/([A-Z]+)(\d+)/g, "$1 $2");
-  return `Ruta ${code}, hacia ${a.name}, ${when}. ${punctuality(a).text}.`;
+  return t().speech.arrival(spokenRoute(a.aliases), a.name, spokenWhen(a.minutes), punctuality(a).text);
 }
 
-const TIME = new Intl.DateTimeFormat("es-CO", { hour: "numeric", minute: "2-digit", timeZone: "America/Bogota" });
-const DAY = new Intl.DateTimeFormat("es-CO", { day: "numeric", month: "long", timeZone: "America/Bogota" });
-
 export function clock(iso: string): string {
-  return TIME.format(new Date(iso));
+  return format("time").format(new Date(iso));
 }
 
 export function since(iso: string, now = Date.now()): string {
+  const time = t().time;
   const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
-  if (s < 60) return `hace ${s} s`;
+  if (s < 60) return time.secondsAgo(s);
   const m = Math.round(s / 60);
-  if (m < 60) return `hace ${m} min`;
+  if (m < 60) return time.minutesAgo(m);
   const h = Math.round(m / 60);
-  if (h < 24) return `hace ${h} h`;
-  return `desde el ${DAY.format(new Date(iso))}, ${clock(iso)}`;
+  if (h < 24) return time.hoursAgo(h);
+  return time.sinceDay(format("day").format(new Date(iso)), clock(iso));
 }
 
 export function feedText(feed: Feed): string {
-  return feed.live ? `En vivo · ${since(feed.asOf)}` : `Sin datos en vivo ${since(feed.asOf)}`;
+  return feed.live ? `${t().feed.live} · ${since(feed.asOf)}` : t().feed.noLiveSince(since(feed.asOf));
 }
 
 export function distanceText(m: number | null): string {
   if (m == null) return "";
   const walk = Math.max(1, Math.round(m / 75));
-  return m < 1000 ? `${m} m · ${walk} min a pie` : `${(m / 1000).toFixed(1)} km`;
+  return m < 1000 ? t().time.walk(m, walk) : t().time.km((m / 1000).toLocaleString(tag(), { maximumFractionDigits: 1 }));
 }
 
-const HOUR = new Intl.DateTimeFormat("es-CO", { hour: "numeric", hourCycle: "h23", timeZone: "America/Bogota" });
-
 export function greeting(now = new Date()): string {
-  const h = Number(HOUR.format(now));
-  if (h < 5) return "Buenas noches";
-  if (h < 12) return "Buenos días";
-  if (h < 19) return "Buenas tardes";
-  return "Buenas noches";
+  const g = t().time.greeting;
+  const h = Number(format("hour").format(now));
+  if (h < 5) return g.night;
+  if (h < 12) return g.morning;
+  if (h < 19) return g.afternoon;
+  return g.night;
 }

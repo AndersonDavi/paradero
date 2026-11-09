@@ -25,6 +25,8 @@ export function humanizeAlert(input: { effect: string | null; description: strin
   const places = parts.filter((p) => STOP_REF.test(p)).map((p) => p.replace(STOP_REF, "").trim());
   const lead = parts.find((p) => !STOP_REF.test(p));
 
+  const note = places.length === 0 && lead ? lead.replace(/operacion/gi, "operación").replace(/\s+/g, " ") : null;
+
   let detail: string;
   if (places.length >= 2) {
     detail = `Entre ${places[0]} y ${places[places.length - 1]}.`;
@@ -36,5 +38,5 @@ export function humanizeAlert(input: { effect: string | null; description: strin
   } else {
     detail = "TransMilenio reporta una novedad en esta ruta.";
   }
-  return { title, detail };
+  return { title, detail, places: places.length >= 2 ? [places[0], places[places.length - 1]] : places, note };
 }

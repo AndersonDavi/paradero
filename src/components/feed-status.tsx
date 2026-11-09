@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { useT } from "@/i18n";
 import { useLargeText } from "@/lib/accessibility";
 import { since } from "@/lib/format";
 import { signal, usePalette } from "@/theme/colors";
@@ -23,12 +24,13 @@ function useTick(ms: number) {
 export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined; floating?: boolean }) {
   const p = usePalette();
   const large = useLargeText();
+  const t = useT();
   useTick(5_000);
   if (!feed) return null;
 
-  const title = feed.live ? "En vivo" : "Horario programado";
-  const detail = feed.live ? `Actualizado ${since(feed.asOf)}` : "TransMilenio no está publicando posiciones";
-  const label = `${title}. ${detail}`;
+  const title = feed.live ? t.feed.live : t.feed.scheduled;
+  const detail = feed.live ? t.feed.updated(since(feed.asOf)) : t.feed.noLiveSince(since(feed.asOf));
+  const label = `${title}. ${feed.live ? detail : `${t.feed.notPublishing}. ${detail}`}`;
 
   if (floating) {
     return (
@@ -40,7 +42,7 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
           </Text>
           {!large && (
             <Text variant="caption" tone="muted" numberOfLines={1} style={styles.shrink}>
-              {feed.live ? since(feed.asOf) : "sin datos en vivo"}
+              {feed.live ? since(feed.asOf) : t.feed.noLive}
             </Text>
           )}
         </View>
@@ -56,7 +58,7 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
           {title}
         </Text>
         <Text variant="caption" tone="muted">
-          {feed.live ? detail : `Sin datos en vivo ${since(feed.asOf).replace("hace", "desde hace").replace(/\.$/, "")}. Usamos el horario publicado.`}
+          {detail}
         </Text>
       </View>
     </View>

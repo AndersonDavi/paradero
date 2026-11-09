@@ -2,7 +2,7 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { ScrollView, StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
@@ -16,6 +16,8 @@ import { Icon, icons } from "@/components/icon";
 import { ParaderoMark } from "@/components/paradero-mark";
 import { Text } from "@/components/text";
 import { Tile } from "@/components/tile";
+import { useT } from "@/i18n";
+import { announce, useLargeText } from "@/lib/accessibility";
 import { askForLocation } from "@/lib/location";
 import { finishOnboarding } from "@/lib/onboarding";
 import { photo, signal, usePalette } from "@/theme/colors";
@@ -25,13 +27,15 @@ import { radius, size, space } from "@/theme/tokens";
 const PHOTOS = [require("@/assets/images/onboarding/welcome.jpg"), require("@/assets/images/onboarding/location.jpg")];
 
 const REASONS = [
-  { icon: icons.stop, text: "Los paraderos y estaciones a una cuadra de ti" },
-  { icon: icons.walk, text: "Cuántos minutos caminas hasta cada uno" },
-  { icon: icons.lock, text: "Solo con la app abierta y redondeada a una cuadra. Nunca la guardamos." },
-];
+  { icon: icons.stop, key: "stops" },
+  { icon: icons.walk, key: "walk" },
+  { icon: icons.lock, key: "privacy" },
+] as const;
 
 export default function Onboarding() {
   const p = usePalette();
+  const t = useT();
+  const large = useLargeText();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
   const params = useLocalSearchParams<{ step?: string }>();
@@ -41,6 +45,7 @@ export default function Onboarding() {
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep(1);
+    announce(`${t.onboarding.locationEyebrow}. ${t.onboarding.locationTitle}`);
   };
 
   const allow = async () => {
@@ -77,7 +82,7 @@ export default function Onboarding() {
       </Animated.View>
 
       <View style={[styles.top, { paddingTop: insets.top + space[2] }]}>
-        <View style={styles.progress}>
+        <View style={styles.progress} accessible accessibilityRole="progressbar" accessibilityValue={{ min: 1, max: 2, now: step + 1 }}>
           {[0, 1].map((i) => (
             <Segment key={i} active={i <= step} />
           ))}
@@ -85,36 +90,36 @@ export default function Onboarding() {
         <View style={styles.brand}>
           <View style={styles.name}>
             <ParaderoMark size={size.icon.lg} color={photo.text} ring={photo.track} />
-            <Text variant="headline" color={photo.text}>
+            <Text variant="headline" color={photo.text} accessibilityRole="header">
               Paradero
             </Text>
           </View>
-          <View style={styles.name} accessible accessibilityLabel="Un bien público de Croma">
+          <View style={styles.name} accessible accessibilityLabel={t.onboarding.byCroma}>
             <Text variant="chrome" color={photo.text}>
-              por
+              {t.onboarding.by}
             </Text>
             <CromaWordmark height={size.icon.xs} color={photo.text} />
           </View>
         </View>
       </View>
 
-      {step === 1 && (
-        <Animated.View entering={motion.enter(250)} style={[styles.preview, { top: height * 0.25 }]}>
+      {step === 1 && !large && (
+        <Animated.View entering={motion.enter(250)} accessible accessibilityLabel={t.onboarding.preview.label} style={[styles.preview, { top: height * 0.25 }]}>
           <Glass style={styles.previewGlass}>
             <View style={styles.previewRow}>
               <Tile tier="sm" tone="ink">
                 <StopSignGlyph size={size.glyph.sm} color={p.onInk} cut={p.ink} />
               </Tile>
               <View style={styles.grow}>
-                <Text variant="headline">C.C. Lourdes</Text>
+                <Text variant="headline">{t.onboarding.preview.name}</Text>
                 <Text variant="caption" tone="muted">
-                  Paradero · 58 m · 1 min a pie
+                  {t.onboarding.preview.meta}
                 </Text>
               </View>
               <View style={styles.previewEta}>
                 <Dot color={signal.live} pulse />
                 <Text variant="headline" tabular>
-                  4 min
+                  {t.onboarding.preview.eta}
                 </Text>
               </View>
             </View>
@@ -122,52 +127,52 @@ export default function Onboarding() {
         </Animated.View>
       )}
 
-      <View style={[styles.content, { paddingBottom: insets.bottom + space[4] }]}>
+      <ScrollView
+        style={styles.scroll}
+        contentContainerStyle={[styles.content, { paddingTop: height * (step === 0 ? 0.4 : 0.3), paddingBottom: insets.bottom + space[4] }]}
+        showsVerticalScrollIndicator={false}
+        bounces={large}>
         {step === 0 ? (
           <Animated.View key="welcome" entering={motion.enter()} exiting={motion.leave} style={styles.copy}>
             <Text variant="eyebrow" tone="faint">
-              Un bien público para Bogotá
+              {t.onboarding.eyebrow}
             </Text>
-            <Text variant="poster">
-              Tu bus, sin adivinar.
-            </Text>
+            <Text variant="poster">{t.onboarding.title}</Text>
             <Text variant="body" tone="muted">
-              Cuándo llega tu bus, desde el paradero de la esquina hasta el portal. TransMilenio, SITP y alimentadores en un solo lugar.
+              {t.onboarding.body}
             </Text>
             <View style={styles.actions}>
-              <Button label="Empezar" onPress={next} />
+              <Button label={t.onboarding.start} onPress={next} />
               <Text variant="chrome" tone="faint" style={styles.center}>
-                Gratis · Sin cuenta · Sin anuncios
+                {t.onboarding.promise}
               </Text>
             </View>
           </Animated.View>
         ) : (
           <Animated.View key="location" entering={motion.enter()} style={styles.copy}>
             <Text variant="eyebrow" tone="faint">
-              Tu ubicación
+              {t.onboarding.locationEyebrow}
             </Text>
-            <Text variant="heading">
-              Te ponemos en el mapa.
-            </Text>
+            <Text variant="heading">{t.onboarding.locationTitle}</Text>
             <View style={styles.reasons}>
               {REASONS.map((r, i) => (
-                <Animated.View key={r.text} entering={motion.enter(120 + i * 80)} style={styles.reason}>
+                <Animated.View key={r.key} entering={motion.enter(120 + i * 80)} style={styles.reason}>
                   <Tile tier="sm">
                     <Icon name={r.icon} color={p.text} size="sm" weight="medium" />
                   </Tile>
                   <Text variant="callout" style={styles.grow}>
-                    {r.text}
+                    {t.onboarding.reasons[r.key]}
                   </Text>
                 </Animated.View>
               ))}
             </View>
             <View style={styles.actions}>
-              <Button label={asking ? "Un momento…" : "Permitir ubicación"} onPress={() => void allow()} disabled={asking} />
-              <Button variant="quiet" height="md" label="Ahora no" accessibilityLabel="Ahora no, buscar sin ubicación" onPress={skip} />
+              <Button label={asking ? t.onboarding.asking : t.onboarding.allow} onPress={() => void allow()} disabled={asking} />
+              <Button variant="quiet" height="md" label={t.onboarding.skip} onPress={skip} />
             </View>
           </Animated.View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -195,7 +200,8 @@ const styles = StyleSheet.create({
   previewGlass: { borderRadius: radius.xl, overflow: "hidden" },
   previewRow: { flexDirection: "row", alignItems: "center", gap: space[3], padding: space[3] },
   previewEta: { flexDirection: "row", alignItems: "center", gap: space[1.5] },
-  content: { flex: 1, justifyContent: "flex-end", paddingHorizontal: space[6] },
+  scroll: { flex: 1 },
+  content: { flexGrow: 1, justifyContent: "flex-end", paddingHorizontal: space[6] },
   copy: { gap: space[3] },
   reasons: { gap: space[3], marginTop: space[1] },
   reason: { flexDirection: "row", alignItems: "center", gap: space[3] },

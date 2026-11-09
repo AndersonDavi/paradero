@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 
+import { useT } from "@/i18n";
 import { useLargeText } from "@/lib/accessibility";
 import { clock, spokenArrival } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
@@ -15,25 +16,28 @@ import { Text } from "./text";
 export function NextBus({ arrival }: { arrival: Arrival }) {
   const p = usePalette();
   const large = useLargeText();
+  const t = useT();
+  const at = arrival.at ? clock(arrival.at) : null;
   return (
     <View
       accessible
-      accessibilityLabel={`Próximo bus. ${spokenArrival(arrival)}`}
+      accessibilityLabel={t.speech.nextBus(`${spokenArrival(arrival)}${at ? ` ${at}.` : ""}`)}
+      accessibilityLiveRegion="polite"
       style={[styles.card, { backgroundColor: p.elevated, borderColor: p.border, boxShadow: p.shadow }]}>
       <View style={styles.top}>
         <Text variant="eyebrow" tone="faint">
-          Próximo bus
+          {t.stop.nextBus}
         </Text>
-        {arrival.at && (
+        {at && (
           <Text variant="eyebrow" tone="faint" tabular>
-            {clock(arrival.at)}
+            {at}
           </Text>
         )}
       </View>
       <View style={large ? styles.stack : styles.main}>
         <View style={large ? styles.lines : styles.grow}>
           <RouteBadge code={arrival.code} system={arrival.system} size="lg" solid />
-          <Text variant="title" numberOfLines={2}>
+          <Text variant="title" numberOfLines={large ? undefined : 2}>
             {arrival.name}
           </Text>
           <Pace arrival={arrival} />

@@ -15,7 +15,7 @@ Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
 ```bash
 npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add: resolves SDK-compatible versions
 npx expo start              # start the dev server
-npm run check               # typecheck + lint + design tokens: run before every PR
+npm run check               # typecheck + lint + design tokens + contrast + translations: run before every PR
 npm run deploy:api          # check, export, scan for leaked secrets, deploy the API to EAS Hosting
 npm run release:ios         # build for TestFlight; the GitHub release notes for this version become "What to Test"
 npx expo-doctor             # diagnose dependency and config issues
@@ -43,9 +43,10 @@ Docs: https://docs.expo.dev/eas/index.md
 
 ## Paradero conventions
 
-- Paradero is a public digital good by Croma for Bogotá riders. Every screen is in plain Spanish, written the way a neighbour would say it.
+- Paradero is a public digital good by Croma for Bogotá riders. Every screen is in plain words, written the way a neighbour would say it.
+- Languages: Spanish (source), English, Portuguese, French, German, Simplified Chinese and Japanese. Every word on screen comes from `src/i18n` through `useT()` (or `t()` in helpers); add the Spanish key in `es.ts` first, and TypeScript then fails until every language has it. `npm run check` also fails on text typed straight into a screen. Stop, station and route names, and TransMilenio's own notes, are never translated. The iOS permission prompt lives in `locales/*.json`.
 - Data honesty is a feature: every time shown says whether it is live or from the published timetable (`Feed.live`, `Arrival.basis`). Never draw stale bus positions as current.
-- Accessibility is not optional: every pressable has `accessibilityRole` and a full spoken `accessibilityLabel`; no fixed text heights.
+- Accessibility is not optional: every pressable has `accessibilityRole` and a full spoken `accessibilityLabel` that starts with the visible words (Voice Control matches on them); rows read as one sentence; no truncation or fixed text heights when `useLargeText()` is on; motion and the map camera honor Reduce Motion; loading, errors and results are announced.
 - Privacy: no accounts, no analytics on location, coordinates are rounded to 3 decimals before leaving the phone (`src/lib/api.ts`).
 - Layout: `src/app` routes and `+api.ts` server routes, `src/server` talks to Croma (key only there), `src/transit` pure domain logic shared by both, `src/components` UI, `src/lib` client state.
 - Route codes: the feed joins paired SITP routes (`HK635` = K635 + H635). Use `describeRoute` in `src/transit/codes.ts`; `feedCode` is for API calls, `code`/`aliases` for anything a rider sees.

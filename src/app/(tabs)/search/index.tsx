@@ -10,6 +10,8 @@ import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
 import { StopRow } from "@/components/stop-row";
 import { Text } from "@/components/text";
+import { useT } from "@/i18n";
+import { announce } from "@/lib/accessibility";
 import { useSearch } from "@/lib/api";
 import { motion } from "@/theme/motion";
 import { layout, space } from "@/theme/tokens";
@@ -20,6 +22,7 @@ export default function Search() {
   const { q } = useLocalSearchParams<{ q?: string }>();
   const [text, setText] = useState(q ?? "");
   const bar = useRef<SearchBarCommands>(null);
+  const t = useT();
 
   useEffect(() => {
     if (!q) return;
@@ -30,6 +33,12 @@ export default function Search() {
   const { data, isFetching, isError, refetch } = useSearch(query);
   const typed = query.trim().length >= 2;
   const nothing = data && data.routes.length === 0 && data.stops.length === 0;
+
+  useEffect(() => {
+    if (!typed) return;
+    if (isError) announce(t.search.failed.title);
+    else if (data) announce(nothing ? t.search.nothing(query.trim()) : `${t.search.routes}: ${data.routes.length}. ${t.search.stops}: ${data.stops.length}.`);
+  }, [data, isError, typed, nothing, query, t]);
 
   const pick = (value: string) => {
     bar.current?.setText(value);
@@ -42,7 +51,7 @@ export default function Search() {
         options={{
           headerSearchBarOptions: {
             ref: bar,
-            placeholder: "Ruta, estación o paradero",
+            placeholder: t.search.placeholder,
             autoCapitalize: "characters",
             hideWhenScrolling: false,
             onChangeText: (e) => setText(e.nativeEvent.text),
@@ -53,26 +62,26 @@ export default function Search() {
       <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
         {!typed && (
           <Animated.View entering={motion.appear()} style={styles.hint}>
-            <Text variant="title">Escribe la ruta como aparece en el bus</Text>
+            <Text variant="title">{t.search.hint}</Text>
             <Text variant="callout" tone="muted">
-              También encontramos las rutas SITP que van en pareja, como la K635 y la H635, aunque TransMilenio las publique juntas.
+              {t.search.pairs}
             </Text>
             <View style={styles.chips}>
               {EXAMPLES.map((e) => (
-                <Chip key={e} label={e} accessibilityLabel={`Buscar ${e}`} onPress={() => pick(e)} />
+                <Chip key={e} label={e} accessibilityLabel={`${e}, ${t.search.example(e)}`} onPress={() => pick(e)} />
               ))}
             </View>
           </Animated.View>
         )}
 
         {typed && isFetching && !data && <SkeletonList rows={5} />}
-        {typed && isError && <Empty title="No pudimos buscar" body="Revisa tu conexión e intenta de nuevo." action="Reintentar" onAction={() => void refetch()} />}
-        {typed && nothing && <Empty title={`Nada con “${query.trim()}”`} body="Prueba solo el código de la ruta, como B10, o una parte del nombre del paradero." />}
+        {typed && isError && <Empty title={t.search.failed.title} body={t.search.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {typed && nothing && <Empty title={t.search.nothing(query.trim())} body={t.search.nothingBody} />}
 
         {typed && data && data.routes.length > 0 && (
           <View style={styles.section}>
-            <Text variant="eyebrow" tone="faint" style={styles.label}>
-              Rutas
+            <Text variant="eyebrow" tone="faint" accessibilityRole="header" style={styles.label}>
+              {t.search.routes}
             </Text>
             {data.routes.map((r) => (
               <RouteRow key={r.id} route={r} />
@@ -82,8 +91,8 @@ export default function Search() {
 
         {typed && data && data.stops.length > 0 && (
           <View style={styles.section}>
-            <Text variant="eyebrow" tone="faint" style={styles.label}>
-              Estaciones y paraderos
+            <Text variant="eyebrow" tone="faint" accessibilityRole="header" style={styles.label}>
+              {t.search.stops}
             </Text>
             {data.stops.map((s) => (
               <StopRow key={s.id} stop={s} />

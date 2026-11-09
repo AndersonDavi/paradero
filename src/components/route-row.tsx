@@ -3,10 +3,11 @@ import { router } from "expo-router";
 import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
+import { useT } from "@/i18n";
 import { prefetchRoute } from "@/lib/api";
-import { systems, usePalette } from "@/theme/colors";
+import { spokenCode } from "@/lib/format";
+import { usePalette } from "@/theme/colors";
 import { layout, space } from "@/theme/tokens";
-import { spokenCode } from "@/transit/codes";
 import type { RouteRef } from "@/transit/types";
 
 import { Icon, icons } from "./icon";
@@ -15,11 +16,12 @@ import { Text } from "./text";
 
 export function RouteRow({ route }: { route: Pick<RouteRef, "id" | "code" | "name" | "system"> }) {
   const p = usePalette();
+  const t = useT();
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={`Ruta ${spokenCode(route.code)}, ${route.name}`}
-      accessibilityHint="Abre el recorrido y los buses en vía"
+      accessibilityLabel={`${route.code}, ${t.speech.route(spokenCode(route.code))}, ${route.name}, ${t.systems[route.system]}`}
+      accessibilityHint={t.routeRow.open}
       onPressIn={() => prefetchRoute(route.id)}
       onPress={() => {
         void Haptics.selectionAsync();
@@ -34,7 +36,7 @@ export function RouteRow({ route }: { route: Pick<RouteRef, "id" | "code" | "nam
           {route.name}
         </Text>
         <Text variant="caption" tone="muted">
-          {systems[route.system].label}
+          {t.systems[route.system]}
         </Text>
       </View>
       <Icon name={icons.chevron} color={p.faint} size="xs" />

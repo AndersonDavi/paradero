@@ -1,0 +1,6 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "Paradero",
+    "NSLocationWhenInUseUsageDescription": "Paradero 仅在应用打开时使用你的位置，用来显示你附近的站点和车站。我们从不保存你的位置。"
+  }
+}

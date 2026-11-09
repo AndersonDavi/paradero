@@ -64,6 +64,7 @@ export function dedupeRoutes(routes: RouteRef[]): RouteRef[] {
   return [...byCode.values()];
 }
 
-export function spokenCode(code: string): string {
-  return code.replace(" · ", " o ").replace(/([A-Z]+)(\d+)/g, "$1 $2");
+/** Splits letters from digits so a screen reader says "K 635" instead of a made-up word. */
+export function sayable(code: string): string {
+  return code.replace(/([A-Z]+)(\d+)/g, "$1 $2");
 }

@@ -3,24 +3,26 @@ import { StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
 import { Text } from "@/components/text";
+import { useT } from "@/i18n";
 import { usePalette } from "@/theme/colors";
 import { layout, space } from "@/theme/tokens";
 
 export default function NotFound() {
   const p = usePalette();
+  const t = useT();
   return (
     <View style={[styles.screen, { backgroundColor: p.background }]}>
       <Stack.Screen options={{ headerShown: false }} />
       <View style={styles.copy}>
         <Text variant="eyebrow" tone="faint">
-          Paradero no encontrado
+          {t.notFound.eyebrow}
         </Text>
-        <Text variant="heading">Este enlace no lleva a ningún lado.</Text>
+        <Text variant="heading">{t.notFound.title}</Text>
         <Text variant="body" tone="muted">
-          Puede que la ruta o el paradero haya cambiado de código. Busca de nuevo desde el inicio.
+          {t.notFound.body}
         </Text>
       </View>
-      <Button label="Volver al inicio" onPress={() => router.replace("/")} />
+      <Button label={t.notFound.home} onPress={() => router.replace("/")} />
     </View>
   );
 }

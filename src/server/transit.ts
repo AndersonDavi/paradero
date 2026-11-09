@@ -35,8 +35,8 @@ function toStop(raw: z.infer<typeof s.stop>): Stop {
 function toAlerts(raw: z.infer<typeof s.alerts>): Alert[] {
   return raw.alerts.map((a) => {
     const routes = a.routes.flatMap((r) => (r.route_code ? [r.route_code] : []));
-    const { title, detail } = humanizeAlert({ effect: a.effect ?? null, description: a.description ?? null, routes });
-    return { id: a.alert_id, effect: a.effect ?? "unknown", title, detail, routes, until: a.active_periods[0]?.end ?? null };
+    const { title, detail, places, note } = humanizeAlert({ effect: a.effect ?? null, description: a.description ?? null, routes });
+    return { id: a.alert_id, effect: a.effect ?? "unknown", title, detail, places, note, routes, until: a.active_periods[0]?.end ?? null };
   });
 }
 

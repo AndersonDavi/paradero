@@ -4,6 +4,7 @@ import Animated, { Easing, useAnimatedStyle, useSharedValue, withRepeat, withTim
 
 import { usePalette } from "@/theme/colors";
 import { radius, size, space, type } from "@/theme/tokens";
+import { t } from "@/i18n";
 
 export function Bone({ width, height, round = radius.sm }: { width: DimensionValue; height: number; round?: number }) {
   const p = usePalette();
@@ -19,7 +20,13 @@ export function SkeletonList({ rows = 4, kind = "stop" }: { rows?: number; kind?
   const style = useAnimatedStyle(() => ({ opacity: pulse.value }));
 
   return (
-    <Animated.View accessibilityLabel="Cargando" style={[styles.list, style]}>
+    <Animated.View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={t().speech.loading}
+      accessibilityState={{ busy: true }}
+      accessibilityLiveRegion="polite"
+      style={[styles.list, style]}>
       {Array.from({ length: rows }, (_, i) =>
         kind === "stop" ? (
           <View key={i} style={styles.stop}>

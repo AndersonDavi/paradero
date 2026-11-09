@@ -15,10 +15,11 @@ interface ButtonProps {
   disabled?: boolean;
   role?: "button" | "link";
   accessibilityLabel?: string;
+  accessibilityHint?: string;
 }
 
 /** The one button. Primary is ink, secondary is outlined, quiet is text only. */
-export function Button({ label, onPress, variant = "primary", height = "lg", hug, disabled, role = "button", accessibilityLabel }: ButtonProps) {
+export function Button({ label, onPress, variant = "primary", height = "lg", hug, disabled, role = "button", accessibilityLabel, accessibilityHint }: ButtonProps) {
   const p = usePalette();
   const look = {
     primary: { backgroundColor: p.ink },
@@ -30,6 +31,7 @@ export function Button({ label, onPress, variant = "primary", height = "lg", hug
     <PressableScale
       accessibilityRole={role}
       accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
       accessibilityState={{ disabled }}
       onPress={disabled ? undefined : onPress}
       style={[styles.base, { minHeight: size.control[height], opacity: disabled ? 0.6 : 1 }, hug && styles.hug, look]}>
