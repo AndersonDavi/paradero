@@ -3,9 +3,29 @@ import ExpoModulesCore
 
 public class TullaveModule: Module {
   private var reader: CardReader?
+  private var shortcutObserver: NSObjectProtocol?
 
   public func definition() -> ModuleDefinition {
     Name("Tullave")
+
+    Events("onShortcut")
+
+    Function("takeShortcut") { () -> String? in
+      Shortcut.take()
+    }
+
+    OnStartObserving("onShortcut") {
+      self.shortcutObserver = NotificationCenter.default.addObserver(forName: .paraderoShortcut, object: nil, queue: .main) { [weak self] note in
+        guard let type = note.object as? String else { return }
+        _ = Shortcut.take()
+        self?.sendEvent("onShortcut", ["type": type])
+      }
+    }
+
+    OnStopObserving("onShortcut") {
+      if let observer = self.shortcutObserver { NotificationCenter.default.removeObserver(observer) }
+      self.shortcutObserver = nil
+    }
 
     Function("isAvailable") {
       NFCTagReaderSession.readingAvailable

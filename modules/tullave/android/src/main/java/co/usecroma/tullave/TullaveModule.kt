@@ -31,6 +31,10 @@ class TullaveModule : Module() {
   override fun definition() = ModuleDefinition {
     Name("Tullave")
 
+    Events("onShortcut")
+
+    Function("takeShortcut") { null as String? }
+
     Function("isAvailable") {
       adapter?.isEnabled == true
     }

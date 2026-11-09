@@ -1,3 +1,6 @@
+import { router } from "expo-router";
+import { useEffect } from "react";
+
 import Tullave from "../../modules/tullave";
 
 import { t, tag } from "@/i18n";
@@ -35,6 +38,21 @@ export async function readCard(): Promise<Card> {
     const code = (error as { code?: string }).code as ReadFailure | undefined;
     throw new ReadError(code && FAILURES.has(code) ? code : "failed");
   }
+}
+
+/** The Home Screen quick action, declared in app.json as UIApplicationShortcutItems. */
+const SHORTCUT = "co.usecroma.paradero.card";
+
+/** Opens the TuLlave reader when the app was opened from the "Leer mi TuLlave" quick action. */
+export function useCardShortcut() {
+  useEffect(() => {
+    if (!Tullave) return;
+    if (Tullave.takeShortcut() === SHORTCUT) router.push("/card");
+    const sub = Tullave.addListener("onShortcut", ({ type }) => {
+      if (type === SHORTCUT) router.push("/card");
+    });
+    return () => sub.remove();
+  }, []);
 }
 
 export function cancelRead() {

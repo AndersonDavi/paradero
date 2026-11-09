@@ -1,7 +1,6 @@
 import { router } from "expo-router";
 import { ScrollView, StyleSheet, View } from "react-native";
 
-import { CardEntry } from "@/components/card-entry";
 import { RouteRow } from "@/components/route-row";
 import { SavedStopCard } from "@/components/saved-stop-card";
 import { Empty } from "@/components/state";
@@ -18,8 +17,6 @@ export default function Saved() {
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
-      <CardEntry />
-
       {saved.length === 0 && (
         <Empty
           title={t.saved.empty.title}

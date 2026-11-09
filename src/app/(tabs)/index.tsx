@@ -7,6 +7,7 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { CardEntry } from "@/components/card-entry";
 import { FeedStatus } from "@/components/feed-status";
 import { Glass } from "@/components/glass";
 import { Icon, icons } from "@/components/icon";
@@ -118,6 +119,8 @@ export default function Home() {
               {t.home.searchPlaceholder}
             </Text>
           </PressableScale>
+
+          <CardEntry />
 
           {savedStops.length > 0 && (
             <View style={styles.section}>

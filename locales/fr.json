@@ -2,6 +2,7 @@
   "ios": {
     "CFBundleDisplayName": "Paradero",
     "NSLocationWhenInUseUsageDescription": "Paradero utilise votre position seulement quand l’app est ouverte, pour vous montrer les arrêts et stations proches. Nous ne la gardons jamais.",
-    "NFCReaderUsageDescription": "Paradero lit votre carte TuLlave sur le téléphone pour afficher son solde. Le numéro ne quitte pas le téléphone."
+    "NFCReaderUsageDescription": "Paradero lit votre carte TuLlave sur le téléphone pour afficher son solde. Le numéro ne quitte pas le téléphone.",
+    "CardShortcutTitle": "Lire ma TuLlave"
   }
 }

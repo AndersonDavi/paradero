@@ -17,8 +17,10 @@ export type CardResponses = {
   records: (string | null)[];
 };
 
-declare class TullaveModule extends NativeModule {
+declare class TullaveModule extends NativeModule<{ onShortcut: (event: { type: string }) => void }> {
   isAvailable(): boolean;
+  /** The Home Screen quick action that opened the app, once. */
+  takeShortcut(): string | null;
   read(prompts: ReadPrompts): Promise<CardResponses>;
   cancel?(): void;
 }

@@ -1,11 +1,13 @@
 import { NativeTabs } from "expo-router/native-tabs";
 import { useT } from "@/i18n";
+import { useCardShortcut } from "@/lib/tullave";
 import { usePalette } from "@/theme/colors";
 import { fonts } from "@/theme/tokens";
 
 export default function TabsLayout() {
   const p = usePalette();
   const t = useT();
+  useCardShortcut();
   return (
     <NativeTabs tintColor={p.ink} minimizeBehavior="onScrollDown" labelStyle={{ fontFamily: fonts[600] }}>
       <NativeTabs.Trigger name="index">
