@@ -195,6 +195,43 @@ export const es = {
     version: (v: string) => `Paradero ${v} · Hecho en Bogotá por Croma y la comunidad`,
   },
 
+  card: {
+    screen: "Tu TuLlave",
+    entry: { title: "Tu TuLlave", body: "Mira el saldo acercando la tarjeta al teléfono" },
+    title: "Mira el saldo de tu TuLlave",
+    intro: { ios: "Acerca la tarjeta a la parte de arriba de tu iPhone y déjala quieta hasta que vibre.", android: "Acerca la tarjeta a la parte de atrás del teléfono y déjala quieta hasta que vibre." },
+    read: "Leer mi tarjeta",
+    again: "Leer otra vez",
+    reading: "Acerca la tarjeta",
+    private: "La lectura pasa en tu teléfono. El número de la tarjeta no sale de él y no lo guardamos.",
+    balance: "Saldo en la tarjeta",
+    readAt: (time: string) => `Leído a las ${time}`,
+    pending: "Una recarga en línea aparece aquí cuando la cargas en un validador o un punto de recarga.",
+    number: "Número de la tarjeta",
+    movements: "Últimos movimientos",
+    noMovements: "La tarjeta no tiene movimientos guardados.",
+    kinds: { trip: "Viaje", topup: "Recarga", topupCancelled: "Recarga anulada", other: "Movimiento" },
+    after: (balance: string) => `Quedó en ${balance}`,
+    speech: {
+      balance: (amount: string) => `Saldo en la tarjeta: ${amount}.`,
+      movement: (kind: string, amount: string, when: string, after: string) => `${kind} de ${amount}${when ? `, ${when}` : ""}. Quedó en ${after}.`,
+    },
+    sheet: {
+      hold: "Acerca tu TuLlave a la parte de arriba del iPhone",
+      reading: "Leyendo. No la muevas",
+      done: "Listo",
+      notCard: "Esa no parece una tarjeta TuLlave",
+      lost: "Se movió la tarjeta. Intenta de nuevo",
+    },
+    errors: {
+      unsupported: { title: "Este teléfono no lee tarjetas", body: "Necesitas un teléfono con NFC. En Android, revisa que el NFC esté activado en Ajustes." },
+      not_tullave: { title: "No es una TuLlave", body: "Esa tarjeta no respondió como una TuLlave. Prueba con tu tarjeta de TransMilenio." },
+      lost: { title: "Se movió la tarjeta", body: "Déjala quieta contra el teléfono hasta que vibre, y vuelve a intentar." },
+      timeout: { title: "No encontramos la tarjeta", body: "Acércala más y déjala quieta. Si tiene funda, sácala." },
+      failed: { title: "No pudimos leerla", body: "Intenta de nuevo. Algunas tarjetas tardan un poco." },
+    },
+  },
+
   report: {
     kinds: {
       time: "Una hora está mal",

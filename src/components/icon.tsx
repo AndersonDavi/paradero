@@ -40,4 +40,5 @@ export const icons = {
   lock: { ios: "lock.fill", android: "lock" },
   check: { ios: "checkmark", android: "check" },
   flag: { ios: "exclamationmark.bubble", android: "feedback" },
+  contactless: { ios: "wave.3.right", android: "contactless" },
 } satisfies Record<string, Name>;

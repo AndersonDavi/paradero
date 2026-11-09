@@ -1,0 +1,9 @@
+{
+  "platforms": ["apple", "android"],
+  "apple": {
+    "modules": ["TullaveModule"]
+  },
+  "android": {
+    "modules": ["co.usecroma.tullave.TullaveModule"]
+  }
+}

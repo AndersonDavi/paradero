@@ -191,6 +191,43 @@ export const zh: Messages = {
     version: (v) => `Paradero ${v} · 由 Croma 与社区在波哥大打造`,
   },
 
+  card: {
+    screen: "TuLlave 卡",
+    entry: { title: "TuLlave 卡", body: "把卡贴近手机即可查看余额" },
+    title: "查看 TuLlave 余额",
+    intro: { ios: "把卡贴近 iPhone 顶部，保持不动，直到手机振动。", android: "把卡贴近手机背面，保持不动，直到手机振动。" },
+    read: "读取我的卡",
+    again: "再读一次",
+    reading: "请把卡贴近",
+    private: "读卡在你的手机上完成。卡号不会离开手机，我们也不保存。",
+    balance: "卡内余额",
+    readAt: (time) => `${time} 读取`,
+    pending: "在线充值需要在验票机或充值点写入卡内后才会显示在这里。",
+    number: "卡号",
+    movements: "最近记录",
+    noMovements: "卡内没有保存的记录。",
+    kinds: { trip: "乘车", topup: "充值", topupCancelled: "充值已取消", other: "记录" },
+    after: (balance) => `余额 ${balance}`,
+    speech: {
+      balance: (amount) => `卡内余额：${amount}。`,
+      movement: (kind, amount, when, after) => `${kind} ${amount}${when ? `，${when}` : ""}。余额 ${after}。`,
+    },
+    sheet: {
+      hold: "把 TuLlave 贴近 iPhone 顶部",
+      reading: "正在读取，请勿移动",
+      done: "完成",
+      notCard: "这似乎不是 TuLlave 卡",
+      lost: "卡移动了，请重试",
+    },
+    errors: {
+      unsupported: { title: "这部手机无法读卡", body: "需要支持 NFC 的手机。在 Android 上，请在设置中确认已开启 NFC。" },
+      not_tullave: { title: "不是 TuLlave 卡", body: "这张卡的响应不像 TuLlave。请换用你的 TransMilenio 卡。" },
+      lost: { title: "卡移动了", body: "把卡贴紧手机保持不动，直到振动，然后重试。" },
+      timeout: { title: "找不到卡", body: "再贴近一些并保持不动。如果卡在卡套里，请取出。" },
+      failed: { title: "无法读取", body: "请重试。有些卡需要多一点时间。" },
+    },
+  },
+
   report: {
     kinds: {
       time: "时间不对",

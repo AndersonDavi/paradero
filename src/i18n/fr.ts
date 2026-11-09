@@ -192,6 +192,43 @@ export const fr: Messages = {
     version: (v) => `Paradero ${v} · Fait à Bogotá par Croma et la communauté`,
   },
 
+  card: {
+    screen: "Votre TuLlave",
+    entry: { title: "Votre TuLlave", body: "Voyez le solde en approchant la carte du téléphone" },
+    title: "Voyez le solde de votre TuLlave",
+    intro: { ios: "Approchez la carte du haut de votre iPhone et gardez-la immobile jusqu’à la vibration.", android: "Approchez la carte du dos du téléphone et gardez-la immobile jusqu’à la vibration." },
+    read: "Lire ma carte",
+    again: "Relire",
+    reading: "Approchez la carte",
+    private: "La lecture se fait sur votre téléphone. Le numéro de la carte n’en sort pas et nous ne le gardons pas.",
+    balance: "Solde sur la carte",
+    readAt: (time) => `Lu à ${time}`,
+    pending: "Une recharge en ligne apparaît ici une fois chargée sur un valideur ou un point de recharge.",
+    number: "Numéro de la carte",
+    movements: "Derniers mouvements",
+    noMovements: "La carte n’a aucun mouvement enregistré.",
+    kinds: { trip: "Trajet", topup: "Recharge", topupCancelled: "Recharge annulée", other: "Mouvement" },
+    after: (balance) => `Reste ${balance}`,
+    speech: {
+      balance: (amount) => `Solde sur la carte : ${amount}.`,
+      movement: (kind, amount, when, after) => `${kind} de ${amount}${when ? `, ${when}` : ""}. Reste ${after}.`,
+    },
+    sheet: {
+      hold: "Approchez votre TuLlave du haut de l’iPhone",
+      reading: "Lecture. Ne bougez pas",
+      done: "Terminé",
+      notCard: "Cela ne ressemble pas à une carte TuLlave",
+      lost: "La carte a bougé. Réessayez",
+    },
+    errors: {
+      unsupported: { title: "Ce téléphone ne lit pas les cartes", body: "Il faut un téléphone avec NFC. Sur Android, vérifiez que le NFC est activé dans les Réglages." },
+      not_tullave: { title: "Ce n’est pas une TuLlave", body: "Cette carte n’a pas répondu comme une TuLlave. Essayez votre carte TransMilenio." },
+      lost: { title: "La carte a bougé", body: "Gardez-la immobile contre le téléphone jusqu’à la vibration, puis réessayez." },
+      timeout: { title: "Carte introuvable", body: "Approchez-la davantage et gardez-la immobile. Si elle est dans un étui, sortez-la." },
+      failed: { title: "Lecture impossible", body: "Réessayez. Certaines cartes prennent un instant." },
+    },
+  },
+
   report: {
     kinds: {
       time: "Un horaire est faux",

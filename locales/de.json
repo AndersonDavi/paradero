@@ -1,6 +1,7 @@
 {
   "ios": {
     "CFBundleDisplayName": "Paradero",
-    "NSLocationWhenInUseUsageDescription": "Paradero nutzt deinen Standort nur, solange die App geöffnet ist, um dir Haltestellen und Stationen in deiner Nähe zu zeigen. Wir speichern ihn nie."
+    "NSLocationWhenInUseUsageDescription": "Paradero nutzt deinen Standort nur, solange die App geöffnet ist, um dir Haltestellen und Stationen in deiner Nähe zu zeigen. Wir speichern ihn nie.",
+    "NFCReaderUsageDescription": "Paradero liest deine TuLlave-Karte auf dem Telefon, um dir das Guthaben zu zeigen. Die Nummer verlässt das Telefon nicht."
   }
 }

@@ -192,6 +192,43 @@ export const de: Messages = {
     version: (v) => `Paradero ${v} · Gemacht in Bogotá von Croma und der Community`,
   },
 
+  card: {
+    screen: "Deine TuLlave",
+    entry: { title: "Deine TuLlave", body: "Sieh das Guthaben, indem du die Karte ans Telefon hältst" },
+    title: "Sieh das Guthaben deiner TuLlave",
+    intro: { ios: "Halte die Karte an die Oberseite deines iPhones und halte sie still, bis es vibriert.", android: "Halte die Karte an die Rückseite des Telefons und halte sie still, bis es vibriert." },
+    read: "Meine Karte lesen",
+    again: "Erneut lesen",
+    reading: "Halte die Karte ans Telefon",
+    private: "Die Karte wird auf deinem Telefon gelesen. Die Kartennummer verlässt es nicht und wir speichern sie nicht.",
+    balance: "Guthaben auf der Karte",
+    readAt: (time) => `Gelesen um ${time}`,
+    pending: "Eine Online-Aufladung erscheint hier, sobald du sie an einem Validator oder einer Ladestelle auf die Karte lädst.",
+    number: "Kartennummer",
+    movements: "Letzte Bewegungen",
+    noMovements: "Auf der Karte sind keine Bewegungen gespeichert.",
+    kinds: { trip: "Fahrt", topup: "Aufladung", topupCancelled: "Aufladung storniert", other: "Bewegung" },
+    after: (balance) => `Rest ${balance}`,
+    speech: {
+      balance: (amount) => `Guthaben auf der Karte: ${amount}.`,
+      movement: (kind, amount, when, after) => `${kind} über ${amount}${when ? `, ${when}` : ""}. Rest ${after}.`,
+    },
+    sheet: {
+      hold: "Halte deine TuLlave an die Oberseite des iPhones",
+      reading: "Wird gelesen. Nicht bewegen",
+      done: "Fertig",
+      notCard: "Das sieht nicht nach einer TuLlave aus",
+      lost: "Die Karte hat sich bewegt. Versuch es nochmal",
+    },
+    errors: {
+      unsupported: { title: "Dieses Telefon liest keine Karten", body: "Du brauchst ein Telefon mit NFC. Prüfe unter Android, ob NFC in den Einstellungen aktiv ist." },
+      not_tullave: { title: "Keine TuLlave", body: "Diese Karte hat nicht wie eine TuLlave geantwortet. Versuch es mit deiner TransMilenio-Karte." },
+      lost: { title: "Die Karte hat sich bewegt", body: "Halte sie still ans Telefon, bis es vibriert, und versuch es nochmal." },
+      timeout: { title: "Karte nicht gefunden", body: "Halte sie näher und ruhig. Nimm sie aus der Hülle, falls sie in einer steckt." },
+      failed: { title: "Lesen fehlgeschlagen", body: "Versuch es nochmal. Manche Karten brauchen einen Moment." },
+    },
+  },
+
   report: {
     kinds: {
       time: "Eine Zeit ist falsch",

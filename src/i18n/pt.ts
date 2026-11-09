@@ -192,6 +192,43 @@ export const pt: Messages = {
     version: (v) => `Paradero ${v} · Feito em Bogotá pela Croma e pela comunidade`,
   },
 
+  card: {
+    screen: "Seu TuLlave",
+    entry: { title: "Seu TuLlave", body: "Veja o saldo aproximando o cartão do celular" },
+    title: "Veja o saldo do seu TuLlave",
+    intro: { ios: "Aproxime o cartão da parte de cima do iPhone e mantenha parado até vibrar.", android: "Aproxime o cartão da parte de trás do celular e mantenha parado até vibrar." },
+    read: "Ler meu cartão",
+    again: "Ler de novo",
+    reading: "Aproxime o cartão",
+    private: "A leitura acontece no seu celular. O número do cartão não sai dele e não o guardamos.",
+    balance: "Saldo no cartão",
+    readAt: (time) => `Lido às ${time}`,
+    pending: "Uma recarga on-line aparece aqui quando você a carrega em um validador ou ponto de recarga.",
+    number: "Número do cartão",
+    movements: "Últimas movimentações",
+    noMovements: "O cartão não tem movimentações salvas.",
+    kinds: { trip: "Viagem", topup: "Recarga", topupCancelled: "Recarga cancelada", other: "Movimentação" },
+    after: (balance) => `Ficou em ${balance}`,
+    speech: {
+      balance: (amount) => `Saldo no cartão: ${amount}.`,
+      movement: (kind, amount, when, after) => `${kind} de ${amount}${when ? `, ${when}` : ""}. Ficou em ${after}.`,
+    },
+    sheet: {
+      hold: "Aproxime seu TuLlave da parte de cima do iPhone",
+      reading: "Lendo. Não mova",
+      done: "Pronto",
+      notCard: "Isso não parece um cartão TuLlave",
+      lost: "O cartão se moveu. Tente de novo",
+    },
+    errors: {
+      unsupported: { title: "Este celular não lê cartões", body: "Você precisa de um celular com NFC. No Android, confira se o NFC está ativado nos Ajustes." },
+      not_tullave: { title: "Não é um TuLlave", body: "Esse cartão não respondeu como um TuLlave. Tente com seu cartão do TransMilenio." },
+      lost: { title: "O cartão se moveu", body: "Mantenha parado contra o celular até vibrar e tente de novo." },
+      timeout: { title: "Não encontramos o cartão", body: "Aproxime mais e mantenha parado. Se estiver em uma capinha, tire." },
+      failed: { title: "Não conseguimos ler", body: "Tente de novo. Alguns cartões demoram um pouco." },
+    },
+  },
+
   report: {
     kinds: {
       time: "Um horário está errado",

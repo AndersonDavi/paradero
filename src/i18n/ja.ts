@@ -192,6 +192,43 @@ export const ja: Messages = {
     version: (v) => `Paradero ${v} · Cromaとコミュニティがボゴタで制作`,
   },
 
+  card: {
+    screen: "TuLlave",
+    entry: { title: "TuLlave", body: "カードをスマホにかざして残高を確認" },
+    title: "TuLlaveの残高を確認",
+    intro: { ios: "カードをiPhoneの上部にかざし、振動するまで動かさないでください。", android: "カードをスマホの背面にかざし、振動するまで動かさないでください。" },
+    read: "カードを読み取る",
+    again: "もう一度読み取る",
+    reading: "カードをかざしてください",
+    private: "読み取りはスマホの中で行われます。カード番号が外に送られることはなく、保存もしません。",
+    balance: "カードの残高",
+    readAt: (time) => `${time}に読み取り`,
+    pending: "オンラインでのチャージは、改札機やチャージ機でカードに反映するとここに表示されます。",
+    number: "カード番号",
+    movements: "最近の利用履歴",
+    noMovements: "カードに保存された履歴はありません。",
+    kinds: { trip: "乗車", topup: "チャージ", topupCancelled: "チャージ取消", other: "利用" },
+    after: (balance) => `残高 ${balance}`,
+    speech: {
+      balance: (amount) => `カードの残高：${amount}。`,
+      movement: (kind, amount, when, after) => `${kind} ${amount}${when ? `、${when}` : ""}。残高 ${after}。`,
+    },
+    sheet: {
+      hold: "TuLlaveをiPhoneの上部にかざしてください",
+      reading: "読み取り中。動かさないでください",
+      done: "完了",
+      notCard: "TuLlaveカードではないようです",
+      lost: "カードが動きました。もう一度お試しください",
+    },
+    errors: {
+      unsupported: { title: "このスマホはカードを読み取れません", body: "NFC対応のスマホが必要です。Androidでは設定でNFCがオンになっているか確認してください。" },
+      not_tullave: { title: "TuLlaveではありません", body: "このカードはTuLlaveとして応答しませんでした。TransMilenioのカードでお試しください。" },
+      lost: { title: "カードが動きました", body: "振動するまでスマホにぴったり当てたまま、もう一度お試しください。" },
+      timeout: { title: "カードが見つかりません", body: "もっと近づけて動かさないでください。ケースに入っている場合は出してください。" },
+      failed: { title: "読み取れませんでした", body: "もう一度お試しください。時間がかかるカードもあります。" },
+    },
+  },
+
   report: {
     kinds: {
       time: "時刻が違う",
