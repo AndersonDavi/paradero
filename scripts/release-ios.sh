@@ -10,4 +10,7 @@ if [ -z "$notes" ]; then
 fi
 
 npm run check
-npx eas-cli build -p ios --profile production --auto-submit --non-interactive --no-wait --what-to-test "$notes"
+npx eas-cli build -p ios --profile production --auto-submit --non-interactive --no-wait
+
+# EAS only sends "What to Test" on its Enterprise plan, so paste these notes into TestFlight once the build is processed.
+printf '\nWhat to Test for TestFlight:\n\n%s\n' "$notes"
