@@ -1,0 +1,81 @@
+{
+ "es": {
+  "heroEyebrow": "Bogotá · TransMilenio · SITP",
+  "heroTitle": "Sabe cuándo llega tu bus.",
+  "heroSub": "Paraderos cercanos, rutas y horarios en una app limpia y rápida.",
+  "heroFoot": "Gratis · Sin anuncios · Sin cuenta",
+  "closeEyebrow": "Paradero · por Croma",
+  "closeTitle": "Un bien público digital de Croma.",
+  "closeItems": [
+   [
+    "01",
+    "Gratis y de código abierto",
+    "Licencia MIT. Bogotá puede adoptarla y hacerla suya."
+   ],
+   [
+    "02",
+    "Sin cuenta ni anuncios",
+    "Abres la app y ya. Nada que vender."
+   ],
+   [
+    "03",
+    "Tu ubicación no se guarda",
+    "Redondeada a una cuadra y solo con la app abierta."
+   ],
+   [
+    "04",
+    "Para todas las personas",
+    "VoiceOver, texto grande y siete idiomas."
+   ]
+  ],
+  "langs": [
+   "Español",
+   "English",
+   "Português",
+   "Français",
+   "Deutsch",
+   "中文",
+   "日本語"
+  ]
+ },
+ "en": {
+  "card": "-en",
+  "heroEyebrow": "Bogotá · TransMilenio · SITP",
+  "heroTitle": "Know when your bus arrives.",
+  "heroSub": "Nearby stops, routes and times in one clean, fast app.",
+  "heroFoot": "Free · No ads · No account",
+  "closeEyebrow": "Paradero · by Croma",
+  "closeTitle": "A digital public good by Croma.",
+  "closeItems": [
+   [
+    "01",
+    "Free and open source",
+    "MIT licensed. Bogotá can adopt it and make it its own."
+   ],
+   [
+    "02",
+    "No account, no ads",
+    "Open the app and go. Nothing to sell."
+   ],
+   [
+    "03",
+    "Your location isn’t stored",
+    "Rounded to a block, and only while the app is open."
+   ],
+   [
+    "04",
+    "Built for everyone",
+    "VoiceOver, large text and seven languages."
+   ]
+  ],
+  "langs": [
+   "Español",
+   "English",
+   "Português",
+   "Français",
+   "Deutsch",
+   "中文",
+   "日本語"
+  ]
+ }
+}

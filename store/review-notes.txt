@@ -1,0 +1,32 @@
+SCREEN RECORDING
+Attached: paradero-0.0.4-demo.mp4, recorded on a physical iPhone with the latest iOS. It starts by opening the app from the Home Screen and shows nearby stops on the map, a stop with its next buses, search, a route with its stops, saving it, Saved, reading a TuLlave card, About with the language settings, and the report form.
+
+1. PURPOSE AND AUDIENCE
+Paradero tells riders in Bogota, Colombia when their bus arrives. It covers TransMilenio (bus rapid transit), SITP zonal buses, feeders and TransMiCable. Riders see the stops around them, the next buses at each stop, every route with its stops in order, and service alerts. It also reads the balance and recent trips of the rider's own TuLlave transit card over NFC.
+Audience: anyone who rides public transport in Bogota, residents and visitors. The problem it solves: knowing when the bus comes and how to get there, in a clean, fast, accessible app in 7 languages, free, with no account, no ads and no tracking.
+Paradero is a free, open-source (MIT) digital public good made by Croma: github.com/croma-labs/paradero. It is an independent project, not affiliated with TransMilenio S.A.
+
+2. HOW TO USE IT
+- No sign-in. There are no accounts, purchases or paid features.
+- On first launch, swipe through the short introduction.
+- Location is optional. Outside Bogota (for example in Cupertino) the app shows stops around central Bogota instead, so every feature can be tested from anywhere. If location is denied, search works the same.
+- Nearby: map and list of stops. Tap a stop to see its next buses; tap a route to see its stops.
+- Search: type a route code such as "B10" or a stop such as "Calle 72".
+- Tap the star to save a stop or route; it appears in Saved.
+- TuLlave card (iPhone with NFC): tap "Tu TuLlave" under the search box, or long-press the app icon and choose "Read my TuLlave", then hold a TuLlave card to the top of the iPhone. Without a TuLlave card the screen explains how it works; every other feature is independent of it.
+- About (heart tab): appearance, high contrast and language (Spanish, English, Portuguese, French, German, Chinese, Japanese). The app also follows the phone's Larger Text, Bold Text, Reduce Motion, Reduce Transparency and VoiceOver settings.
+Arrival times are labeled "Live" when TransMilenio publishes real-time bus positions, or "Scheduled" when they come from the published timetable.
+
+3. EXTERNAL SERVICES
+- Croma API (api.croma.run): serves TransMilenio's open data (GTFS schedules, GTFS-Realtime positions and service alerts).
+- Expo EAS Hosting (paradero.expo.app): the app's own server routes that call the Croma API.
+- CARTO basemaps with MapLibre: map tiles.
+- GitHub API: the optional "Report a problem or idea" form files an issue in our public GitHub repository. Reports are anonymous, emails and phone numbers are removed before publishing, they are never shown inside the app, and our team moderates them on GitHub.
+- Core NFC: reads the TuLlave card on the device only. The card number and balance never leave the phone and are not stored.
+No analytics, advertising, login, payment or AI services.
+
+4. REGIONAL DIFFERENCES
+The app works the same in every region. Its transit data covers Bogota only; outside Bogota it shows Bogota.
+
+5. REGULATED INDUSTRY / THIRD-PARTY MATERIAL
+Not a regulated service. Transit data is TransMilenio's publicly published open data. The TuLlave reader only reads the balance and trip history that the rider's own card stores, the same information shown at TransMilenio's validators; it does not write to the card or top it up. TransMilenio, SITP and TuLlave are named only to describe the service. No protected third-party content is included.
