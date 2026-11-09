@@ -21,6 +21,11 @@ const EXAMPLES = ["K635", "B10", "Portal Norte", "Calle 72", "H710", "TransMiCab
 export default function Search() {
   const { q } = useLocalSearchParams<{ q?: string }>();
   const [text, setText] = useState(q ?? "");
+  const [linked, setLinked] = useState(q);
+  if (q !== linked) {
+    setLinked(q);
+    if (q) setText(q);
+  }
   const bar = useRef<SearchBarCommands>(null);
   const t = useT();
 
