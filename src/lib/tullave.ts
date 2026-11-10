@@ -40,13 +40,14 @@ export async function readCard(): Promise<Card> {
   }
 }
 
-/** The Home Screen quick action, declared in app.json as UIApplicationShortcutItems. */
+/** The Home Screen quick action: UIApplicationShortcutItems in app.json on iOS, a dynamic shortcut on Android. */
 const SHORTCUT = "co.usecroma.paradero.card";
 
 /** Opens the TuLlave reader when the app was opened from the "Leer mi TuLlave" quick action. */
 export function useCardShortcut() {
   useEffect(() => {
     if (!Tullave) return;
+    if (canReadCards()) Tullave.setShortcut?.(t().card.shortcut);
     if (Tullave.takeShortcut() === SHORTCUT) router.push("/card");
     const sub = Tullave.addListener("onShortcut", ({ type }) => {
       if (type === SHORTCUT) router.push("/card");

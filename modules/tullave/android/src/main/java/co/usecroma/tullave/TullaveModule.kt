@@ -1,6 +1,11 @@
 package co.usecroma.tullave
 
+import android.content.Intent
+import android.content.pm.ShortcutInfo
+import android.content.pm.ShortcutManager
+import android.graphics.drawable.Icon
 import android.nfc.NfcAdapter
+import android.os.Build
 import android.nfc.Tag
 import android.nfc.tech.IsoDep
 import expo.modules.kotlin.Promise
@@ -12,6 +17,8 @@ import expo.modules.kotlin.records.Record
 class Prompts : Record {
   @Field val hold: String = ""
 }
+
+private const val SHORTCUT = "co.usecroma.paradero.card"
 
 private object Command {
   val selectApp = bytes(0x00, 0xA4, 0x04, 0x00, 0x07, 0xD4, 0x10, 0x00, 0x00, 0x03, 0x00, 0x01)
@@ -33,7 +40,34 @@ class TullaveModule : Module() {
 
     Events("onShortcut")
 
-    Function("takeShortcut") { null as String? }
+    Function("takeShortcut") {
+      val intent = appContext.currentActivity?.intent ?: return@Function null
+      if (intent.action != SHORTCUT) return@Function null
+      intent.action = Intent.ACTION_MAIN
+      SHORTCUT
+    }
+
+    Function("setShortcut") { title: String ->
+      val context = appContext.reactContext ?: return@Function
+      if (Build.VERSION.SDK_INT < Build.VERSION_CODES.N_MR1) return@Function
+      val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return@Function
+      launch.action = SHORTCUT
+      launch.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+      val shortcut = ShortcutInfo.Builder(context, "card")
+        .setShortLabel(title)
+        .setLongLabel(title)
+        .setIcon(Icon.createWithResource(context, context.applicationInfo.icon))
+        .setIntent(launch)
+        .build()
+      runCatching { context.getSystemService(ShortcutManager::class.java)?.dynamicShortcuts = listOf(shortcut) }
+    }
+
+    OnNewIntent { intent ->
+      if (intent.action == SHORTCUT) {
+        intent.action = Intent.ACTION_MAIN
+        sendEvent("onShortcut", mapOf("type" to SHORTCUT))
+      }
+    }
 
     Function("isAvailable") {
       adapter?.isEnabled == true

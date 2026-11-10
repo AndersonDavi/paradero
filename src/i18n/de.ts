@@ -95,7 +95,7 @@ export const de: Messages = {
     none: { title: "Keine Haltestellen im Umkreis von 700 m", body: "Suche nach einem Stationsnamen oder deiner Linie." },
   },
 
-  common: { retry: "Erneut versuchen", station: "Station", stop: "Haltestelle", accessible: "Barrierefrei", done: "Fertig", close: "Schließen" },
+  common: { retry: "Erneut versuchen", station: "Station", stop: "Haltestelle", accessible: "Barrierefrei", done: "Fertig", close: "Schließen", clear: "Löschen" },
 
   map: { webOnly: "Die Karte gibt es in der App für iOS und Android." },
 
@@ -193,6 +193,7 @@ export const de: Messages = {
   },
 
   card: {
+    shortcut: "Meine TuLlave lesen",
     screen: "Deine TuLlave",
     entry: { title: "Deine TuLlave", body: "Sieh das Guthaben, indem du die Karte ans Telefon hältst" },
     title: "Sieh das Guthaben deiner TuLlave",

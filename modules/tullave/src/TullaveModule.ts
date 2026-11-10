@@ -21,6 +21,8 @@ declare class TullaveModule extends NativeModule<{ onShortcut: (event: { type: s
   isAvailable(): boolean;
   /** The Home Screen quick action that opened the app, once. */
   takeShortcut(): string | null;
+  /** Android only: adds the long-press shortcut on the app icon. iOS declares it in Info.plist. */
+  setShortcut?(title: string): void;
   read(prompts: ReadPrompts): Promise<CardResponses>;
   cancel?(): void;
 }

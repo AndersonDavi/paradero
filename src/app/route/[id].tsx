@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
 import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
@@ -10,6 +10,7 @@ import { Button } from "@/components/button";
 import { DetailScreen } from "@/components/detail-screen";
 import { FeedStatus } from "@/components/feed-status";
 import { BusGlyph } from "@/components/glyphs";
+import { SaveButton } from "@/components/save-button";
 import { RouteBadge } from "@/components/route-badge";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
@@ -56,16 +57,7 @@ export default function RouteScreen() {
 
   return (
     <>
-      {data && (
-        <Stack.Toolbar placement="right">
-          <Stack.Toolbar.Button
-            icon={saved ? "star.fill" : "star"}
-            tintColor={p.text}
-            accessibilityLabel={saved ? t.route.unsave : t.route.save}
-            onPress={save}
-          />
-        </Stack.Toolbar>
-      )}
+      {data && <SaveButton saved={saved} label={saved ? t.route.unsave : t.route.save} onPress={save} />}
 
       <DetailScreen
         map={

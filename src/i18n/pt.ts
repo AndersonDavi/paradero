@@ -95,7 +95,7 @@ export const pt: Messages = {
     none: { title: "Nenhum ponto a 700 m", body: "Busque o nome de uma estação ou a linha que você pega." },
   },
 
-  common: { retry: "Tentar de novo", station: "Estação", stop: "Ponto", accessible: "Acessível", done: "Pronto", close: "Fechar" },
+  common: { retry: "Tentar de novo", station: "Estação", stop: "Ponto", accessible: "Acessível", done: "Pronto", close: "Fechar", clear: "Limpar" },
 
   map: { webOnly: "O mapa está disponível no app para iOS e Android." },
 
@@ -193,6 +193,7 @@ export const pt: Messages = {
   },
 
   card: {
+    shortcut: "Ler meu TuLlave",
     screen: "Seu TuLlave",
     entry: { title: "Seu TuLlave", body: "Veja o saldo aproximando o cartão do celular" },
     title: "Veja o saldo do seu TuLlave",

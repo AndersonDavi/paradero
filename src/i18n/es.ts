@@ -98,7 +98,7 @@ export const es = {
     none: { title: "No hay paraderos a 700 m", body: "Busca el nombre de una estación o la ruta que tomas." },
   },
 
-  common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar" },
+  common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar", clear: "Borrar" },
 
   map: { webOnly: "El mapa está disponible en la app para iOS y Android." },
 
@@ -196,6 +196,7 @@ export const es = {
   },
 
   card: {
+    shortcut: "Leer mi TuLlave",
     screen: "Tu TuLlave",
     entry: { title: "Tu TuLlave", body: "Mira el saldo acercando la tarjeta al teléfono" },
     title: "Mira el saldo de tu TuLlave",

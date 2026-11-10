@@ -95,7 +95,7 @@ export const ja: Messages = {
     none: { title: "700 m以内に停留所がありません", body: "駅名か、乗る路線で検索してください。" },
   },
 
-  common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる" },
+  common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる", clear: "消去" },
 
   map: { webOnly: "地図はiOSとAndroidのアプリで利用できます。" },
 
@@ -193,6 +193,7 @@ export const ja: Messages = {
   },
 
   card: {
+    shortcut: "TuLlaveを読み取る",
     screen: "TuLlave",
     entry: { title: "TuLlave", body: "カードをスマホにかざして残高を確認" },
     title: "TuLlaveの残高を確認",

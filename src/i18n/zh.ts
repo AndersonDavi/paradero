@@ -95,7 +95,7 @@ export const zh: Messages = {
     none: { title: "700 米内没有站点", body: "搜索车站名称或你乘坐的线路。" },
   },
 
-  common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭" },
+  common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭", clear: "清除" },
 
   map: { webOnly: "地图可在 iOS 和 Android 应用中使用。" },
 
@@ -192,6 +192,7 @@ export const zh: Messages = {
   },
 
   card: {
+    shortcut: "读取我的 TuLlave",
     screen: "TuLlave 卡",
     entry: { title: "TuLlave 卡", body: "把卡贴近手机即可查看余额" },
     title: "查看 TuLlave 余额",

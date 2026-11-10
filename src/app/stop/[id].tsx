@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
 import { useMemo, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -13,6 +13,7 @@ import { ArrivalRow } from "@/components/arrival-row";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { NextBus } from "@/components/next-bus";
+import { SaveButton } from "@/components/save-button";
 import { RouteBadge } from "@/components/route-badge";
 import { RouteRow } from "@/components/route-row";
 import { SkeletonList } from "@/components/skeleton";
@@ -54,16 +55,7 @@ export default function StopScreen() {
 
   return (
     <>
-      {data && (
-        <Stack.Toolbar placement="right">
-          <Stack.Toolbar.Button
-            icon={saved ? "star.fill" : "star"}
-            tintColor={p.text}
-            accessibilityLabel={saved ? t.stop.unsave : t.stop.save}
-            onPress={save}
-          />
-        </Stack.Toolbar>
-      )}
+      {data && <SaveButton saved={saved} label={saved ? t.stop.unsave : t.stop.save} onPress={save} />}
 
       <DetailScreen
         map={

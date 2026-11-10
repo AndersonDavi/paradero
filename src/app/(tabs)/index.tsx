@@ -97,7 +97,7 @@ export default function Home() {
         enableDynamicSizing={false}
         animatedPosition={position}
         topInset={insets.top}
-        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp }}
+        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp, borderWidth: size.line.hair, borderColor: p.border }}
         handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
         handleComponent={QuietHandle}
 >

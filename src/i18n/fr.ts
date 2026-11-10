@@ -95,7 +95,7 @@ export const fr: Messages = {
     none: { title: "Aucun arrêt à moins de 700 m", body: "Cherchez le nom d’une station ou la ligne que vous prenez." },
   },
 
-  common: { retry: "Réessayer", station: "Station", stop: "Arrêt", accessible: "Accessible", done: "Terminé", close: "Fermer" },
+  common: { retry: "Réessayer", station: "Station", stop: "Arrêt", accessible: "Accessible", done: "Terminé", close: "Fermer", clear: "Effacer" },
 
   map: { webOnly: "La carte est disponible dans l’app iOS et Android." },
 
@@ -193,6 +193,7 @@ export const fr: Messages = {
   },
 
   card: {
+    shortcut: "Lire ma TuLlave",
     screen: "Votre TuLlave",
     entry: { title: "Votre TuLlave", body: "Voyez le solde en approchant la carte du téléphone" },
     title: "Voyez le solde de votre TuLlave",

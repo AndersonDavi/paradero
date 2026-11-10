@@ -46,7 +46,7 @@ export const LIGHT: Palette = {
   onInk: "#FDFCFC",
   shadow: "0 16px 32px -12px rgba(9,9,11,0.16)",
   shadowSoft: "0 4px 16px -4px rgba(9,9,11,0.08)",
-  shadowUp: "0 -8px 32px rgba(9,9,11,0.08)",
+  shadowUp: "0 -6px 24px -4px rgba(9,9,11,0.14)",
   fadeTo: "#948F88",
 };
 

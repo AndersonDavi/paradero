@@ -1,10 +1,11 @@
 import { Stack, useLocalSearchParams } from "expo-router";
 import { useDeferredValue, useEffect, useRef, useState } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from "react-native";
 import Animated from "react-native-reanimated";
 import type { SearchBarCommands } from "react-native-screens";
 
 import { Chip } from "@/components/chip";
+import { Icon, icons } from "@/components/icon";
 import { RouteRow } from "@/components/route-row";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
@@ -13,8 +14,12 @@ import { Text } from "@/components/text";
 import { useT } from "@/i18n";
 import { announce } from "@/lib/accessibility";
 import { useSearch } from "@/lib/api";
+import { usePalette } from "@/theme/colors";
 import { motion } from "@/theme/motion";
-import { layout, space } from "@/theme/tokens";
+import { fonts, layout, radius, size, space, type } from "@/theme/tokens";
+
+/** Android has no search bar in the header like iOS, so the field sits at the top of the screen, always visible. */
+const ANDROID = Platform.OS === "android";
 
 const EXAMPLES = ["K635", "B10", "Portal Norte", "Calle 72", "H710", "TransMiCable"];
 
@@ -53,7 +58,7 @@ export default function Search() {
   return (
     <>
       <Stack.Screen
-        options={{
+        options={ANDROID ? {} : {
           headerSearchBarOptions: {
             ref: bar,
             placeholder: t.search.placeholder,
@@ -65,6 +70,8 @@ export default function Search() {
         }}
       />
       <ScrollView contentInsetAdjustmentBehavior="automatic" keyboardDismissMode="on-drag" contentContainerStyle={styles.content}>
+        {ANDROID && <Field value={text} onChange={setText} />}
+
         {!typed && (
           <Animated.View entering={motion.appear()} style={styles.hint}>
             <Text variant="title">{t.search.hint}</Text>
@@ -109,7 +116,44 @@ export default function Search() {
   );
 }
 
+function Field({ value, onChange }: { value: string; onChange: (text: string) => void }) {
+  const p = usePalette();
+  const t = useT();
+  return (
+    <View style={[styles.field, { backgroundColor: p.surface }]}>
+      <Icon name={icons.search} color={p.text} size="md" weight="bold" />
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={t.search.placeholder}
+        placeholderTextColor={p.faint}
+        autoCapitalize="characters"
+        autoCorrect={false}
+        returnKeyType="search"
+        accessibilityLabel={t.search.placeholder}
+        style={[styles.input, { color: p.text }]}
+      />
+      {value.length > 0 && (
+        <Pressable accessibilityRole="button" accessibilityLabel={t.common.clear} onPress={() => onChange("")} hitSlop={space[3]}>
+          <Icon name={icons.close} color={p.faint} size="md" />
+        </Pressable>
+      )}
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  field: {
+    marginHorizontal: space[4],
+    marginTop: space[2],
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space[3],
+    paddingHorizontal: space[5],
+    minHeight: size.control.lg,
+    borderRadius: radius.lg,
+  },
+  input: { flex: 1, fontFamily: fonts[400], fontSize: type.body.fontSize, paddingVertical: space[3] },
   content: { paddingBottom: layout.tabBarClearance },
   hint: { padding: space[4], gap: space[3] },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2], marginTop: space[2] },

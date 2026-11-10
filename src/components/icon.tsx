@@ -1,5 +1,6 @@
 import { SymbolView, type SymbolViewProps } from "expo-symbols";
-import type { ColorValue } from "react-native";
+import { Platform, type ColorValue } from "react-native";
+import Svg, { Path } from "react-native-svg";
 
 import { size as sizes } from "@/theme/tokens";
 
@@ -14,7 +15,17 @@ interface IconProps {
 
 export function Icon({ name, color, size = "md", weight = "semibold" }: IconProps) {
   const side = sizes.icon[size];
+  if (Platform.OS === "android" && name === icons.starFill) return <FilledStar side={side} color={color} />;
   return <SymbolView name={name} size={side} tintColor={color} weight={weight} resizeMode="scaleAspectFit" style={{ width: side, height: side }} />;
+}
+
+/** Material Symbols on Android ships the outline only, so the saved star is drawn. */
+function FilledStar({ side, color }: { side: number; color: ColorValue }) {
+  return (
+    <Svg width={side} height={side} viewBox="0 0 24 24">
+      <Path fill={color} d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+    </Svg>
+  );
 }
 
 export const icons = {

@@ -95,7 +95,7 @@ export const en: Messages = {
     none: { title: "No stops within 700 m", body: "Search for a station name or the route you take." },
   },
 
-  common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close" },
+  common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close", clear: "Clear" },
 
   map: { webOnly: "The map is available in the iOS and Android app." },
 
@@ -193,6 +193,7 @@ export const en: Messages = {
   },
 
   card: {
+    shortcut: "Read my TuLlave",
     screen: "Your TuLlave",
     entry: { title: "Your TuLlave", body: "Check the balance by holding the card to your phone" },
     title: "Check your TuLlave balance",

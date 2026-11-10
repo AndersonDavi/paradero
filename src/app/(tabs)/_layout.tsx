@@ -9,7 +9,13 @@ export default function TabsLayout() {
   const t = useT();
   useCardShortcut();
   return (
-    <NativeTabs tintColor={p.ink} minimizeBehavior="onScrollDown" labelStyle={{ fontFamily: fonts[600] }}>
+    <NativeTabs
+      tintColor={p.ink}
+      minimizeBehavior="onScrollDown"
+      labelStyle={{ fontFamily: fonts[600] }}
+      backgroundColor={process.env.EXPO_OS === "android" ? p.background : undefined}
+      indicatorColor={p.fillStrong}
+      labelVisibilityMode="labeled">
       <NativeTabs.Trigger name="index">
         <NativeTabs.Trigger.Label>{t.tabs.nearby}</NativeTabs.Trigger.Label>
         <NativeTabs.Trigger.Icon src={require("@/assets/images/tabs/tab-nearby.png")} renderingMode="template" />
