@@ -1,10 +1,11 @@
+import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
 import { useT } from "@/i18n";
 import { useLargeText } from "@/lib/accessibility";
 import { clock, spokenArrival } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
-import { radius, space } from "@/theme/tokens";
+import { radius, size, space } from "@/theme/tokens";
 import type { Arrival } from "@/transit/types";
 
 import { Pace } from "./arrival-row";
@@ -13,17 +14,21 @@ import { RouteBadge } from "./route-badge";
 import { Text } from "./text";
 
 /** The one answer most riders open the app for, set large and quiet. */
-export function NextBus({ arrival }: { arrival: Arrival }) {
+export function NextBus({ arrival, following = false, onPress }: { arrival: Arrival; following?: boolean; onPress?: () => void }) {
   const p = usePalette();
   const large = useLargeText();
   const t = useT();
   const at = arrival.at ? clock(arrival.at) : null;
   return (
-    <View
+    <PressableScale
       accessible
+      accessibilityRole={onPress ? "button" : undefined}
       accessibilityLabel={t.speech.nextBus(`${spokenArrival(arrival)}${at ? ` ${at}.` : ""}`)}
-      accessibilityLiveRegion="polite"
-      style={[styles.card, { backgroundColor: p.elevated, borderColor: p.border, boxShadow: p.shadow }]}>
+      accessibilityHint={onPress && !following ? t.stop.followHint : undefined}
+      accessibilityState={{ selected: following }}
+      enabled={!!onPress}
+      onPress={onPress}
+      style={[styles.card, { borderColor: p.border }]}>
       <View style={styles.top}>
         <Text variant="eyebrow" tone="faint">
           {t.stop.nextBus}
@@ -44,12 +49,12 @@ export function NextBus({ arrival }: { arrival: Arrival }) {
         </View>
         <Minutes value={arrival.minutes} size="lg" />
       </View>
-    </View>
+    </PressableScale>
   );
 }
 
 const styles = StyleSheet.create({
-  card: { borderRadius: radius.xl, borderCurve: "continuous", borderWidth: StyleSheet.hairlineWidth, padding: space[6], gap: space[4] },
+  card: { borderRadius: radius.xl, borderCurve: "continuous", borderWidth: size.line.hair, padding: space[5], gap: space[3] },
   top: { flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", gap: space[2] },
   main: { flexDirection: "row", alignItems: "flex-end", gap: space[4] },
   stack: { gap: space[4] },

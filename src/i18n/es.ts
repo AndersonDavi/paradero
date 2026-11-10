@@ -20,6 +20,7 @@ export const es = {
   },
 
   pace: {
+    estimated: "Estimado en vivo",
     scheduled: "Según horario",
     onTime: "A tiempo",
     late: (m: number) => `${m} min tarde`,
@@ -98,7 +99,7 @@ export const es = {
     none: { title: "No hay paraderos a 700 m", body: "Busca el nombre de una estación o la ruta que tomas." },
   },
 
-  common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar" },
+  common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar", clear: "Borrar" },
 
   map: { webOnly: "El mapa está disponible en la app para iOS y Android." },
 
@@ -106,6 +107,7 @@ export const es = {
   routeRow: { open: "Abre el recorrido y los buses en vía" },
 
   stop: {
+    followHint: "Muestra este bus en el mapa",
     station: "Estación TransMilenio",
     sitp: "Paradero SITP",
     failed: { title: "No pudimos cargar este paradero", body: "Revisa tu conexión. Si sigue fallando, puede que TransMilenio no esté respondiendo." },
@@ -195,6 +197,46 @@ export const es = {
     version: (v: string) => `Paradero ${v} · Hecho en Bogotá por Croma y la comunidad`,
   },
 
+  card: {
+    shortcut: "Leer mi TuLlave",
+    screen: "Tu TuLlave",
+    entry: { title: "Tu TuLlave", body: "Mira el saldo acercando la tarjeta al teléfono" },
+    title: "Mira el saldo de tu TuLlave",
+    intro: { ios: "Acerca la tarjeta a la parte de arriba de tu iPhone y déjala quieta hasta que vibre.", android: "Acerca la tarjeta a la parte de atrás del teléfono y déjala quieta hasta que vibre." },
+    read: "Leer mi tarjeta",
+    again: "Leer otra vez",
+    reading: "Acerca la tarjeta",
+    private: "La lectura pasa en tu teléfono. El número de la tarjeta no sale de él y no lo guardamos.",
+    balance: "Saldo en la tarjeta",
+    readAt: (time: string) => `Leído a las ${time}`,
+    pending: "Una recarga en línea aparece aquí cuando la cargas en un validador o un punto de recarga.",
+    number: "Número de la tarjeta",
+    movements: "Últimos movimientos",
+    owed: (amount: string) => `La tarjeta quedó debiendo ${amount}. Se descuenta de tu próxima recarga.`,
+    undated: "Sin fecha",
+    noMovements: "La tarjeta no tiene movimientos guardados.",
+    kinds: { trip: "Viaje", topup: "Recarga", topupCancelled: "Recarga anulada", other: "Movimiento" },
+    after: (balance: string) => `Quedó en ${balance}`,
+    speech: {
+      balance: (amount: string) => `Saldo en la tarjeta: ${amount}.`,
+      movement: (kind: string, amount: string, when: string, after: string) => `${kind} de ${amount}${when ? `, ${when}` : ""}. Quedó en ${after}.`,
+    },
+    sheet: {
+      hold: "Acerca tu TuLlave a la parte de arriba del iPhone",
+      reading: "Leyendo. No la muevas",
+      done: "Listo",
+      notCard: "Esa no parece una tarjeta TuLlave",
+      lost: "Se movió la tarjeta. Intenta de nuevo",
+    },
+    errors: {
+      unsupported: { title: "Este teléfono no lee tarjetas", body: "Necesitas un teléfono con NFC. En Android, revisa que el NFC esté activado en Ajustes." },
+      not_tullave: { title: "No es una TuLlave", body: "Esa tarjeta no respondió como una TuLlave. Prueba con tu tarjeta de TransMilenio." },
+      lost: { title: "Se movió la tarjeta", body: "Déjala quieta contra el teléfono hasta que vibre, y vuelve a intentar." },
+      timeout: { title: "No encontramos la tarjeta", body: "Acércala más y déjala quieta. Si tiene funda, sácala." },
+      failed: { title: "No pudimos leerla", body: "Intenta de nuevo. Algunas tarjetas tardan un poco." },
+    },
+  },
+
   report: {
     kinds: {
       time: "Una hora está mal",
@@ -222,6 +264,15 @@ export const es = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "Una nota de Croma",
+      title: "Paradero es de Bogotá.",
+      body: "Lo hicimos en Croma como un bien público digital: gratis, de código abierto y sin anuncios, construido sobre los datos abiertos de TransMilenio.",
+      body2: "Lo ponemos a disposición de la Alcaldía y de TransMilenio para que lo adopten y lo hagan suyo. Mientras tanto, lo cuidamos contigo.",
+      sign: "El equipo de Croma",
+      rail: "Bienes Públicos Digitales",
+      next: "Continuar",
+    },
     byCroma: "Un bien público de Croma",
     by: "por",
     eyebrow: "Un bien público para Bogotá",

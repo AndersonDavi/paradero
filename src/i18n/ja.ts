@@ -18,6 +18,7 @@ export const ja: Messages = {
   },
 
   pace: {
+    estimated: "リアルタイム推定",
     scheduled: "時刻表どおり",
     onTime: "定刻",
     late: (m) => `${m}分遅れ`,
@@ -95,7 +96,7 @@ export const ja: Messages = {
     none: { title: "700 m以内に停留所がありません", body: "駅名か、乗る路線で検索してください。" },
   },
 
-  common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる" },
+  common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる", clear: "消去" },
 
   map: { webOnly: "地図はiOSとAndroidのアプリで利用できます。" },
 
@@ -103,6 +104,7 @@ export const ja: Messages = {
   routeRow: { open: "経路と運行中のバスを表示します" },
 
   stop: {
+    followHint: "このバスを地図に表示します",
     station: "TransMilenio 駅",
     sitp: "SITP 停留所",
     failed: { title: "この停留所を読み込めませんでした", body: "接続を確認してください。失敗が続く場合、TransMilenioが応答していない可能性があります。" },
@@ -192,6 +194,46 @@ export const ja: Messages = {
     version: (v) => `Paradero ${v} · Cromaとコミュニティがボゴタで制作`,
   },
 
+  card: {
+    shortcut: "TuLlaveを読み取る",
+    screen: "TuLlave",
+    entry: { title: "TuLlave", body: "カードをスマホにかざして残高を確認" },
+    title: "TuLlaveの残高を確認",
+    intro: { ios: "カードをiPhoneの上部にかざし、振動するまで動かさないでください。", android: "カードをスマホの背面にかざし、振動するまで動かさないでください。" },
+    read: "カードを読み取る",
+    again: "もう一度読み取る",
+    reading: "カードをかざしてください",
+    private: "読み取りはスマホの中で行われます。カード番号が外に送られることはなく、保存もしません。",
+    balance: "カードの残高",
+    readAt: (time) => `${time}に読み取り`,
+    pending: "オンラインでのチャージは、改札機やチャージ機でカードに反映するとここに表示されます。",
+    number: "カード番号",
+    movements: "最近の利用履歴",
+    owed: (amount) => `カードは ${amount} の未払いがあります。次回のチャージから差し引かれます。`,
+    undated: "日付なし",
+    noMovements: "カードに保存された履歴はありません。",
+    kinds: { trip: "乗車", topup: "チャージ", topupCancelled: "チャージ取消", other: "利用" },
+    after: (balance) => `残高 ${balance}`,
+    speech: {
+      balance: (amount) => `カードの残高：${amount}。`,
+      movement: (kind, amount, when, after) => `${kind} ${amount}${when ? `、${when}` : ""}。残高 ${after}。`,
+    },
+    sheet: {
+      hold: "TuLlaveをiPhoneの上部にかざしてください",
+      reading: "読み取り中。動かさないでください",
+      done: "完了",
+      notCard: "TuLlaveカードではないようです",
+      lost: "カードが動きました。もう一度お試しください",
+    },
+    errors: {
+      unsupported: { title: "このスマホはカードを読み取れません", body: "NFC対応のスマホが必要です。Androidでは設定でNFCがオンになっているか確認してください。" },
+      not_tullave: { title: "TuLlaveではありません", body: "このカードはTuLlaveとして応答しませんでした。TransMilenioのカードでお試しください。" },
+      lost: { title: "カードが動きました", body: "振動するまでスマホにぴったり当てたまま、もう一度お試しください。" },
+      timeout: { title: "カードが見つかりません", body: "もっと近づけて動かさないでください。ケースに入っている場合は出してください。" },
+      failed: { title: "読み取れませんでした", body: "もう一度お試しください。時間がかかるカードもあります。" },
+    },
+  },
+
   report: {
     kinds: {
       time: "時刻が違う",
@@ -219,6 +261,15 @@ export const ja: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "Cromaからのメッセージ",
+      title: "Paraderoはボゴタのものです。",
+      body: "Cromaはこのアプリをデジタル公共財として作りました。無料、オープンソース、広告なし。TransMilenioのオープンデータをもとにしています。",
+      body2: "ボゴタ市とTransMilenioが引き継ぎ、自分たちのものにできるよう提供しています。それまでは、みなさんと一緒に育てていきます。",
+      sign: "Cromaチーム",
+      rail: "デジタル公共財",
+      next: "続ける",
+    },
     byCroma: "Cromaによる公共財",
     by: "by",
     eyebrow: "ボゴタのための公共財",

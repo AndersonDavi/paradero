@@ -20,6 +20,8 @@ function format(kind: "time" | "day" | "hour"): Intl.DateTimeFormat {
 export function punctuality(a: Arrival): { text: string; tone: "live" | "late" | "early" | "schedule" } {
   const pace = t().pace;
   if (a.basis === "scheduled") return { text: pace.scheduled, tone: "schedule" };
+  // Timed from where the bus is, not a prediction from the network: we know it is coming, not whether it is late.
+  if (a.basis === "estimated" && a.delaySeconds == null) return { text: pace.estimated, tone: "live" };
   const d = a.delaySeconds;
   if (d == null || Math.abs(d) < 60) return { text: pace.onTime, tone: "live" };
   const m = Math.round(Math.abs(d) / 60);

@@ -18,6 +18,7 @@ export const en: Messages = {
   },
 
   pace: {
+    estimated: "Live estimate",
     scheduled: "Scheduled",
     onTime: "On time",
     late: (m) => `${m} min late`,
@@ -95,7 +96,7 @@ export const en: Messages = {
     none: { title: "No stops within 700 m", body: "Search for a station name or the route you take." },
   },
 
-  common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close" },
+  common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close", clear: "Clear" },
 
   map: { webOnly: "The map is available in the iOS and Android app." },
 
@@ -103,6 +104,7 @@ export const en: Messages = {
   routeRow: { open: "Opens the route and the buses on it" },
 
   stop: {
+    followHint: "Shows this bus on the map",
     station: "TransMilenio station",
     sitp: "SITP stop",
     failed: { title: "We couldn't load this stop", body: "Check your connection. If it keeps failing, TransMilenio may not be responding." },
@@ -192,6 +194,46 @@ export const en: Messages = {
     version: (v) => `Paradero ${v} · Made in Bogotá by Croma and the community`,
   },
 
+  card: {
+    shortcut: "Read my TuLlave",
+    screen: "Your TuLlave",
+    entry: { title: "Your TuLlave", body: "Check the balance by holding the card to your phone" },
+    title: "Check your TuLlave balance",
+    intro: { ios: "Hold the card to the top of your iPhone and keep it still until it vibrates.", android: "Hold the card to the back of your phone and keep it still until it vibrates." },
+    read: "Read my card",
+    again: "Read again",
+    reading: "Hold the card near",
+    private: "The card is read on your phone. Its number never leaves it and we don't keep it.",
+    balance: "Balance on the card",
+    readAt: (time) => `Read at ${time}`,
+    pending: "An online top-up shows here once you load it at a validator or a top-up point.",
+    number: "Card number",
+    movements: "Recent activity",
+    owed: (amount) => `The card owes ${amount}. It comes off your next top-up.`,
+    undated: "No date",
+    noMovements: "The card has no saved activity.",
+    kinds: { trip: "Trip", topup: "Top-up", topupCancelled: "Top-up cancelled", other: "Activity" },
+    after: (balance) => `Left ${balance}`,
+    speech: {
+      balance: (amount) => `Balance on the card: ${amount}.`,
+      movement: (kind, amount, when, after) => `${kind} of ${amount}${when ? `, ${when}` : ""}. Left ${after}.`,
+    },
+    sheet: {
+      hold: "Hold your TuLlave to the top of the iPhone",
+      reading: "Reading. Don't move it",
+      done: "Done",
+      notCard: "That doesn't look like a TuLlave card",
+      lost: "The card moved. Try again",
+    },
+    errors: {
+      unsupported: { title: "This phone can't read cards", body: "You need a phone with NFC. On Android, check that NFC is on in Settings." },
+      not_tullave: { title: "Not a TuLlave", body: "That card didn't answer like a TuLlave. Try your TransMilenio card." },
+      lost: { title: "The card moved", body: "Keep it still against the phone until it vibrates, then try again." },
+      timeout: { title: "We couldn't find the card", body: "Hold it closer and keep it still. If it's in a case, take it out." },
+      failed: { title: "We couldn't read it", body: "Try again. Some cards take a moment." },
+    },
+  },
+
   report: {
     kinds: {
       time: "A time is wrong",
@@ -219,6 +261,15 @@ export const en: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "A note from Croma",
+      title: "Paradero belongs to Bogotá.",
+      body: "We built it at Croma as a digital public good: free, open source and ad-free, made from TransMilenio's open data.",
+      body2: "We offer it to the City of Bogotá and TransMilenio to adopt and make their own. Until then, we look after it with you.",
+      sign: "The Croma team",
+      rail: "Digital Public Goods",
+      next: "Continue",
+    },
     byCroma: "A public good by Croma",
     by: "by",
     eyebrow: "A public good for Bogotá",

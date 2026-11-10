@@ -1,6 +1,8 @@
 {
   "ios": {
     "CFBundleDisplayName": "Paradero",
-    "NSLocationWhenInUseUsageDescription": "Paradero 仅在应用打开时使用你的位置，用来显示你附近的站点和车站。我们从不保存你的位置。"
+    "NSLocationWhenInUseUsageDescription": "Paradero 仅在应用打开时使用你的位置，用来显示你附近的站点和车站。我们从不保存你的位置。",
+    "NFCReaderUsageDescription": "Paradero 在手机上读取你的 TuLlave 卡并显示余额。卡号不会离开手机。",
+    "CardShortcutTitle": "读取我的 TuLlave"
   }
 }

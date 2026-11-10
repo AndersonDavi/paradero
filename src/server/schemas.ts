@@ -49,6 +49,7 @@ export const arrivals = z.object({
       route_name: nstr,
       system: nstr,
       vehicle_label: nstr,
+      license_plate: nstr.optional(),
     }),
   ),
 });

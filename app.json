@@ -2,7 +2,7 @@
   "expo": {
     "name": "Paradero",
     "slug": "paradero",
-    "version": "0.0.3",
+    "version": "0.0.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "paradero",
@@ -23,6 +23,22 @@
           "de",
           "ja",
           "zh-Hans"
+        ],
+        "NFCReaderUsageDescription": "Paradero lee tu tarjeta TuLlave en el teléfono para mostrarte el saldo. El número no sale del teléfono.",
+        "com.apple.developer.nfc.readersession.iso7816.select-identifiers": [
+          "D4100000030001"
+        ],
+        "UIApplicationShortcutItems": [
+          {
+            "UIApplicationShortcutItemType": "co.usecroma.paradero.card",
+            "UIApplicationShortcutItemTitle": "CardShortcutTitle",
+            "UIApplicationShortcutItemIconSymbolName": "wave.3.right"
+          }
+        ]
+      },
+      "entitlements": {
+        "com.apple.developer.nfc.readersession.formats": [
+          "TAG"
         ]
       }
     },
@@ -37,7 +53,13 @@
       "package": "co.usecroma.paradero",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "ACCESS_FINE_LOCATION",
+        "NFC"
+      ],
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
       ]
     },
     "web": {

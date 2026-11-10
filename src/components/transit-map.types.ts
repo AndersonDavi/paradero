@@ -9,10 +9,19 @@ export interface TransitMapProps {
   center: { lat: number; lon: number };
   zoom?: number;
   stops?: Pick<Stop, "id" | "name" | "kind" | "lat" | "lon">[];
-  buses?: (Bus & { system?: System })[];
+  buses?: (Bus & { system?: System; code?: string })[];
   path?: [number, number][];
+  /** The stretch of the path still to be driven to the stop; drawn strong, with the rest of the path faint. */
+  approach?: [number, number][];
+  /** Draw each bus's route code beside it, for maps that hold more than one route. */
+  showCodes?: boolean;
+  /** The bus the rider is following: drawn larger, above the rest. */
+  focusBusId?: string | null;
   system?: System;
   showUser?: boolean;
   padding?: { top: number; right: number; bottom: number; left: number };
   onStopPress?: (id: string) => void;
 }
+
+/** Who the map is from. It sits on the map in plain sight in place of an info button, and reads the same in every language. */
+export const MAP_CREDIT = "© OpenStreetMap · © CARTO";

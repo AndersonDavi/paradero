@@ -18,6 +18,7 @@ export const zh: Messages = {
   },
 
   pace: {
+    estimated: "实时估计",
     scheduled: "按时刻表",
     onTime: "准点",
     late: (m) => `晚点 ${m} 分钟`,
@@ -95,7 +96,7 @@ export const zh: Messages = {
     none: { title: "700 米内没有站点", body: "搜索车站名称或你乘坐的线路。" },
   },
 
-  common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭" },
+  common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭", clear: "清除" },
 
   map: { webOnly: "地图可在 iOS 和 Android 应用中使用。" },
 
@@ -103,6 +104,7 @@ export const zh: Messages = {
   routeRow: { open: "查看线路走向和运行中的车辆" },
 
   stop: {
+    followHint: "在地图上显示这辆公交",
     station: "TransMilenio 车站",
     sitp: "SITP 站点",
     failed: { title: "无法加载此站点", body: "请检查网络连接。如果仍然失败，可能是 TransMilenio 没有响应。" },
@@ -191,6 +193,46 @@ export const zh: Messages = {
     version: (v) => `Paradero ${v} · 由 Croma 与社区在波哥大打造`,
   },
 
+  card: {
+    shortcut: "读取我的 TuLlave",
+    screen: "TuLlave 卡",
+    entry: { title: "TuLlave 卡", body: "把卡贴近手机即可查看余额" },
+    title: "查看 TuLlave 余额",
+    intro: { ios: "把卡贴近 iPhone 顶部，保持不动，直到手机振动。", android: "把卡贴近手机背面，保持不动，直到手机振动。" },
+    read: "读取我的卡",
+    again: "再读一次",
+    reading: "请把卡贴近",
+    private: "读卡在你的手机上完成。卡号不会离开手机，我们也不保存。",
+    balance: "卡内余额",
+    readAt: (time) => `${time} 读取`,
+    pending: "在线充值需要在验票机或充值点写入卡内后才会显示在这里。",
+    number: "卡号",
+    movements: "最近记录",
+    owed: (amount) => `卡内欠款 ${amount}，将从下次充值中扣除。`,
+    undated: "无日期",
+    noMovements: "卡内没有保存的记录。",
+    kinds: { trip: "乘车", topup: "充值", topupCancelled: "充值已取消", other: "记录" },
+    after: (balance) => `余额 ${balance}`,
+    speech: {
+      balance: (amount) => `卡内余额：${amount}。`,
+      movement: (kind, amount, when, after) => `${kind} ${amount}${when ? `，${when}` : ""}。余额 ${after}。`,
+    },
+    sheet: {
+      hold: "把 TuLlave 贴近 iPhone 顶部",
+      reading: "正在读取，请勿移动",
+      done: "完成",
+      notCard: "这似乎不是 TuLlave 卡",
+      lost: "卡移动了，请重试",
+    },
+    errors: {
+      unsupported: { title: "这部手机无法读卡", body: "需要支持 NFC 的手机。在 Android 上，请在设置中确认已开启 NFC。" },
+      not_tullave: { title: "不是 TuLlave 卡", body: "这张卡的响应不像 TuLlave。请换用你的 TransMilenio 卡。" },
+      lost: { title: "卡移动了", body: "把卡贴紧手机保持不动，直到振动，然后重试。" },
+      timeout: { title: "找不到卡", body: "再贴近一些并保持不动。如果卡在卡套里，请取出。" },
+      failed: { title: "无法读取", body: "请重试。有些卡需要多一点时间。" },
+    },
+  },
+
   report: {
     kinds: {
       time: "时间不对",
@@ -218,6 +260,15 @@ export const zh: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "来自 Croma 的一封信",
+      title: "Paradero 属于波哥大。",
+      body: "我们在 Croma 把它做成一项数字公共产品：免费、开源、没有广告，基于 TransMilenio 的开放数据。",
+      body2: "我们把它提供给波哥大市政府和 TransMilenio，让他们接手并成为自己的应用。在那之前，我们和你一起照顾它。",
+      sign: "Croma 团队",
+      rail: "数字公共产品",
+      next: "继续",
+    },
     byCroma: "Croma 出品的公共产品",
     by: "出品",
     eyebrow: "为波哥大打造的公共产品",

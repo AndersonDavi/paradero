@@ -60,6 +60,7 @@ export const type = {
   body: { fontSize: 16, lineHeight: 23, weight: 400, tracking: -0.2 },
   callout: { fontSize: 15, lineHeight: 21, weight: 400, tracking: -0.15 },
   caption: { fontSize: 13, lineHeight: 17, weight: 500, tracking: -0.05 },
+  micro: { fontSize: 10, lineHeight: 13, weight: 500, tracking: 0 },
   eyebrow: { fontSize: 11, lineHeight: 15, weight: "mono", tracking: 1.8, upper: true },
   chrome: { fontSize: 11, lineHeight: 15, weight: "chrome", tracking: 2.6, upper: true },
 } as const satisfies Record<string, Style>;

@@ -3,19 +3,23 @@ import { dedupeRoutes, describeRoute } from "@/transit/codes";
 import type { Alert, Arrival, Bus, Feed, Health, IncomingBus, Nearby, RouteDetail, SearchResult, Stop, StopDetail } from "@/transit/types";
 import type { z } from "zod";
 
+import { simplify } from "@/transit/path";
+
 import { cached, croma, isLive } from "./croma";
 import * as s from "./schemas";
 
 const MINUTE = 60_000;
 
+/** How long a live answer may stand in for one the source failed to give. Every answer carries its own time, so the app says how old it is. */
+const LIVE_GRACE_MS = 90_000;
 const nearbyCache = cached<Nearby>(5 * MINUTE);
 const searchCache = cached<SearchResult>(30 * MINUTE);
 const stopCache = cached<z.infer<typeof s.stopLookup>>(6 * 60 * MINUTE);
-const arrivalsCache = cached<z.infer<typeof s.arrivals>>(15_000);
+const arrivalsCache = cached<z.infer<typeof s.arrivals>>(15_000, LIVE_GRACE_MS);
 const alertsCache = cached<Alert[]>(2 * MINUTE);
 const routeCache = cached<Omit<RouteDetail, "buses" | "feed" | "alerts">>(60 * MINUTE);
-const busesCache = cached<{ feed: Feed; buses: Bus[] }>(15_000);
-const aroundCache = cached<z.infer<typeof s.vehicles>>(15_000);
+const busesCache = cached<{ feed: Feed; buses: Bus[] }>(15_000, LIVE_GRACE_MS);
+const aroundCache = cached<z.infer<typeof s.vehicles>>(15_000, LIVE_GRACE_MS);
 
 function toStop(raw: z.infer<typeof s.stop>): Stop {
   return {
@@ -103,6 +107,7 @@ export async function stopDetail(stopId: string): Promise<StopDetail | null> {
       basis: a.basis,
       delaySeconds: a.delay_seconds ?? null,
       vehicle: a.vehicle_label ?? null,
+      plate: a.license_plate ?? null,
     };
   });
 
@@ -157,6 +162,10 @@ async function loadRoute(routeId: string) {
       tripsPerWeek: own?.trips_per_week ?? null,
     },
     path: (main?.geometry?.coordinates ?? []).map((c) => [c[0], c[1]] as [number, number]),
+    patterns: [...r.patterns]
+      .sort((a, b) => b.trips_per_week - a.trips_per_week)
+      .slice(0, 4)
+      .map((pt) => ({ path: simplify((pt.geometry?.coordinates ?? []).map((c) => [c[0], c[1]] as [number, number]), 6), stops: pt.stops.map((st) => st.stop_id) })),
     stops: (main?.stops ?? []).flatMap((st) =>
       st.latitude == null || st.longitude == null ? [] : [{ id: st.stop_id, name: st.name ?? "Paradero", lat: st.latitude, lon: st.longitude }],
     ),
