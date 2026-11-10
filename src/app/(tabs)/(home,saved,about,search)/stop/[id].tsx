@@ -140,7 +140,7 @@ export default function StopScreen() {
           </View>
         )}
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
-        {isError && <Empty title={t.stop.failed.title} body={t.stop.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {isError && !data && <Empty title={t.stop.failed.title} body={t.stop.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
 
         {data && (
           <>

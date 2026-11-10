@@ -13,7 +13,7 @@ xcrun simctl privacy $D grant location co.usecroma.paradero; xcrun simctl locati
 xcrun simctl launch $D co.usecroma.paradero >/dev/null; sleep 35
 shot(){ xcrun simctl io $D screenshot $OUT/$1.png >/dev/null 2>&1; }
 shot home
-xcrun simctl openurl $D "paradero://stop/9122"; sleep 14; shot stop
+xcrun simctl openurl $D "paradero://stop/${STOP:-9122}"; sleep 14; shot stop
 xcrun simctl openurl $D "paradero://route/${ROUTE:-10075}"; sleep 9; shot route
 xcrun simctl openurl $D "paradero://saved"; sleep 6; shot saved
 xcrun simctl openurl $D "paradero://search?q=calle%2072"; sleep 12; shot search

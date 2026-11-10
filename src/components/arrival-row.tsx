@@ -53,7 +53,7 @@ export function ArrivalRow({ arrival, first, index = 0, following = false, onPre
           {!plain && <Pace arrival={arrival} />}
         </View>
         <View style={styles.when}>
-          {plain && <Dot color={signal.live} size="sm" />}
+          {plain && arrival.minutes != null && arrival.minutes > 0 && <Dot color={signal.live} size="sm" />}
           <Minutes value={arrival.minutes} />
         </View>
       </PressableScale>

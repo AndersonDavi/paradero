@@ -76,7 +76,7 @@ export default function RouteScreen() {
           )
         }>
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
-        {isError && <Empty title={t.route.failed.title} body={t.route.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {isError && !data && <Empty title={t.route.failed.title} body={t.route.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
 
         {data && (
           <>

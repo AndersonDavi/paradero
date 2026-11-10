@@ -52,15 +52,27 @@ export function isLive(asOf: string, live: boolean | undefined): boolean {
 }
 
 /** One answer per key for `ttlMs`, shared by every rider on this instance, joining a request already in flight. */
-export function cached<T>(ttlMs: number) {
-  const entries = new Map<string, { at: number; value: Promise<T> }>();
+export function cached<T>(ttlMs: number, graceMs = 0) {
+  const entries = new Map<string, { at: number; value: Promise<T>; last?: { at: number; value: T } }>();
   return (key: string, load: () => Promise<T>): Promise<T> => {
     const hit = entries.get(key);
     if (hit && Date.now() - hit.at < ttlMs) return hit.value;
-    const value = load();
-    entries.set(key, { at: Date.now(), value });
-    value.catch(() => entries.delete(key));
+    const last = hit?.last;
+    const entry: { at: number; value: Promise<T>; last?: { at: number; value: T } } = { at: Date.now(), value: Promise.resolve(undefined as T), last };
+    entry.value = load().then(
+      (value) => {
+        entry.last = { at: Date.now(), value };
+        return value;
+      },
+      (error: unknown) => {
+        // The source stumbles now and then. A recent answer, which says how old it is, serves a rider better than an error.
+        if (last && Date.now() - last.at < graceMs) return last.value;
+        entries.delete(key);
+        throw error;
+      },
+    );
+    entries.set(key, entry);
     if (entries.size > 2_000) entries.delete(entries.keys().next().value as string);
-    return value;
+    return entry.value;
   };
 }

@@ -10,14 +10,16 @@ import * as s from "./schemas";
 
 const MINUTE = 60_000;
 
+/** How long a live answer may stand in for one the source failed to give. Every answer carries its own time, so the app says how old it is. */
+const LIVE_GRACE_MS = 90_000;
 const nearbyCache = cached<Nearby>(5 * MINUTE);
 const searchCache = cached<SearchResult>(30 * MINUTE);
 const stopCache = cached<z.infer<typeof s.stopLookup>>(6 * 60 * MINUTE);
-const arrivalsCache = cached<z.infer<typeof s.arrivals>>(15_000);
+const arrivalsCache = cached<z.infer<typeof s.arrivals>>(15_000, LIVE_GRACE_MS);
 const alertsCache = cached<Alert[]>(2 * MINUTE);
 const routeCache = cached<Omit<RouteDetail, "buses" | "feed" | "alerts">>(60 * MINUTE);
-const busesCache = cached<{ feed: Feed; buses: Bus[] }>(15_000);
-const aroundCache = cached<z.infer<typeof s.vehicles>>(15_000);
+const busesCache = cached<{ feed: Feed; buses: Bus[] }>(15_000, LIVE_GRACE_MS);
+const aroundCache = cached<z.infer<typeof s.vehicles>>(15_000, LIVE_GRACE_MS);
 
 function toStop(raw: z.infer<typeof s.stop>): Stop {
   return {
