@@ -58,11 +58,9 @@ export default function RootLayout() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider value={theme}>
           <StatusBar style="auto" />
-          <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal", headerTitleStyle: { fontFamily: fonts[600] } }}>
+          <Stack screenOptions={{ headerBackButtonDisplayMode: "minimal", headerBackButtonMenuEnabled: false, headerTitleStyle: { fontFamily: fonts[600] } }}>
             <Stack.Protected guard={onboarded}>
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="stop/[id]" options={{ headerTransparent: true, title: "" }} />
-              <Stack.Screen name="route/[id]" options={{ headerTransparent: true, title: "" }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Paradero" }} />
               <Stack.Screen name="report" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
               <Stack.Screen name="card" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
             </Stack.Protected>

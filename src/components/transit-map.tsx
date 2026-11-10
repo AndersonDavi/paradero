@@ -1,17 +1,24 @@
 import { Camera, GeoJSONSource, Images, Layer, Map, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { useAccessibility } from "@/lib/accessibility";
 import { useMovingBuses } from "@/lib/moving-buses";
 import { systems, usePalette } from "@/theme/colors";
+import { space } from "@/theme/tokens";
 
-import type { MapHandle, TransitMapProps } from "./transit-map.types";
+import { Text } from "./text";
+import { MAP_CREDIT, type MapHandle, type TransitMapProps } from "./transit-map.types";
 
 const STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 };
+
+/** The map already keeps clear of the header and the sheet when it is given its inset; what is framed only needs room to breathe inside that. */
+const FIT_MARGIN = { top: space[6], right: space[6], bottom: space[6], left: space[6] };
+/** With no inset given, the frame itself has to leave room for a sheet over the lower map. */
+const FIT_UNDER_SHEET = { top: 60, right: 40, bottom: 320, left: 40 };
 
 /** A small bus seen from above in each system's colour, turned the way it runs. */
 const BUS_IMAGES = {
@@ -47,7 +54,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
       if (coords.length < 2) return;
       const lons = coords.map((c) => c[0]);
       const lats = coords.map((c) => c[1]);
-      camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ?? { top: 60, right: 40, bottom: 320, left: 40 }, duration: glide });
+      camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ? FIT_MARGIN : FIT_UNDER_SHEET, duration: glide });
     },
   }));
 
@@ -55,45 +62,45 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const ink = p.ink;
 
   return (
-    <Map
-      style={StyleSheet.absoluteFill}
-      mapStyle={p.dark ? STYLES.dark : STYLES.light}
-      logo={false}
-      tintColor={p.faint}
-      attributionPosition={{ bottom: 8, left: 8 }}
-      compass={false}
-      touchPitch={false}
-      contentInset={padding}>
-      <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={[-74.45, 4.3, -73.85, 4.95]} />
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+      <Map style={StyleSheet.absoluteFill} mapStyle={p.dark ? STYLES.dark : STYLES.light} logo={false} attribution={false} compass={false} touchPitch={false} contentInset={padding}>
+        <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={[-74.45, 4.3, -73.85, 4.95]} />
 
-      {path && path.length > 1 && <RouteLine path={path} quiet={!!approach} />}
-      {approach && approach.length > 1 && <Approach key={focusBusId ?? "none"} path={approach} still={reduceMotion} />}
+        {path && path.length > 1 && <RouteLine path={path} quiet={!!approach} />}
+        {approach && approach.length > 1 && <Approach key={focusBusId ?? "none"} path={approach} still={reduceMotion} />}
 
-      <GeoJSONSource
-        id="stops"
-        data={stopData}
-        hitbox={{ top: 22, right: 22, bottom: 22, left: 22 }}
-        onPress={(e) => {
-          const id = e.nativeEvent.features[0]?.properties?.id;
-          if (typeof id === "string") onStopPress?.(id);
-        }}>
-        <Layer
-          id="stops-dot"
-          type="circle"
-          paint={{
-            "circle-radius": ["interpolate", ["linear"], ["zoom"], 12, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
-            "circle-color": p.background,
-            "circle-stroke-color": ink,
-            "circle-stroke-width": ["case", ["get", "station"], 3, 2],
-          }}
-        />
-      </GeoJSONSource>
+        <GeoJSONSource
+          id="stops"
+          data={stopData}
+          hitbox={{ top: 22, right: 22, bottom: 22, left: 22 }}
+          onPress={(e) => {
+            const id = e.nativeEvent.features[0]?.properties?.id;
+            if (typeof id === "string") onStopPress?.(id);
+          }}>
+          <Layer
+            id="stops-dot"
+            type="circle"
+            paint={{
+              // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
+              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.6, 1], 13, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
+              "circle-color": p.background,
+              "circle-stroke-color": ink,
+              "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.2, 0.8], 13, ["case", ["get", "station"], 3, 2]],
+            }}
+          />
+        </GeoJSONSource>
 
-      <Images images={BUS_IMAGES} />
-      {buses.length > 0 && <MovingBuses buses={buses} path={path} still={reduceMotion} showCodes={showCodes} focusBusId={focusBusId} />}
+        <Images images={BUS_IMAGES} />
+        {buses.length > 0 && <MovingBuses buses={buses} path={path} still={reduceMotion} showCodes={showCodes} focusBusId={focusBusId} />}
 
-      {showUser && <UserLocation animated={!reduceMotion} accuracy />}
-    </Map>
+        {showUser && <UserLocation animated={!reduceMotion} accuracy />}
+      </Map>
+      <View pointerEvents="none" style={[styles.credit, { left: (padding?.left ?? 0) + space[3], bottom: (padding?.bottom ?? 0) + space[2] }]}>
+        <Text variant="micro" tone="faint">
+          {MAP_CREDIT}
+        </Text>
+      </View>
+    </View>
   );
 });
 
@@ -218,7 +225,7 @@ function MovingBuses({
           "icon-rotation-alignment": "map",
           "icon-allow-overlap": true,
           "icon-ignore-placement": true,
-          "icon-size": ["interpolate", ["linear"], ["zoom"], 11, ["case", ["==", ["get", "focus"], 1], 0.55, 0.36], 16, ["case", ["==", ["get", "focus"], 1], 1.5, 1.1]],
+          "icon-size": ["interpolate", ["linear"], ["zoom"], 11, ["case", ["==", ["get", "focus"], 1], 0.6, 0.45], 16, ["case", ["==", ["get", "focus"], 1], 1.5, 1.1]],
           "symbol-sort-key": ["get", "focus"],
         }}
       />
@@ -242,3 +249,7 @@ function MovingBuses({
     </GeoJSONSource>
   );
 }
+
+const styles = StyleSheet.create({
+  credit: { position: "absolute" },
+});

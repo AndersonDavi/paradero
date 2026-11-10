@@ -1,6 +1,6 @@
 {
   "name": "paradero",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "main": "expo-router/entry",
   "dependencies": {
     "@expo-google-fonts/geist": "^0.4.2",

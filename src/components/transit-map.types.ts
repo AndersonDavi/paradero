@@ -22,3 +22,6 @@ export interface TransitMapProps {
   padding?: { top: number; right: number; bottom: number; left: number };
   onStopPress?: (id: string) => void;
 }
+
+/** Who the map is from. It sits on the map in plain sight in place of an info button, and reads the same in every language. */
+export const MAP_CREDIT = "© OpenStreetMap · © CARTO";

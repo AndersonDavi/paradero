@@ -34,5 +34,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 0,
   },
   scroll: { flex: 1, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl },
-  content: { padding: layout.gutter, paddingTop: space[6], gap: space[5], paddingBottom: layout.screenEnd },
+  // The tab bar floats over the end of the sheet, so the last row needs to scroll clear of it.
+  content: { padding: layout.gutter, paddingTop: space[6], gap: space[5], paddingBottom: layout.tabBarClearance },
 });

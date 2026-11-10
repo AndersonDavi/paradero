@@ -10,7 +10,7 @@ export interface MeasuredPath {
 
 const METRES_PER_DEGREE = 111_320;
 
-function metresBetween(a: LngLat, b: LngLat): number {
+export function metresBetween(a: LngLat, b: LngLat): number {
   const x = (b[0] - a[0]) * METRES_PER_DEGREE * Math.cos((((a[1] + b[1]) / 2) * Math.PI) / 180);
   const y = (b[1] - a[1]) * METRES_PER_DEGREE;
   return Math.hypot(x, y);
