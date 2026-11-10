@@ -1,5 +1,9 @@
-SCREEN RECORDING
-Attached: paradero-0.0.4-demo.mp4, recorded on a physical iPhone with the latest iOS. It starts by opening the app from the Home Screen and shows nearby stops on the map, a stop with its next buses, search, a route with its stops, saving it, Saved, reading a TuLlave card, About with the language settings, and the report form.
+WHAT IS NEW IN 0.0.6
+This is an update to the approved version 0.0.4. No new permissions, services, accounts or purchases.
+- When you open a stop, the map follows the next bus as it approaches and draws the stretch it still has to drive. The position comes from TransMilenio's open real-time data.
+- The tab bar stays visible on stop and route screens.
+- The stop screen is simpler: one live label and flatter cards.
+To see it: open the app, tap any stop on the map during Bogota service hours (about 4:30 a.m. to 11 p.m., UTC-5). Outside those hours the app shows scheduled times and no moving bus, which is expected.
 
 1. PURPOSE AND AUDIENCE
 Paradero tells riders in Bogota, Colombia when their bus arrives. It covers TransMilenio (bus rapid transit), SITP zonal buses, feeders and TransMiCable. Riders see the stops around them, the next buses at each stop, every route with its stops in order, and service alerts. It also reads the balance and recent trips of the rider's own TuLlave transit card over NFC.
