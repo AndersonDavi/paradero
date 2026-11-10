@@ -15,8 +15,8 @@ const STYLES = {
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 };
 
-/** The map already keeps clear of the header and the sheet when it is given its inset; what is framed only needs room to breathe inside that. */
-const FIT_MARGIN = { top: space[6], right: space[6], bottom: space[6], left: space[6] };
+/** Room left around what is framed on a map that sits above its sheet: clear of the header buttons, and wide enough that a bus at the edge is drawn whole. */
+const FIT_MARGIN = { top: 76, right: 56, bottom: 88, left: 56 };
 /** With no inset given, the frame itself has to leave room for a sheet over the lower map. */
 const FIT_UNDER_SHEET = { top: 60, right: 40, bottom: 320, left: 40 };
 

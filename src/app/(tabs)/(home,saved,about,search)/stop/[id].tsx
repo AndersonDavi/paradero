@@ -36,6 +36,8 @@ import type { Arrival } from "@/transit/types";
 
 /** A rider this close to the stop is kept in the frame with the bus, to judge the walk against the wait. Further away, the map would zoom out too far to read. */
 const RIDER_IN_FRAME_M = 1_500;
+/** How long the map rests after framing a bus before it will move again on its own. */
+const FRAME_REST_MS = 20_000;
 
 const keyOf = (a: Arrival) => `${a.routeId ?? a.code}-${a.plate ?? a.vehicle ?? a.at}`;
 
@@ -65,19 +67,21 @@ export default function StopScreen() {
     route && live && followed ? route.buses.map((b) => ({ ...b, code: followed.code, system: followed.system })) : data?.feed.live ? data.incoming.filter((b) => !only || b.code === only) : [];
 
   const map = useRef<MapHandle>(null);
-  // The map frames the stop, the bus and the rider once on arriving, and again when the rider picks a bus; it never moves on its own after that.
+  // The map frames the stop, the bus and the rider when it starts following a bus: on arriving, when the rider picks one, and when the one
+  // followed has come and the next takes its place. Buses trading places in the list from one report to the next must not shake it, so it rests between moves.
   const { state: place } = useLocation();
   const rider = place.status === "ready" && stop && metresBetween([place.lon, place.lat], [stop.lon, stop.lat]) <= RIDER_IN_FRAME_M ? place : null;
-  const framed = useRef(false);
+  const framed = useRef<{ bus: string | null; at: number }>({ bus: null, at: 0 });
   useEffect(() => {
-    if (!focus || !stop || place.status === "loading" || framed.current) return;
-    framed.current = true;
+    if (!focus || !stop || place.status === "loading" || framed.current.bus === focus.id) return;
+    if (Date.now() - framed.current.at < FRAME_REST_MS) return;
+    framed.current = { bus: focus.id, at: Date.now() };
     map.current?.fit([[stop.lon, stop.lat], [focus.lon, focus.lat], ...(rider ? [[rider.lon, rider.lat] as [number, number]] : [])]);
   }, [focus, stop, rider, place.status]);
 
   const follow = (a: Arrival) => {
     void Haptics.selectionAsync();
-    framed.current = false;
+    framed.current = { bus: null, at: 0 };
     setPicked(keyOf(a));
   };
 
