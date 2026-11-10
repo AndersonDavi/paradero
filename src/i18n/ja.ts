@@ -18,6 +18,7 @@ export const ja: Messages = {
   },
 
   pace: {
+    estimated: "リアルタイム推定",
     scheduled: "時刻表どおり",
     onTime: "定刻",
     late: (m) => `${m}分遅れ`,
@@ -103,6 +104,7 @@ export const ja: Messages = {
   routeRow: { open: "経路と運行中のバスを表示します" },
 
   stop: {
+    followHint: "このバスを地図に表示します",
     station: "TransMilenio 駅",
     sitp: "SITP 停留所",
     failed: { title: "この停留所を読み込めませんでした", body: "接続を確認してください。失敗が続く場合、TransMilenioが応答していない可能性があります。" },
@@ -259,6 +261,15 @@ export const ja: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "Cromaからのメッセージ",
+      title: "Paraderoはボゴタのものです。",
+      body: "Cromaはこのアプリをデジタル公共財として作りました。無料、オープンソース、広告なし。TransMilenioのオープンデータをもとにしています。",
+      body2: "ボゴタ市とTransMilenioが引き継ぎ、自分たちのものにできるよう提供しています。それまでは、みなさんと一緒に育てていきます。",
+      sign: "Cromaチーム",
+      rail: "デジタル公共財",
+      next: "続ける",
+    },
     byCroma: "Cromaによる公共財",
     by: "by",
     eyebrow: "ボゴタのための公共財",

@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
@@ -21,13 +21,18 @@ import { Empty } from "@/components/state";
 import { StopTile } from "@/components/stop-row";
 import { Text } from "@/components/text";
 import { TransitMap } from "@/components/transit-map";
+import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useLargeText } from "@/lib/accessibility";
-import { knownStop, useStop } from "@/lib/api";
+import { knownStop, useRoute, useStop } from "@/lib/api";
 import { spokenCode } from "@/lib/format";
 import { toggleStop, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
+import { wayTowards } from "@/transit/follow";
+import type { Arrival } from "@/transit/types";
+
+const keyOf = (a: Arrival) => `${a.routeId ?? a.code}-${a.plate ?? a.vehicle ?? a.at}`;
 
 export default function StopScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -43,6 +48,34 @@ export default function StopScreen() {
   const codes = useMemo(() => [...new Set((data?.arrivals ?? []).map((a) => a.code))], [data]);
   const arrivals = (data?.arrivals ?? []).filter((a) => !only || a.code === only);
   const [next, ...later] = arrivals;
+
+  // The bus the map follows: the next one, until the rider picks another.
+  const [picked, setPicked] = useState<string | null>(null);
+  const followed = arrivals.find((a) => keyOf(a) === picked) ?? next;
+  const live = !!data?.feed.live && followed?.basis !== "scheduled";
+  const { data: route } = useRoute(live ? (followed?.routeId ?? undefined) : undefined);
+  const focus = live && followed?.plate ? (route?.buses.find((b) => b.plate === followed.plate) ?? null) : null;
+  const way = useMemo(() => (route && stop ? wayTowards(route.patterns ?? [{ path: route.path }], stop, focus) : undefined), [route, stop, focus]);
+  const mapBuses =
+    route && live && followed ? route.buses.map((b) => ({ ...b, code: followed.code, system: followed.system })) : data?.feed.live ? data.incoming.filter((b) => !only || b.code === only) : [];
+
+  const map = useRef<MapHandle>(null);
+  // The map frames the bus once on arriving and again when the rider picks one; it never moves on its own after that.
+  const framed = useRef(false);
+  useEffect(() => {
+    if (!focus || !stop || framed.current) return;
+    framed.current = true;
+    map.current?.fit([
+      [stop.lon, stop.lat],
+      [focus.lon, focus.lat],
+    ]);
+  }, [focus, stop]);
+
+  const follow = (a: Arrival) => {
+    void Haptics.selectionAsync();
+    framed.current = false;
+    setPicked(keyOf(a));
+  };
 
   const save = () => {
     if (!data) return;
@@ -61,10 +94,16 @@ export default function StopScreen() {
         map={
           stop && (
             <TransitMap
+              ref={map}
               center={{ lat: stop.lat, lon: stop.lon }}
               zoom={15.5}
               stops={[stop]}
-              buses={data?.feed.live ? data.incoming.filter((b) => !only || b.code === only) : []}
+              path={way?.line}
+              approach={way?.approach}
+              system={followed?.system}
+              buses={mapBuses}
+              showCodes={!route}
+              focusBusId={focus?.id ?? null}
               padding={layout.mapInset}
             />
           )
@@ -122,13 +161,10 @@ export default function StopScreen() {
               </ScrollView>
             )}
 
-            {next ? (
-              <NextBus arrival={next} />
-            ) : (
-              <Empty title={t.stop.none.title} body={t.stop.none.body} />
-            )}
+            {next ? <NextBus arrival={next} following={!!focus && followed === next} onPress={() => follow(next)} /> : <Empty title={t.stop.none.title} body={t.stop.none.body} />}
 
-            <FeedStatus feed={data.feed} />
+            {/* Each live arrival already says so; the notice is for when times fall back to the timetable. */}
+            {!data.feed.live && <FeedStatus feed={data.feed} />}
             <AlertCard alerts={data.alerts} />
 
             {later.length > 0 && (
@@ -137,7 +173,7 @@ export default function StopScreen() {
                   {t.stop.later}
                 </Text>
                 {later.slice(0, 10).map((a, i) => (
-                  <ArrivalRow key={`${a.code}-${a.at}-${i}`} arrival={a} first={i === 0} index={i} />
+                  <ArrivalRow key={`${a.code}-${a.at}-${i}`} arrival={a} first={i === 0} index={i} following={!!focus && followed === a} onPress={() => follow(a)} />
                 ))}
               </View>
             )}
@@ -154,14 +190,7 @@ export default function StopScreen() {
             </View>
           </>
         )}
-        {stop && (
-          <Button
-            variant="quiet"
-            height="md"
-            label={t.stop.report}
-            onPress={() => router.push({ pathname: "/report", params: { stopId: stop.id, stopName: stop.name } })}
-          />
-        )}
+        {stop && <Button variant="quiet" height="md" label={t.stop.report} onPress={() => router.push({ pathname: "/report", params: { stopId: stop.id, stopName: stop.name } })} />}
       </DetailScreen>
     </>
   );

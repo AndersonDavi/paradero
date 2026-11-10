@@ -18,6 +18,7 @@ export const zh: Messages = {
   },
 
   pace: {
+    estimated: "实时估计",
     scheduled: "按时刻表",
     onTime: "准点",
     late: (m) => `晚点 ${m} 分钟`,
@@ -103,6 +104,7 @@ export const zh: Messages = {
   routeRow: { open: "查看线路走向和运行中的车辆" },
 
   stop: {
+    followHint: "在地图上显示这辆公交",
     station: "TransMilenio 车站",
     sitp: "SITP 站点",
     failed: { title: "无法加载此站点", body: "请检查网络连接。如果仍然失败，可能是 TransMilenio 没有响应。" },
@@ -258,6 +260,15 @@ export const zh: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "来自 Croma 的一封信",
+      title: "Paradero 属于波哥大。",
+      body: "我们在 Croma 把它做成一项数字公共产品：免费、开源、没有广告，基于 TransMilenio 的开放数据。",
+      body2: "我们把它提供给波哥大市政府和 TransMilenio，让他们接手并成为自己的应用。在那之前，我们和你一起照顾它。",
+      sign: "Croma 团队",
+      rail: "数字公共产品",
+      next: "继续",
+    },
     byCroma: "Croma 出品的公共产品",
     by: "出品",
     eyebrow: "为波哥大打造的公共产品",

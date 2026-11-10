@@ -3,6 +3,8 @@ import { dedupeRoutes, describeRoute } from "@/transit/codes";
 import type { Alert, Arrival, Bus, Feed, Health, IncomingBus, Nearby, RouteDetail, SearchResult, Stop, StopDetail } from "@/transit/types";
 import type { z } from "zod";
 
+import { simplify } from "@/transit/path";
+
 import { cached, croma, isLive } from "./croma";
 import * as s from "./schemas";
 
@@ -103,6 +105,7 @@ export async function stopDetail(stopId: string): Promise<StopDetail | null> {
       basis: a.basis,
       delaySeconds: a.delay_seconds ?? null,
       vehicle: a.vehicle_label ?? null,
+      plate: a.license_plate ?? null,
     };
   });
 
@@ -157,6 +160,10 @@ async function loadRoute(routeId: string) {
       tripsPerWeek: own?.trips_per_week ?? null,
     },
     path: (main?.geometry?.coordinates ?? []).map((c) => [c[0], c[1]] as [number, number]),
+    patterns: [...r.patterns]
+      .sort((a, b) => b.trips_per_week - a.trips_per_week)
+      .slice(0, 4)
+      .map((pt) => ({ path: simplify((pt.geometry?.coordinates ?? []).map((c) => [c[0], c[1]] as [number, number]), 6), stops: pt.stops.map((st) => st.stop_id) })),
     stops: (main?.stops ?? []).flatMap((st) =>
       st.latitude == null || st.longitude == null ? [] : [{ id: st.stop_id, name: st.name ?? "Paradero", lat: st.latitude, lon: st.longitude }],
     ),

@@ -53,7 +53,7 @@ export default function RouteScreen() {
 
   const tint = p.ink;
   const hours = data?.route.firstDeparture && data.route.lastDeparture ? t.route.hours(data.route.firstDeparture, data.route.lastDeparture) : null;
-  const buses = data?.feed.live ? data.buses : [];
+  const buses = data?.feed.live ? data.buses.map((b) => ({ ...b, system: data.route.system })) : [];
 
   return (
     <>

@@ -36,7 +36,7 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
         void Haptics.selectionAsync();
         router.push({ pathname: "/stop/[id]", params: { id: saved.id } });
       }}
-      style={[styles.card, { width: large ? undefined : width, backgroundColor: p.elevated, borderColor: p.border, boxShadow: p.shadowSoft }]}>
+      style={[styles.card, { width: large ? undefined : width, borderColor: p.border }]}>
       <View style={styles.titles}>
         <Text variant="headline" numberOfLines={large ? undefined : 1}>
           {title}
@@ -64,7 +64,7 @@ export function SavedStopCard({ saved, width }: { saved: SavedStop; width?: numb
 }
 
 const styles = StyleSheet.create({
-  card: { padding: space[4], borderRadius: radius.xl, borderCurve: "continuous", gap: space[3], borderWidth: StyleSheet.hairlineWidth },
+  card: { padding: space[4], borderRadius: radius.xl, borderCurve: "continuous", gap: space[3], borderWidth: size.line.hair },
   titles: { gap: space[0.5] },
   list: { gap: space[2] },
   line: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: space[2] },

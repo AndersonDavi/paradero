@@ -18,6 +18,7 @@ export const de: Messages = {
   },
 
   pace: {
+    estimated: "Live geschätzt",
     scheduled: "Laut Fahrplan",
     onTime: "Pünktlich",
     late: (m) => `${m} Min. später`,
@@ -103,6 +104,7 @@ export const de: Messages = {
   routeRow: { open: "Öffnet den Linienverlauf und die Busse unterwegs" },
 
   stop: {
+    followHint: "Zeigt diesen Bus auf der Karte",
     station: "TransMilenio-Station",
     sitp: "SITP-Haltestelle",
     failed: { title: "Diese Haltestelle konnte nicht geladen werden", body: "Prüfe deine Verbindung. Wenn es weiter fehlschlägt, antwortet TransMilenio vielleicht nicht." },
@@ -259,6 +261,15 @@ export const de: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "Eine Notiz von Croma",
+      title: "Paradero gehört Bogotá.",
+      body: "Wir haben es bei Croma als digitales Gemeingut gebaut: kostenlos, Open Source und werbefrei, aus den offenen Daten von TransMilenio.",
+      body2: "Wir bieten es der Stadt Bogotá und TransMilenio an, damit sie es übernehmen und zu ihrem machen. Bis dahin kümmern wir uns gemeinsam mit dir darum.",
+      sign: "Das Croma-Team",
+      rail: "Digitale Gemeingüter",
+      next: "Weiter",
+    },
     byCroma: "Ein Gemeingut von Croma",
     by: "von",
     eyebrow: "Ein Gemeingut für Bogotá",

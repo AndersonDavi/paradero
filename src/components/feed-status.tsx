@@ -50,6 +50,20 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
     );
   }
 
+  if (feed.live) {
+    return (
+      <View accessible accessibilityLabel={label} style={styles.line}>
+        <Dot color={signal.live} pulse />
+        <Text variant="caption" weight={600}>
+          {title}
+        </Text>
+        <Text variant="caption" tone="muted" numberOfLines={large ? undefined : 1} style={styles.shrink}>
+          {detail}
+        </Text>
+      </View>
+    );
+  }
+
   return (
     <View accessible accessibilityLabel={label} style={[styles.inline, { borderColor: p.separator }]}>
       <Dot color={feed.live ? signal.live : signal.late} pulse={feed.live} />
@@ -68,6 +82,16 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
 const styles = StyleSheet.create({
   floating: { borderRadius: radius.pill, overflow: "hidden", maxWidth: "100%" },
   shrink: { flexShrink: 1 },
+  line: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", gap: space[2] },
   pill: { flexDirection: "row", alignItems: "center", gap: space[2], paddingVertical: space[2], paddingHorizontal: space[3] },
-  inline: { flexDirection: "row", alignItems: "flex-start", gap: space[3], padding: space[3], borderRadius: radius.lg, borderWidth: StyleSheet.hairlineWidth, borderCurve: "continuous", paddingTop: space[4] },
+  inline: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: space[3],
+    padding: space[3],
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderCurve: "continuous",
+    paddingTop: space[4],
+  },
 });

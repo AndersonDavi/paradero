@@ -18,6 +18,7 @@ export const pt: Messages = {
   },
 
   pace: {
+    estimated: "Estimativa ao vivo",
     scheduled: "Pelo horário",
     onTime: "No horário",
     late: (m) => `${m} min atrasado`,
@@ -103,6 +104,7 @@ export const pt: Messages = {
   routeRow: { open: "Abre o trajeto e os ônibus em circulação" },
 
   stop: {
+    followHint: "Mostra este ônibus no mapa",
     station: "Estação TransMilenio",
     sitp: "Ponto SITP",
     failed: { title: "Não conseguimos carregar este ponto", body: "Verifique sua conexão. Se continuar falhando, a TransMilenio pode não estar respondendo." },
@@ -259,6 +261,15 @@ export const pt: Messages = {
   },
 
   onboarding: {
+    note: {
+      eyebrow: "Uma nota da Croma",
+      title: "O Paradero é de Bogotá.",
+      body: "Nós o criamos na Croma como um bem público digital: gratuito, de código aberto e sem anúncios, feito com os dados abertos da TransMilenio.",
+      body2: "Nós o oferecemos à Prefeitura de Bogotá e à TransMilenio para que o adotem e o tornem seu. Enquanto isso, cuidamos dele com você.",
+      sign: "A equipe da Croma",
+      rail: "Bens Públicos Digitais",
+      next: "Continuar",
+    },
     byCroma: "Um bem público da Croma",
     by: "por",
     eyebrow: "Um bem público para Bogotá",

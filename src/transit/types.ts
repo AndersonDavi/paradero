@@ -50,6 +50,8 @@ export interface Arrival {
   basis: Basis;
   delaySeconds: number | null;
   vehicle: string | null;
+  /** The bus's plate, to find it on the map. Absent from servers before 0.0.5. */
+  plate?: string | null;
 }
 
 export interface Alert {
@@ -96,6 +98,8 @@ export interface RouteDetail {
     tripsPerWeek: number | null;
   };
   path: [number, number][];
+  /** Every way the route runs, the busiest first: its line and its stops in order. Absent from servers before 0.0.5. */
+  patterns?: { path: [number, number][]; stops: string[] }[];
   stops: { id: string; name: string; lat: number; lon: number }[];
   buses: Bus[];
   alerts: Alert[];
