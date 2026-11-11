@@ -2,6 +2,10 @@
  * Spanish is the source language. Every other language mirrors this shape, so a missing
  * key fails the type check instead of showing up blank on someone's phone.
  */
+
+/** "a. m." and "p. m." already end in a period, which also closes the sentence: "a las 5:10 p. m. Usamos…". */
+const end = (text: string) => (text.endsWith(".") ? text : `${text}.`);
+
 export const es = {
   tabs: { nearby: "Cerca", saved: "Guardados", about: "Bien público", search: "Buscar" },
 
@@ -52,7 +56,7 @@ export const es = {
     updated: (since: string) => `Actualizado ${since}`,
     notPublishing: (operator: string) => `${operator} no está publicando posiciones`,
     noLive: "sin datos en vivo",
-    noLiveSince: (since: string) => `Sin datos en vivo. Última actualización ${since}. Usamos el horario publicado.`,
+    noLiveSince: (since: string) => `Sin datos en vivo. Última actualización ${end(since)} Usamos el horario publicado.`,
   },
 
   systems: {
@@ -141,7 +145,7 @@ export const es = {
     last: "Último bus",
     onRoad: "En vía",
     notPublishing: (operator: string) => `${operator} no está publicando posiciones, así que no dibujamos buses que podrían no estar ahí.`,
-    noneNow: (hours: string | null) => `No vemos buses en vía ahora.${hours ? ` Opera de ${hours}.` : ""}`,
+    noneNow: (hours: string | null) => `No vemos buses en vía ahora.${hours ? ` Opera de ${end(hours)}` : ""}`,
     hours: (from: string, to: string) => `${from} a ${to}`,
     onRoadNow: (n: number) => `${n} ${n === 1 ? "bus" : "buses"} en vía. Toca un paradero para ver cuándo llega.`,
     stops: (n: number) => `${n} paradas`,
@@ -228,7 +232,7 @@ export const es = {
     after: (balance: string) => `Quedó en ${balance}`,
     speech: {
       balance: (amount: string) => `Saldo en la tarjeta: ${amount}.`,
-      movement: (kind: string, amount: string, when: string, after: string) => `${kind} de ${amount}${when ? `, ${when}` : ""}. Quedó en ${after}.`,
+      movement: (kind: string, amount: string, when: string, after: string) => `${end(`${kind} de ${amount}${when ? `, ${when}` : ""}`)} Quedó en ${after}.`,
     },
     sheet: {
       hold: "Acerca tu TuLlave a la parte de arriba del iPhone",
