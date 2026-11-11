@@ -63,4 +63,5 @@ export const icons = {
   neighbourhood: { ios: "house.fill", android: "home" },
   place: { ios: "mappin.circle.fill", android: "place" },
   settings: { ios: "gearshape.fill", android: "settings" },
+  address: { ios: "signpost.right.and.left.fill", android: "pin_drop" },
 } satisfies Record<string, Name>;

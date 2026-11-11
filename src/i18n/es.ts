@@ -162,6 +162,7 @@ export const es = {
     first: "Primer bus",
     last: "Último bus",
     onRoad: "En vía",
+    noTimetable: (operator: string) => `${operator} publicó por dónde pasa esta ruta, pero no su horario: sabemos sus paraderos, no a qué hora llega.`,
     notPublishing: (operator: string) => `${operator} no está publicando posiciones, así que no dibujamos buses que podrían no estar ahí.`,
     noneNow: (hours: string | null) => `No vemos buses en vía ahora.${hours ? ` Opera de ${end(hours)}` : ""}`,
     hours: (from: string, to: string) => `${from} a ${to}`,
@@ -197,11 +198,12 @@ export const es = {
     stops: "Estaciones y paraderos",
     places: "Lugares",
     placeholderPlaces: "Ruta, paradero o a dónde vas",
-    placesHint: "También puedes escribir a dónde vas, como un centro comercial, un hospital o un barrio, y te decimos cómo llegar.",
+    placesHint: "También puedes escribir a dónde vas: un centro comercial, un hospital, un barrio o una dirección como Calle 72 # 53-50. Te decimos cómo llegar.",
     placeHint: "Muestra cómo llegar desde donde estás",
   },
 
   placeKinds: {
+    address: "Dirección",
     mall: "Comercio",
     health: "Salud",
     education: "Colegio o universidad",

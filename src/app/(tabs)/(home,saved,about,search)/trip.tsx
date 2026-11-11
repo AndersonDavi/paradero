@@ -67,9 +67,9 @@ export default function TripScreen() {
   }, [data, count, t]);
 
   const stops = useMemo(() => {
-    const list = journey?.legs.flatMap((l) => (l.kind === "ride" ? [l.from, l.to] : [])) ?? [];
+    const list = journey?.legs.flatMap((l) => (l.kind === "ride" ? [l.from, l.to].map((s) => ({ ...s, system: l.route.system })) : [])) ?? [];
     const unique = [...new Map(list.map((s) => [s.id, { ...s, kind: "stop" as const }])).values()];
-    return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const }] : unique;
+    return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const, system: "other" as const }] : unique;
   }, [journey, to, name]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
 

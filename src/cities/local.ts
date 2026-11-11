@@ -2,6 +2,7 @@ import { ApiError } from "@/lib/http";
 import type { Arrival, Feed, Nearby, Place, PlaceKind, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
 
 import { metres, plan } from "./planner";
+import { buildStreets, type Streets, type StreetsData } from "./streets";
 import type { Point, TransitSource } from "./types";
 
 /**
@@ -78,7 +79,10 @@ const GENERIC = /^(c\.?\s*c\.?|centro comercial|barrio|urbanizacion|hospital|cli
 const core = (name: string) => compact(plain(name).replace(GENERIC, ""));
 
 /** Among places that match as well, the kinds people most often go to first. */
-const KIND_ORDER: Record<PlaceKind, number> = { mall: 0, transit: 1, education: 2, park: 3, neighbourhood: 4, health: 5, other: 6 };
+const KIND_ORDER: Record<PlaceKind, number> = { address: 0, mall: 1, transit: 2, education: 3, park: 4, neighbourhood: 5, health: 6, other: 7 };
+
+/** "Calle 45D # 1F-32", "Cra 46 84-10": worth reading the streets for. */
+const ADDRESS_LIKE = /^\s*(av(enida)?\.?\s+)?(calle|cll?|carrera|cra|kra|kr|cr|diagonal|dg|transversal|tv)\.?\s*\d+\w*\s*(#|no|con|x|\s)\s*\w*\d/i;
 
 /** The city's clock: which timetable runs today and how many minutes of it have gone by. */
 function cityClock(now: Date): { day: Day; tomorrow: Day; minute: number } {
@@ -202,8 +206,21 @@ function arrivalsAt(index: Index, stop: number, now: Date): Arrival[] {
 
 const pathOf = (index: Index, p: Pattern): [number, number][] => p.line ?? p.stops.map((s) => [index.stops[s].lon, index.stops[s].lat]);
 
-export function localSource(read: () => Promise<CityData>): TransitSource {
+export function localSource(read: () => Promise<CityData>, readStreets?: () => Promise<StreetsData>): TransitSource {
   let loading: Promise<Index> | null = null;
+  let streetsLoading: Promise<Streets> | null = null;
+  // The streets are the biggest file: read only to plan a trip or find an address, and a trip still plans with
+  // straight walks if they cannot be read.
+  const streets = (): Promise<Streets | null> => {
+    if (!readStreets) return Promise.resolve(null);
+    streetsLoading ??= readStreets()
+      .then(buildStreets)
+      .catch((error: unknown) => {
+        streetsLoading = null;
+        throw error;
+      });
+    return streetsLoading.catch(() => null);
+  };
   const load = () => {
     loading ??= read()
       .then(build)
@@ -263,6 +280,21 @@ export function localSource(read: () => Promise<CityData>): TransitSource {
         )
         .slice(0, SEARCH_MAX)
         .map((x) => x.place);
+      // An address goes first: whoever types one knows exactly where they are going.
+      if (ADDRESS_LIKE.test(query)) {
+        const map = await streets();
+        const areas = index.places.filter((p) => p.kind === "neighbourhood");
+        const found = map?.addresses(query, near) ?? [];
+        places.unshift(
+          ...found.map((a, i) => {
+            const area = areas.reduce<{ name: string; m: number } | null>((best, p) => {
+              const m = metres(a.point, p);
+              return m < 1500 && (!best || m < best.m) ? { name: p.name, m } : best;
+            }, null);
+            return { id: `address-${i}-${a.point.lat.toFixed(5)},${a.point.lon.toFixed(5)}`, name: a.label, kind: "address" as const, lat: a.point.lat, lon: a.point.lon, area: area?.name ?? null, distanceM: far(a.point) };
+          }),
+        );
+      }
       return { stops, routes, places };
     },
 
@@ -271,10 +303,15 @@ export function localSource(read: () => Promise<CityData>): TransitSource {
       const now = new Date();
       const clock = cityClock(now);
       const startOfMinute = Math.floor(now.getTime() / 60_000) * 60_000;
-      const journeys = plan(index, tripsFor(index, now), from, to, {
-        minute: clock.minute,
-        at: (minute) => new Date(startOfMinute + (minute - clock.minute) * 60_000).toISOString(),
-      });
+      const map = await streets();
+      const journeys = plan(
+        index,
+        tripsFor(index, now),
+        from,
+        to,
+        { minute: clock.minute, at: (minute) => new Date(startOfMinute + (minute - clock.minute) * 60_000).toISOString() },
+        map,
+      );
       return { feed: index.feed, journeys };
     },
 

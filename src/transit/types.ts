@@ -109,7 +109,7 @@ export interface Nearby {
   stops: Stop[];
 }
 
-export type PlaceKind = "mall" | "health" | "education" | "park" | "neighbourhood" | "transit" | "other";
+export type PlaceKind = "mall" | "health" | "education" | "park" | "neighbourhood" | "transit" | "other" | "address";
 
 /** Somewhere a rider wants to go that is not a stop: a mall, a hospital, a neighbourhood. Its name is never translated. */
 export interface Place {

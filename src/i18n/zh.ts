@@ -150,6 +150,7 @@ export const zh: Messages = {
     first: "首班车",
     last: "末班车",
     onRoad: "运行中",
+    noTimetable: (operator) => `${operator} 公布了这条线路的走向，但没有公布时刻表：我们知道它的站点，不知道它几点到。`,
     notPublishing: (operator) => `${operator} 目前没有发布车辆位置，所以我们不会画出可能并不存在的车辆。`,
     noneNow: (hours) => `目前没有运行中的车辆。${hours ? `运营时间 ${hours}。` : ""}`,
     hours: (from, to) => `${from} 至 ${to}`,
@@ -185,11 +186,11 @@ export const zh: Messages = {
     stops: "车站和站点",
     places: "地点",
     placeholderPlaces: "线路、站点或目的地",
-    placesHint: "也可以输入你要去的地方，比如商场、医院或街区，我们告诉你怎么去。",
+    placesHint: "也可以输入你要去的地方：商场、医院、街区，或像 Calle 72 # 53-50 这样的地址。我们告诉你怎么去。",
     placeHint: "显示从你所在位置怎么去",
   },
 
-  placeKinds: { mall: "购物", health: "医疗", education: "学校或大学", park: "公园或运动", neighbourhood: "街区", transit: "客运站", other: "地点" },
+  placeKinds: { address: "地址", mall: "购物", health: "医疗", education: "学校或大学", park: "公园或运动", neighbourhood: "街区", transit: "客运站", other: "地点" },
 
   trip: {
     title: "怎么去",

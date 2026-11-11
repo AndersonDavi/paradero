@@ -1,5 +1,6 @@
 import type { Journey, Leg, PlanStop, RouteRef } from "@/transit/types";
 
+import type { Streets, Walk } from "./streets";
 import type { Point } from "./types";
 
 /**
@@ -19,7 +20,7 @@ export interface Network {
 
 /** A walking pace most riders keep: 75 metres a minute, about 4.5 km/h. */
 export const WALK_M_PER_MIN = 75;
-/** Streets are longer than a straight line between two points. */
+/** Streets are longer than a straight line between two points: the guess when a city has no street map. */
 const DETOUR = 1.25;
 /** How far a rider will walk to the first stop, or from the last. */
 const ACCESS_M = 1000;
@@ -40,7 +41,8 @@ export function metres(a: Point, b: Point): number {
   return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
 }
 
-export const walkMinutes = (m: number) => Math.max(1, Math.ceil((m * DETOUR) / WALK_M_PER_MIN));
+/** Minutes to walk a distance already measured along the streets (or guessed with DETOUR). */
+export const walkMinutes = (m: number) => Math.max(1, Math.ceil(m / WALK_M_PER_MIN));
 
 type Label =
   | { kind: "access"; meters: number }
@@ -62,7 +64,7 @@ function walksBetween(net: Network): Reach[][] {
       net.stops.flatMap((b, j) => {
         if (i === j) return [];
         const meters = metres(a, b);
-        return meters <= TRANSFER_M ? [{ stop: j, meters: Math.round(meters) }] : [];
+        return meters <= TRANSFER_M ? [{ stop: j, meters: Math.round(meters * DETOUR) }] : [];
       }),
     );
     transfers.set(net, paths);
@@ -70,10 +72,31 @@ function walksBetween(net: Network): Reach[][] {
   return paths;
 }
 
-function around(net: Network, point: Point): Reach[] {
+const snaps = new WeakMap<Network, ({ vertex: number; meters: number } | null)[]>();
+
+/** Where each stop meets the streets, worked out once per network. */
+function stopsOnStreets(net: Network, streets: Streets) {
+  let list = snaps.get(net);
+  if (!list) {
+    list = net.stops.map((s) => streets.snap(s));
+    snaps.set(net, list);
+  }
+  return list;
+}
+
+/** The stops a rider can walk to from a point, and how far: along the streets when the city has them. */
+function around(net: Network, point: Point, walk: Walk | null, streets: Streets | null): Reach[] {
   for (const radius of [ACCESS_M, ACCESS_M * 1.6]) {
     const found = net.stops.flatMap((s, stop) => {
-      const meters = metres(point, s);
+      if (walk && streets && walk.origin >= 0) {
+        const at = stopsOnStreets(net, streets)[stop];
+        const meters = at ? walk.dist[at.vertex] + at.meters : Infinity;
+        // A stop beside the rider is closer in a straight line than by going round the block to its corner.
+        const straight = metres(point, s);
+        const best = straight < HERE_M * 2 ? straight : meters;
+        return best <= radius ? [{ stop, meters: Math.round(best) }] : [];
+      }
+      const meters = metres(point, s) * DETOUR;
       return meters <= radius ? [{ stop, meters: Math.round(meters) }] : [];
     });
     if (found.length) return found;
@@ -201,22 +224,39 @@ export interface Clock {
  * Up to three ways from `from` to `to`, the soonest arrival first. `trips` holds, for each pattern, the minutes
  * of the day its trips leave their first stop, in order, tomorrow's after today's.
  */
-export function plan(net: Network, trips: number[][], from: Point, to: Point, clock: Clock): Journey[] {
-  const access = around(net, from);
-  const egress = around(net, to);
-  const direct = Math.round(metres(from, to));
+export function plan(net: Network, trips: number[][], from: Point, to: Point, clock: Clock, streets: Streets | null = null): Journey[] {
+  // With the city's streets, every walk is measured and drawn along them; without, it is a straight line, longer
+  // by a guess. One search out from each end covers every stop a rider would walk to.
+  const reach = ACCESS_M * 1.6 + 200;
+  const fromWalk = streets?.walkFrom(from, reach) ?? null;
+  const toWalk = streets?.walkFrom(to, reach) ?? null;
+  const onStreets = streets ? stopsOnStreets(net, streets) : null;
+  const access = around(net, from, fromWalk, streets);
+  const egress = around(net, to, toWalk, streets);
   const found: (Journey & { arrive: number; leave: number; key: string })[] = [];
 
-  const walkLeg = (meters: number, a: PlanStop | null, b: PlanStop | null, pa: Point, pb: Point): Leg => ({
+  const straight = (a: Point, b: Point): [number, number][] => [
+    [a.lon, a.lat],
+    [b.lon, b.lat],
+  ];
+  const byStreet = (walk: Walk | null, stop: number, meters: number) => {
+    const at = onStreets?.[stop];
+    return streets && walk && at && meters >= HERE_M * 2 && walk.dist[at.vertex] < Infinity ? streets.line(walk, at.vertex, net.stops[stop]) : null;
+  };
+  const accessPath = (stop: number, meters: number) => byStreet(fromWalk, stop, meters) ?? straight(from, net.stops[stop]);
+  const egressPath = (stop: number, meters: number) => byStreet(toWalk, stop, meters)?.reverse() ?? straight(net.stops[stop], to);
+  const transferPath = (a: number, b: number, meters: number) => {
+    const walk = streets && meters >= HERE_M * 2 ? streets.walkFrom(net.stops[a], TRANSFER_M * 3) : null;
+    return byStreet(walk, b, meters) ?? straight(net.stops[a], net.stops[b]);
+  };
+
+  const walkLeg = (meters: number, a: PlanStop | null, b: PlanStop | null, path: [number, number][]): Leg => ({
     kind: "walk",
     meters,
     minutes: walkMinutes(meters),
     from: a,
     to: b,
-    path: [
-      [pa.lon, pa.lat],
-      [pb.lon, pb.lat],
-    ],
+    path,
   });
 
   const search = (now: number) => {
@@ -233,17 +273,17 @@ export function plan(net: Network, trips: number[][], from: Point, to: Point, cl
       if (!end || arrive >= bestSoFar) continue;
       const legs: Leg[] = [];
       let leave = now;
-      if (end.meters >= HERE_M) legs.unshift(walkLeg(end.meters, net.stops[end.stop], null, net.stops[end.stop], to));
+      if (end.meters >= HERE_M) legs.unshift(walkLeg(end.meters, net.stops[end.stop], null, egressPath(end.stop, end.meters)));
       let s = end.stop;
       let label = labels[round][s];
       let guard = 0;
       while (label && guard++ < 10) {
         if (label.kind === "access") {
-          if (label.meters >= HERE_M) legs.unshift(walkLeg(label.meters, null, net.stops[s], from, net.stops[s]));
+          if (label.meters >= HERE_M) legs.unshift(walkLeg(label.meters, null, net.stops[s], accessPath(s, label.meters)));
           break;
         }
         if (label.kind === "walk") {
-          legs.unshift(walkLeg(label.meters, net.stops[label.from], net.stops[s], net.stops[label.from], net.stops[s]));
+          legs.unshift(walkLeg(label.meters, net.stops[label.from], net.stops[s], transferPath(label.from, s, label.meters)));
           s = label.from;
           label = labels[label.round][s];
           continue;
@@ -292,6 +332,10 @@ export function plan(net: Network, trips: number[][], from: Point, to: Point, cl
   const journeys: Journey[] = unique.slice(0, OPTIONS).map(({ arrive: _a, leave: _l, key: _k, ...j }) => j);
 
   // Close enough, walking is a way too, and sometimes the best one.
+  const there = streets?.snap(to);
+  const onFoot = fromWalk && there && fromWalk.dist[there.vertex] < Infinity;
+  const direct = Math.round(onFoot ? fromWalk.dist[there.vertex] + there.meters : metres(from, to) * DETOUR);
+  const directPath = onFoot && streets ? streets.line(fromWalk, there.vertex, to) : straight(from, to);
   const walkOnly = walkMinutes(direct);
   if (direct <= 2500 && (journeys.length === 0 || walkOnly <= journeys[0].minutes + 5)) {
     journeys.push({
@@ -300,7 +344,7 @@ export function plan(net: Network, trips: number[][], from: Point, to: Point, cl
       minutes: walkOnly,
       walkM: direct,
       rides: 0,
-      legs: [walkLeg(direct, null, null, from, to)],
+      legs: [walkLeg(direct, null, null, directPath)],
     });
     journeys.sort((a, b) => Date.parse(a.arrives) - Date.parse(b.arrives));
   }

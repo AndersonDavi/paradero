@@ -1,4 +1,4 @@
-import { timetable } from "./barranquilla-timetable";
+import { streets, timetable } from "./barranquilla-timetable";
 import { localSource } from "./local";
 import type { City } from "./types";
 
@@ -19,5 +19,5 @@ export const barranquilla: City = {
   bounds: { west: -75.0, south: 10.78, east: -74.65, north: 11.12 },
   examples: ["S1", "R10", "A3-4", "Portal de Soledad", "C. C. Viva", "Universidad del Norte"],
   card: false,
-  source: localSource(timetable),
+  source: localSource(timetable, streets),
 };

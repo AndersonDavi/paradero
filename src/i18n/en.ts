@@ -154,6 +154,7 @@ export const en: Messages = {
     first: "First bus",
     last: "Last bus",
     onRoad: "Running",
+    noTimetable: (operator) => `${operator} published where this route goes, but not its schedule: we know its stops, not when it comes.`,
     notPublishing: (operator) => `${operator} is not publishing bus positions, so we don't draw buses that might not be there.`,
     noneNow: (hours) => `No buses running right now.${hours ? ` Runs ${hours}.` : ""}`,
     hours: (from, to) => `${from} to ${to}`,
@@ -189,11 +190,11 @@ export const en: Messages = {
     stops: "Stations and stops",
     places: "Places",
     placeholderPlaces: "Route, stop or where you're going",
-    placesHint: "You can also type where you're going, like a mall, a hospital or a neighbourhood, and we'll tell you how to get there.",
+    placesHint: "You can also type where you're going: a mall, a hospital, a neighbourhood or an address like Calle 72 # 53-50. We'll tell you how to get there.",
     placeHint: "Shows how to get there from where you are",
   },
 
-  placeKinds: { mall: "Shopping", health: "Health", education: "School or university", park: "Park or sports", neighbourhood: "Neighbourhood", transit: "Terminal", other: "Place" },
+  placeKinds: { address: "Address", mall: "Shopping", health: "Health", education: "School or university", park: "Park or sports", neighbourhood: "Neighbourhood", transit: "Terminal", other: "Place" },
 
   trip: {
     title: "How to get there",

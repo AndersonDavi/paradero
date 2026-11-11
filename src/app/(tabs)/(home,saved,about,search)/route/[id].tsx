@@ -105,7 +105,7 @@ export default function RouteScreen() {
             <View style={[styles.note, { backgroundColor: p.surface }]}>
               <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
               <Text variant="callout" tone="muted" style={{ flex: 1 }}>
-                {!data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
+                {data.route.tripsPerWeek === 0 ? t.route.noTimetable(city.operator) : !data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
               </Text>
             </View>
 

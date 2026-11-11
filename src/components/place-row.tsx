@@ -22,6 +22,7 @@ const KIND_ICON: Record<PlaceKind, (typeof icons)[keyof typeof icons]> = {
   neighbourhood: icons.neighbourhood,
   transit: icons.station,
   other: icons.place,
+  address: icons.address,
 };
 
 /** A place a rider can go to. Tapping it shows how to get there from where they are. */

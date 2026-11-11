@@ -150,6 +150,7 @@ export const ja: Messages = {
     first: "始発",
     last: "終発",
     onRoad: "運行中",
+    noTimetable: (operator) => `${operator}はこの路線の経路を公開していますが、時刻表は公開していません。停留所はわかりますが、到着時刻はわかりません。`,
     notPublishing: (operator) => `${operator}がバスの位置情報を公開していないため、実際にいないかもしれないバスは表示しません。`,
     noneNow: (hours) => `現在運行中のバスはありません。${hours ? `運行時間は${hours}です。` : ""}`,
     hours: (from, to) => `${from}〜${to}`,
@@ -185,11 +186,11 @@ export const ja: Messages = {
     stops: "駅と停留所",
     places: "場所",
     placeholderPlaces: "路線、停留所、行き先",
-    placesHint: "ショッピングモールや病院、地区など行き先を入力すると、行き方をお伝えします。",
+    placesHint: "ショッピングモール、病院、地区、または Calle 72 # 53-50 のような住所を入力すると、行き方をお伝えします。",
     placeHint: "現在地からの行き方を表示します",
   },
 
-  placeKinds: { mall: "買い物", health: "医療", education: "学校・大学", park: "公園・スポーツ", neighbourhood: "地区", transit: "ターミナル", other: "場所" },
+  placeKinds: { address: "住所", mall: "買い物", health: "医療", education: "学校・大学", park: "公園・スポーツ", neighbourhood: "地区", transit: "ターミナル", other: "場所" },
 
   trip: {
     title: "行き方",

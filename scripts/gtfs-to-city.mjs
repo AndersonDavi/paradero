@@ -4,12 +4,16 @@
  * (src/cities/local.ts). Trips that run the same stops with the same times between them become one
  * pattern with a list of departures, which keeps a whole city's timetable to a few hundred kilobytes.
  *
- *   node scripts/gtfs-to-city.mjs <city> <folder with the GTFS .txt files> public/cities/<city>.json [osm lines] [osm places]
+ *   node scripts/gtfs-to-city.mjs <city> <folder with the GTFS .txt files> public/cities/<city>.json [osm lines] [osm places] [newer stops]
  *
  * Platforms that belong to a station are folded into the station, as riders name them. When the GTFS has no
  * shapes, pass the route lines from scripts/osm-route-lines.mjs: each pattern is then drawn along the streets
  * of the OpenStreetMap route that fits its stops best, cut from its first stop to its last. A pattern that no
  * line fits is drawn stop to stop.
+ *
+ * A city can also pass a newer list of each route's stops in order, without times (for Barranquilla,
+ * Transmetro's "Paraderos del Sistema" on datos.gov.co, 2020). Routes the timetable lacks are added from it with
+ * their stops and no departures, so riders find them and see where they go, marked as having no timetable.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -21,14 +25,21 @@ const CITIES = {
       url: "https://github.com/ColombiaInfo/ColombiaGTFS",
       license: "CC BY-SA 4.0",
     },
-    // Transmetro: the A and U routes feed the trunk from the neighbourhoods; the rest run on the trunk.
-    system: (code) => (/^[AU]/.test(code) ? "alimentador" : "troncal"),
+    // Transmetro: the A and U routes feed the trunk from the neighbourhoods; R, S and B run on the trunk.
+    system: (code) => (/^[AU]/.test(code) ? "alimentador" : /^[RSB]/.test(code) ? "troncal" : "other"),
+    newer: {
+      name: "Transmetro, Paraderos del Sistema (datos.gov.co, 2020)",
+      url: "https://www.datos.gov.co/d/hxy3-94yh",
+      license: "Datos abiertos del Gobierno de Colombia",
+      // Routes whose code is a name in that list, by the code riders see on the bus.
+      codes: { Gran: "GM" },
+    },
     // Weekday, Saturday and Sunday timetables, as the feed names them.
     services: { H: "weekday", S: "saturday", D: "sunday" },
   },
 };
 
-const [cityId, folder, out, osmFile, placesFile] = process.argv.slice(2);
+const [cityId, folder, out, osmFile, placesFile, newerFile] = process.argv.slice(2);
 const city = CITIES[cityId];
 if (!city || !folder || !out) {
   console.error(`Usage: node scripts/gtfs-to-city.mjs <${Object.keys(CITIES).join("|")}> <gtfs folder> <out.json>`);
@@ -125,6 +136,59 @@ for (const [tripId, list] of timesByTrip) {
   const pattern = patterns.get(key) ?? { route: routeIndex.get(trip.route_id), stops: seq, offsets, departures: {} };
   (pattern.departures[service] ??= []).push(start);
   patterns.set(key, pattern);
+}
+
+// ---- Routes from a newer list of stops, without times ----
+
+let added = 0;
+if (newerFile && city.newer) {
+  const rows = JSON.parse(readFileSync(newerFile, "utf8"));
+  const known = new Set(routes.map((r) => r[1]));
+  const byRoute = new Map();
+  for (const row of rows) {
+    const list = byRoute.get(row.nombre_ruta) ?? [];
+    list.push(row);
+    byRoute.set(row.nombre_ruta, list);
+  }
+  const plain = (text) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const far = (a, b) => Math.hypot((a[0] - b[0]) * 110_540, (a[1] - b[1]) * 111_320 * Math.cos((a[0] * Math.PI) / 180));
+  /** The timetable's own stop when this one is it: the same name close by, or any stop a few metres away. */
+  const stopFor = (row, newId) => {
+    const at = [Number(row.coordenada_y), Number(row.coordenada_x)];
+    const name = plain(row.nombre_parada);
+    let best = -1;
+    let bestM = Infinity;
+    stops.forEach((s, i) => {
+      const m = far(at, [s[2], s[3]]);
+      const fits = (plain(s[1]) === name && m < 150) || m < 25;
+      if (fits && m < bestM) [best, bestM] = [i, m];
+    });
+    if (best >= 0) return best;
+    stops.push([newId, row.nombre_parada.trim(), round(at[0]), round(at[1]), 0, 0]);
+    stopIndex.set(newId, stops.length - 1);
+    return stops.length - 1;
+  };
+  for (const [name, list] of byRoute) {
+    const first = name.split(" ")[0];
+    const code = city.newer.codes[first] ?? first;
+    if (known.has(code)) continue;
+    list.sort((a, b) => Number(a.secuencia_parada) - Number(b.secuencia_parada));
+    const id = `newer-${code}`;
+    routeIndex.set(id, routes.length);
+    // "A1-2 Carrera 8" is code and name; a route listed only by its name ("Gran Malecon") keeps the whole name.
+    const label = code === first ? name.slice(first.length).trim() : name;
+    routes.push([id, code, label || code, city.system(code)]);
+    known.add(code);
+    const seq = list.map((row) => stopFor(row, `newer-${code}-${row.secuencia_parada}`)).filter((s, i, all) => i === 0 || all[i - 1] !== s);
+    // No times: offsets are a guess from the distance at a bus's pace, and there are no departures to plan with.
+    const offsets = [0];
+    for (let i = 1; i < seq.length; i++) {
+      const [a, b] = [stops[seq[i - 1]], stops[seq[i]]];
+      offsets.push(offsets[i - 1] + Math.max(1, Math.round(far([a[2], a[3]], [b[2], b[3]]) / 300)));
+    }
+    patterns.set(`${id}|${seq.join(",")}`, { route: routeIndex.get(id), stops: seq, offsets, departures: {} });
+    added++;
+  }
 }
 
 // ---- Drawing patterns along the streets ----
@@ -344,6 +408,7 @@ const data = {
   version: 1,
   city: cityId,
   source: city.source,
+  newer: added ? { name: city.newer.name, url: city.newer.url, license: city.newer.license } : null,
   lines: osmLines.length ? { name: "OpenStreetMap", url: "https://www.openstreetmap.org/copyright", license: "ODbL" } : null,
   validUntil: (() => {
     const ends = table("calendar").map((c) => c.end_date).sort();
@@ -387,4 +452,4 @@ function places() {
 
 const json = JSON.stringify(data);
 writeFileSync(out, json);
-console.log(`${cityId}: ${stops.length} stops, ${data.places?.length ?? 0} places, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);
+console.log(`${cityId}: ${stops.length} stops, ${added} routes added without times, ${data.places?.length ?? 0} places, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);
