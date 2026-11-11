@@ -25,7 +25,7 @@ import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
 import { useLocation } from "@/lib/location";
 import { placeId, placesInOrder, setPlace, toggleTrip, tripId, useIsSaved, useSaved, type SavedPlace } from "@/lib/saved";
-import { usePalette } from "@/theme/colors";
+import { photo, systems, usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
 import type { Journey, Leg } from "@/transit/types";
 
@@ -296,9 +296,10 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
           <>
             <View style={styles.rail}>
               <View style={[styles.line, { backgroundColor: p.ink, opacity: i === 0 ? 0 : 1 }]} />
-              <View style={[styles.mark, { backgroundColor: p.surface }]}>
+              {/* A bus step is the bus on its kind of route's colour, so trunk and feeder buses read apart at a glance. */}
+              <View style={[styles.mark, { backgroundColor: s.leg ? systems[s.leg.route.system].dot : p.surface }]}>
                 {s.leg ? (
-                  <RouteBadge code={s.leg.route.code} system={s.leg.route.system} size="sm" />
+                  <Icon name={icons.bus} color={photo.text} size="sm" />
                 ) : (
                   <Icon name={s.icon === "walk" ? icons.walk : s.icon === "end" ? icons.finish : icons.stop} color={p.text} size="sm" />
                 )}

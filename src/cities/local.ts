@@ -31,6 +31,11 @@ export interface CityData {
   paths?: string[];
   /** Places from OpenStreetMap: name, lat, lon, kind, and the neighbourhood it is in (an index here, or -1). */
   places?: [string, number, number, PlaceKind, number][];
+  /**
+   * Neighbourhoods: a name and its outlines as encoded polylines, or only a name where OpenStreetMap has no
+   * outline. A place's last field indexes this list; without it (older files), the places list itself.
+   */
+  areas?: [string, ...string[]][];
 }
 
 interface Pattern {
@@ -54,6 +59,8 @@ interface Index {
   /** For each stop: the patterns that call there and where in the pattern. */
   calls: { pattern: number; at: number }[][];
   places: (Omit<Place, "distanceM"> & { words: string; core: string })[];
+  /** The neighbourhoods OpenStreetMap has an outline for, as lon/lat rings. */
+  outlines: { name: string; rings: [number, number][][] }[];
   /** Each pattern's trips for one day, today's and then tomorrow's, kept for the day they were worked out for. */
   trips: { day: string; list: number[][] } | null;
 }
@@ -142,7 +149,9 @@ function build(data: CityData): Index {
   });
 
   const raw = data.places ?? [];
-  const places = raw.map(([name, lat, lon, kind, area], i) => ({ id: `place-${i}`, name, lat, lon, kind, area: raw[area]?.[0] ?? null, words: compact(name), core: core(name) }));
+  const areaName = (i: number) => (data.areas ? data.areas[i]?.[0] : raw[i]?.[0]) ?? null;
+  const places = raw.map(([name, lat, lon, kind, area], i) => ({ id: `place-${i}`, name, lat, lon, kind, area: areaName(area), words: compact(name), core: core(name) }));
+  const outlines = (data.areas ?? []).flatMap(([name, ...rings]) => (rings.length ? [{ name, rings: rings.map(decode) }] : []));
 
   // The timetable's own date: shown as "last updated", so a rider can tell how old it is.
   const asOf = data.validUntil ? `${data.validUntil}T00:00:00-05:00` : new Date(0).toISOString();
@@ -156,8 +165,36 @@ function build(data: CityData): Index {
     patterns,
     calls,
     places,
+    outlines,
     trips: null,
   };
+}
+
+/** Whether a point is inside a ring, by counting the ring's edges a line from it crosses. */
+function inside(point: Point, ring: [number, number][]): boolean {
+  let crossed = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i];
+    const [xj, yj] = ring[j];
+    if (yi > point.lat !== yj > point.lat && point.lon < ((xj - xi) * (point.lat - yi)) / (yj - yi) + xi) crossed = !crossed;
+  }
+  return crossed;
+}
+
+/**
+ * The neighbourhood a point is in: the outline that holds it, or, where OpenStreetMap has none, the nearest
+ * neighbourhood by name, within a walk.
+ */
+function neighbourhoodOf(index: Index, point: Point): string | null {
+  const holder = index.outlines.find((o) => o.rings.some((ring) => inside(point, ring)));
+  if (holder) return holder.name;
+  let best: { name: string; m: number } | null = null;
+  for (const p of index.places) {
+    if (p.kind !== "neighbourhood") continue;
+    const m = metres(point, p);
+    if (m < 1500 && (!best || m < best.m)) best = { name: p.name, m };
+  }
+  return best?.name ?? null;
 }
 
 /** Each pattern's trips from its first stop: today's, then tomorrow's, so a trip late at night can still be planned. */
@@ -283,16 +320,17 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       // An address goes first: whoever types one knows exactly where they are going.
       if (ADDRESS_LIKE.test(query)) {
         const map = await streets();
-        const areas = index.places.filter((p) => p.kind === "neighbourhood");
         const found = map?.addresses(query, near) ?? [];
         places.unshift(
-          ...found.map((a, i) => {
-            const area = areas.reduce<{ name: string; m: number } | null>((best, p) => {
-              const m = metres(a.point, p);
-              return m < 1500 && (!best || m < best.m) ? { name: p.name, m } : best;
-            }, null);
-            return { id: `address-${i}-${a.point.lat.toFixed(5)},${a.point.lon.toFixed(5)}`, name: a.label, kind: "address" as const, lat: a.point.lat, lon: a.point.lon, area: area?.name ?? null, distanceM: far(a.point) };
-          }),
+          ...found.map((a, i) => ({
+            id: `address-${i}-${a.point.lat.toFixed(5)},${a.point.lon.toFixed(5)}`,
+            name: a.label,
+            kind: "address" as const,
+            lat: a.point.lat,
+            lon: a.point.lon,
+            area: neighbourhoodOf(index, a.point),
+            distanceM: far(a.point),
+          })),
         );
       }
       return { stops, routes, places };
