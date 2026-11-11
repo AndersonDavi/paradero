@@ -10,6 +10,7 @@ import { city } from "@/cities";
 import { Button } from "@/components/button";
 import { Chip } from "@/components/chip";
 import { DetailScreen } from "@/components/detail-screen";
+import { Dot } from "@/components/dot";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { RouteBadge } from "@/components/route-badge";
@@ -27,7 +28,7 @@ import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
 import { useLocation } from "@/lib/location";
 import { placeId, placesInOrder, setPlace, toggleTrip, tripId, useIsSaved, useSaved, type SavedPlace } from "@/lib/saved";
-import { photo, systems, usePalette } from "@/theme/colors";
+import { photo, signal, systems, usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
 import type { Journey, Leg } from "@/transit/types";
 
@@ -36,7 +37,6 @@ const DESTINATION = "destination";
 
 /** How long a rider can say they stay at a stop before going on, in minutes. */
 const STAYS = [0, 15, 30, 60];
-
 interface Later {
   name: string;
   lat: number;
@@ -235,13 +235,6 @@ export default function TripScreen() {
                     <Icon name={icons.close} color={p.faint} size="sm" />
                   </Pressable>
                 </View>
-                {i < stops.length - 1 && (
-                  <View accessibilityRole="radiogroup" accessibilityLabel={s.name} style={styles.chips}>
-                    {STAYS.map((m) => (
-                      <Chip key={m} radio label={t.trip.stayFor(m)} accessibilityLabel={`${t.trip.stayFor(m)}, ${s.name}`} selected={later[i].stay === m} onPress={() => setStay(i, m)} />
-                    ))}
-                  </View>
-                )}
               </View>
             ))}
           </View>
@@ -290,20 +283,16 @@ export default function TripScreen() {
                 <Option key={i} journey={j} selected={j === journey} onPress={() => pick(i)} />
               ))}
             </View>
-            {journey && <Steps journey={journey} name={name ?? ""} stay={later[0]?.stay} />}
+            {journey && <Steps journey={journey} name={name ?? ""} />}
             {later.map((s, i) => {
+              // Each stop on the way: how long the rider stays, then the soonest bus on once they are ready to go.
+              const before = i === 0 ? journey : data.then[i - 1];
               const leg = data.then[i];
-              return leg ? (
-                <Steps key={`${i}-${s.lat},${s.lon}`} journey={leg} name={s.name} stay={later[i + 1]?.stay} title={t.trip.thenTo(s.name)} />
-              ) : (
-                <View key={`${i}-${s.lat},${s.lon}`} style={styles.list}>
-                  <Text variant="title" accessibilityRole="header">
-                    {t.trip.thenTo(s.name)}
-                  </Text>
-                  <Text variant="callout" tone="muted">
-                    {t.trip.noLeg}
-                  </Text>
-                </View>
+              return (
+                <Fragment key={`${i}-${s.lat},${s.lon}`}>
+                  {before && <Stay place={stops[i].name} arrives={before.arrives} stay={s.stay} next={leg} to={s.name} onStay={(m) => setStay(i, m)} />}
+                  {leg && <Steps journey={leg} name={s.name} title={t.trip.thenTo(s.name)} />}
+                </Fragment>
               );
             })}
           </>
@@ -363,7 +352,40 @@ interface Step {
   leg?: Extract<Leg, { kind: "ride" }>;
 }
 
-function Steps({ journey, name, stay, title }: { journey: Journey; name: string; stay?: number; title?: string }) {
+/**
+ * A stop on the way: the rider says how long they stay (passing through by default), and the screen says when the
+ * next bus on comes once they are ready to go, or warns them when by then there is none left.
+ */
+function Stay({ place, arrives, stay, next, to, onStay }: { place: string; arrives: string; stay: number; next: Journey | null | undefined; to: string; onStay: (minutes: number) => void }) {
+  const p = usePalette();
+  const t = useT();
+  const ride = next?.legs.find((l): l is Extract<Leg, { kind: "ride" }> => l.kind === "ride");
+  const ready = Date.parse(arrives) + stay * 60_000;
+  const wait = next ? Math.max(0, Math.round((Date.parse(next.departs) - ready) / 60_000)) : 0;
+  const missed = !next;
+  return (
+    <View style={styles.list}>
+      <Text variant="title" accessibilityRole="header">
+        {t.trip.stayAt(place)}
+      </Text>
+      <View accessibilityRole="radiogroup" accessibilityLabel={t.trip.stayAt(place)} style={styles.chips}>
+        {STAYS.map((m) => (
+          <Chip key={m} radio label={t.trip.stayFor(m)} selected={stay === m} onPress={() => onStay(m)} />
+        ))}
+      </View>
+      {(ride || missed) && (
+        <View accessibilityRole={missed ? "alert" : undefined} accessibilityLiveRegion="polite" style={[styles.notice, { backgroundColor: p.surface }]}>
+          <Dot color={missed ? signal.alert : signal.live} />
+          <Text variant="callout" style={styles.noticeText}>
+            {missed ? t.trip.missed(to) : t.trip.nextBus(ride!.route.code, clock(ride!.departs), wait > 0 ? clock(next!.departs) : null)}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function Steps({ journey, name, title }: { journey: Journey; name: string; title?: string }) {
   const p = usePalette();
   const t = useT();
   const large = useLargeText();
@@ -376,7 +398,7 @@ function Steps({ journey, name, stay, title }: { journey: Journey; name: string;
       { key: `o${i}`, icon: "off", title: t.trip.getOff(l.to.name, clock(l.arrives)) },
     ];
   });
-  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: [clock(journey.arrives), stay ? t.trip.stayThere(stay) : null].filter(Boolean).join("  ·  ") });
+  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: clock(journey.arrives) });
 
   return (
     <View>
@@ -465,4 +487,6 @@ const styles = StyleSheet.create({
   pass: { flexDirection: "row", gap: space[3], minHeight: size.control.sm - space[2] },
   passDot: { width: size.dot.md, height: size.dot.md, borderRadius: radius.pill, borderWidth: size.line.rule },
   passName: { flex: 1, alignSelf: "center" },
+  notice: { flexDirection: "row", alignItems: "center", gap: space[3], padding: space[4], borderRadius: radius.lg, borderCurve: "continuous" },
+  noticeText: { flex: 1 },
 });

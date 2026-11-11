@@ -32,6 +32,8 @@ const CHANGE_MIN = 1;
 /** Closer than this, the stop is where the rider already is: no walk to tell. */
 const HERE_M = 25;
 const OPTIONS = 3;
+/** The app is for catching a bus: walking the whole way is only offered when the place is this close, in metres. */
+const ON_FOOT_M = 800;
 
 export function metres(a: Point, b: Point): number {
   const rad = Math.PI / 180;
@@ -332,12 +334,12 @@ export function plan(net: Network, trips: number[][], from: Point, to: Point, cl
   const unique = [...new Map(kept.map((j) => [j.key, j])).values()].sort((a, b) => a.arrive - b.arrive || a.rides - b.rides);
   const journeys: Journey[] = unique.slice(0, OPTIONS).map(({ arrive: _a, leave: _l, key: _k, ...j }) => j);
 
-  // Close enough, walking is a way too, and sometimes the best one.
+  // Very close, walking is a way too, and sometimes the best one. Farther, the rider wants a bus, not a long walk.
   const there = streets && fromWalk ? streets.reach(fromWalk, streets.near(to)) : null;
   const direct = Math.round(there ? there.meters : metres(from, to) * DETOUR);
   const directPath = there && streets && fromWalk ? streets.line(fromWalk, there.vertex, to) : straight(from, to);
   const walkOnly = walkMinutes(direct);
-  if (direct <= 2500 && (journeys.length === 0 || walkOnly <= journeys[0].minutes + 5)) {
+  if (direct <= ON_FOOT_M && (journeys.length === 0 || walkOnly <= journeys[0].minutes + 5)) {
     journeys.push({
       departs: clock.at(clock.minute),
       arrives: clock.at(clock.minute + walkOnly),

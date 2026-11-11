@@ -52,14 +52,11 @@ export default function StopScreen() {
   const stop = data?.stop ?? early;
   // This stop stands out; the others stay on the map, faint, to see what is around and open them.
   const every = useEveryStop().data;
-  const mapStops = useMemo(
-    () => (stop ? [{ ...stop, tone: "focus" as const }, ...(every ?? []).filter((s) => s.id !== stop.id).map((s) => ({ ...s, tone: "faint" as const }))] : []),
-    [stop, every],
-  );
   const saved = useIsSaved("stop", id);
   const [only, setOnly] = useState<string | null>(null);
 
-  const codes = useMemo(() => [...new Set((data?.arrivals ?? []).map((a) => a.code))], [data]);
+  // In a fixed order, so the chips stay put as buses come and go and a tap lands on the route the rider meant.
+  const codes = useMemo(() => [...new Set((data?.arrivals ?? []).map((a) => a.code))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [data]);
   const arrivals = (data?.arrivals ?? []).filter((a) => !only || a.code === only);
   const [next, ...later] = arrivals;
 
@@ -67,9 +64,19 @@ export default function StopScreen() {
   const [picked, setPicked] = useState<string | null>(null);
   const followed = arrivals.find((a) => keyOf(a) === picked) ?? next;
   const live = !!data?.feed.live && followed?.basis !== "scheduled";
-  const { data: route } = useRoute(live ? (followed?.routeId ?? undefined) : undefined);
+  // The line of the bus followed live, or of the route the rider picked, drawn on the map with its stops.
+  const shown = live || only || picked ? (followed?.routeId ?? undefined) : undefined;
+  const { data: route } = useRoute(shown);
   const focus = live && followed?.plate ? (route?.buses.find((b) => b.plate === followed.plate) ?? null) : null;
   const way = useMemo(() => (route && stop ? wayTowards(route.patterns ?? [{ path: route.path }], stop, focus) : undefined), [route, stop, focus]);
+  const mapStops = useMemo(() => {
+    if (!stop) return [];
+    const onRoute = new Set(route?.stops.map((s) => s.id));
+    return [
+      { ...stop, tone: "focus" as const },
+      ...(every ?? []).filter((s) => s.id !== stop.id).map((s) => ({ ...s, tone: onRoute.has(s.id) ? ("pass" as const) : ("faint" as const) })),
+    ];
+  }, [stop, every, route]);
   const mapBuses =
     route && live && followed ? route.buses.map((b) => ({ ...b, code: followed.code, system: followed.system })) : data?.feed.live ? data.incoming.filter((b) => !only || b.code === only) : [];
 
@@ -85,6 +92,12 @@ export default function StopScreen() {
     framed.current = { bus: focus.id, at: Date.now() };
     map.current?.fit([[stop.lon, stop.lat], [focus.lon, focus.lat], ...(rider ? [[rider.lon, rider.lat] as [number, number]] : [])]);
   }, [focus, stop, rider, place.status]);
+
+  // Picking a route shows its whole line, so the rider sees where it goes from here.
+  const line = !live && only ? way?.line : undefined;
+  useEffect(() => {
+    if (line && line.length > 1) map.current?.fit(line);
+  }, [line]);
 
   const follow = (a: Arrival) => {
     void Haptics.selectionAsync();
