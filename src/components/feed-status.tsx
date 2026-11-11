@@ -23,7 +23,7 @@ function useTick(ms: number) {
 }
 
 /** Says where every time comes from. Riders forgive old data; they don't forgive being told it is live when it isn't. */
-export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined; floating?: boolean }) {
+export function FeedStatus({ feed, floating = false, compact = false }: { feed: Feed | undefined; floating?: boolean; compact?: boolean }) {
   const p = usePalette();
   const large = useLargeText();
   const t = useT();
@@ -50,6 +50,21 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
           )}
         </View>
       </Glass>
+    );
+  }
+
+  // One line above a list: what kind of times these are, and why, in a sentence.
+  if (compact) {
+    return (
+      <View accessible accessibilityLabel={label} style={styles.line}>
+        <Dot color={feed.live ? signal.live : signal.late} pulse={feed.live} />
+        <Text variant="caption" weight={600}>
+          {title}
+        </Text>
+        <Text variant="caption" tone="muted" numberOfLines={large ? undefined : 2} style={styles.shrink}>
+          {feed.live ? since(feed.asOf) : t.feed.notPublishing(city.operator)}
+        </Text>
+      </View>
     );
   }
 

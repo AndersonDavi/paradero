@@ -326,7 +326,17 @@ export const ja: Messages = {
     view: "報告を見る",
   },
 
+  settings: {
+    title: "設定",
+    open: "設定",
+    hint: "都市、言語、表示、時刻の形式",
+    city: "都市",
+    cityHint: "停留所、路線、時刻は選んだ都市のものになります。",
+    changeCity: (name) => `${name}、都市を変更`,
+  },
+
   onboarding: {
+    city: "どの都市で移動しますか？",
     note: {
       rail: "デジタル公共財",
       next: "続ける",

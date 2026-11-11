@@ -331,7 +331,17 @@ export const en: Messages = {
     view: "View the report",
   },
 
+  settings: {
+    title: "Settings",
+    open: "Settings",
+    hint: "City, language, appearance and time format",
+    city: "City",
+    cityHint: "Stops, routes and times are those of the city you choose.",
+    changeCity: (name) => `${name}, change city`,
+  },
+
   onboarding: {
+    city: "Which city do you get around in?",
     note: {
       rail: "Digital Public Goods",
       next: "Continue",

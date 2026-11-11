@@ -24,11 +24,12 @@ if (Platform.OS !== "web") {
 
 const LIVE = 20_000;
 
-// Every answer comes from the city's own source; its id is in each key so two cities never share a cached answer.
-const source = city.source;
+// Every answer comes from the city's own source, read when asked so a change of city takes effect at once; its id
+// is in each key so two cities never share a cached answer.
+const source = () => city.source;
 
 export function useHealth() {
-  return useQuery({ queryKey: ["health", city.id], queryFn: () => source.health(), refetchInterval: 60_000 });
+  return useQuery({ queryKey: ["health", city.id], queryFn: () => source().health(), refetchInterval: 60_000 });
 }
 
 export function useNearby(point: { lat: number; lon: number } | null) {
@@ -37,7 +38,7 @@ export function useNearby(point: { lat: number; lon: number } | null) {
   const lon = point ? Math.round(point.lon * 1000) / 1000 : null;
   return useQuery({
     queryKey: ["nearby", city.id, lat, lon],
-    queryFn: () => source.nearby({ lat: lat ?? 0, lon: lon ?? 0 }),
+    queryFn: () => source().nearby({ lat: lat ?? 0, lon: lon ?? 0 }),
     enabled: !!point,
     placeholderData: keepPreviousData,
     staleTime: 5 * 60_000,
@@ -50,15 +51,15 @@ export function useSearch(query: string, near?: { lat: number; lon: number } | n
   const at = near ? { lat: Math.round(near.lat * 1000) / 1000, lon: Math.round(near.lon * 1000) / 1000 } : null;
   return useQuery({
     queryKey: ["search", city.id, q.toLowerCase(), at?.lat, at?.lon],
-    queryFn: () => source.search(q, at),
+    queryFn: () => source().search(q, at),
     enabled: q.length >= 2,
     placeholderData: keepPreviousData,
     staleTime: 30 * 60_000,
   });
 }
 
-const stopQuery = (id: string) => ({ queryKey: ["stop", city.id, id], queryFn: () => source.stop(id), staleTime: 15_000 });
-const routeQuery = (id: string) => ({ queryKey: ["route", city.id, id], queryFn: () => source.route(id), staleTime: 15_000 });
+const stopQuery = (id: string) => ({ queryKey: ["stop", city.id, id], queryFn: () => source().stop(id), staleTime: 15_000 });
+const routeQuery = (id: string) => ({ queryKey: ["route", city.id, id], queryFn: () => source().route(id), staleTime: 15_000 });
 
 export function prefetchStop(id: string) {
   void queryClient.prefetchQuery(stopQuery(id));
@@ -87,7 +88,7 @@ export function useRoute(id: string | undefined) {
 }
 
 /** Whether this city can plan a trip on the phone. */
-export const canPlan = typeof source.plan === "function";
+export const canPlan = () => typeof source().plan === "function";
 
 /**
  * Ways from where the rider is to a place. Worked out on the phone from the timetable, so the exact position is
@@ -96,8 +97,8 @@ export const canPlan = typeof source.plan === "function";
 export function usePlan(from: { lat: number; lon: number } | null, to: { lat: number; lon: number } | null) {
   return useQuery({
     queryKey: ["plan", city.id, from?.lat, from?.lon, to?.lat, to?.lon],
-    queryFn: () => source.plan!(from!, to!),
-    enabled: canPlan && !!from && !!to,
+    queryFn: () => source().plan!(from!, to!),
+    enabled: canPlan() && !!from && !!to,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     refetchInterval: 60_000,

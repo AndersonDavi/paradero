@@ -331,7 +331,17 @@ export const pt: Messages = {
     view: "Ver o relato",
   },
 
+  settings: {
+    title: "Ajustes",
+    open: "Ajustes",
+    hint: "Cidade, idioma, aparência e formato de hora",
+    city: "Cidade",
+    cityHint: "Os pontos, as linhas e os horários são os da cidade que você escolher.",
+    changeCity: (name) => `${name}, mudar de cidade`,
+  },
+
   onboarding: {
+    city: "Em que cidade você se move?",
     note: {
       rail: "Bens Públicos Digitais",
       next: "Continuar",

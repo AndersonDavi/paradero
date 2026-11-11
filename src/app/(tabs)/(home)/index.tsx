@@ -7,7 +7,7 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { city } from "@/cities";
+import { useCity } from "@/cities";
 import { CardEntry } from "@/components/card-entry";
 import { FeedStatus } from "@/components/feed-status";
 import { Glass } from "@/components/glass";
@@ -34,6 +34,7 @@ const SNAPS = ["30%", "58%", "92%"];
 export default function Home() {
   const p = usePalette();
   const t = useT();
+  const city = useCity();
   const { screenReader } = useAccessibility();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -72,8 +73,19 @@ export default function Home() {
       />
       </View>
 
+      {/* The city the map is on, and the way to change it with the rest of the settings. */}
       <View pointerEvents="box-none" style={[styles.top, { top: insets.top + space[2] }]}>
-        <FeedStatus feed={health.data?.feed} floating />
+        <PressableScale accessibilityRole="button" accessibilityLabel={t.settings.changeCity(city.name)} onPress={() => router.push("/ajustes")}>
+          <Glass interactive style={styles.cityGlass}>
+            <Icon name={icons.place} color={p.text} size="sm" />
+            <Text variant="headline">{city.name}</Text>
+          </Glass>
+        </PressableScale>
+        <PressableScale accessibilityRole="button" accessibilityLabel={t.settings.open} accessibilityHint={t.settings.hint} onPress={() => router.push("/ajustes")}>
+          <Glass interactive style={styles.locateGlass}>
+            <Icon name={icons.settings} color={p.text} size="md" />
+          </Glass>
+        </PressableScale>
       </View>
 
       <Animated.View style={[styles.locate, locateStyle]} pointerEvents={screenReader ? "none" : "box-none"} accessibilityElementsHidden={screenReader} importantForAccessibility={screenReader ? "no-hide-descendants" : "auto"}>
@@ -103,6 +115,9 @@ export default function Home() {
         handleComponent={QuietHandle}
 >
         <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
+          <View style={styles.notice}>
+            <FeedStatus feed={health.data?.feed} compact />
+          </View>
           <View style={styles.hello}>
             <Text variant="eyebrow" tone="faint">
               {greeting()}
@@ -117,7 +132,7 @@ export default function Home() {
             style={[styles.where, { backgroundColor: p.surface }]}>
             <Icon name={icons.search} color={p.text} size="md" weight="bold" />
             <Text variant="body" tone="muted">
-              {canPlan ? t.search.placeholderPlaces : t.home.searchPlaceholder}
+              {canPlan() ? t.search.placeholderPlaces : t.home.searchPlaceholder}
             </Text>
           </PressableScale>
 
@@ -188,7 +203,9 @@ function SectionTitle({ title, detail }: { title: string; detail?: string }) {
 
 const styles = StyleSheet.create({
   screen: { flex: 1 },
-  top: { position: "absolute", left: space[4], right: space[4], alignItems: "flex-start" },
+  top: { position: "absolute", left: space[4], right: space[4], flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  cityGlass: { flexDirection: "row", alignItems: "center", gap: space[2], minHeight: size.control.md, paddingHorizontal: space[4], borderRadius: radius.pill },
+  notice: { paddingHorizontal: layout.gutter, paddingBottom: space[3] },
   locate: { position: "absolute", top: 0, right: space[4] },
   locateGlass: { width: size.control.md, height: size.control.md, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
   hello: { paddingHorizontal: layout.gutter, paddingTop: space[1], gap: space[0.5] },

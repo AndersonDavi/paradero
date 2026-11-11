@@ -1,18 +1,15 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
-import type { ReactNode } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
-import { Chip } from "@/components/chip";
 import { CromaWordmark } from "@/components/croma-mark";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
-import { LANGUAGES, setLanguage, useLanguageChoice, useT, type Language, type LanguageChoice } from "@/i18n";
+import { useT } from "@/i18n";
 import { useHealth } from "@/lib/api";
-import { setAppearance, setClock, setContrast, useAppearance, useClock, useContrast, type Appearance, type Clock, type Contrast } from "@/lib/appearance";
 import { usePalette } from "@/theme/colors";
 import { layout, size, space } from "@/theme/tokens";
 
@@ -27,18 +24,10 @@ const PROMISES = [
   { icon: icons.code, key: "code" },
 ] as const;
 
-const APPEARANCES: Appearance[] = ["system", "light", "dark"];
-const CONTRASTS: Contrast[] = ["system", "high"];
-const CLOCKS: Clock[] = ["12", "24"];
-const CHOICES: LanguageChoice[] = ["system", ...(Object.keys(LANGUAGES) as Language[])];
 
 export default function About() {
   const p = usePalette();
   const health = useHealth();
-  const appearance = useAppearance();
-  const contrast = useContrast();
-  const clock = useClock();
-  const language = useLanguageChoice();
   const t = useT();
 
   return (
@@ -111,30 +100,10 @@ export default function About() {
         <Text variant="eyebrow" tone="faint" accessibilityRole="header">
           {t.about.settingsTitle}
         </Text>
-        <Choices label={t.about.language.label}>
-          {CHOICES.map((c) => {
-            const label = c === "system" ? t.about.language.system : LANGUAGES[c].name;
-            return <Chip key={c} radio label={label} accessibilityLabel={`${label}, ${t.about.language.label}`} selected={language === c} onPress={() => setLanguage(c)} />;
-          })}
-        </Choices>
-        <Choices label={t.about.appearance.label}>
-          {APPEARANCES.map((a) => (
-            <Chip key={a} radio label={t.about.appearance[a]} accessibilityLabel={`${t.about.appearance[a]}, ${t.about.appearance.label}`} selected={appearance === a} onPress={() => setAppearance(a)} />
-          ))}
-        </Choices>
-        <Choices label={t.about.contrast.label}>
-          {CONTRASTS.map((c) => (
-            <Chip key={c} radio label={t.about.contrast[c]} accessibilityLabel={`${t.about.contrast[c]}, ${t.about.contrast.label}`} selected={contrast === c} onPress={() => setContrast(c)} />
-          ))}
-        </Choices>
-        <Choices label={t.about.clock.label}>
-          {CLOCKS.map((c) => (
-            <Chip key={c} radio label={t.about.clock[c]} accessibilityLabel={`${t.about.clock[c]}, ${t.about.clock.label}`} selected={clock === c} onPress={() => setClock(c)} />
-          ))}
-        </Choices>
-        <Text variant="callout" tone="muted">
-          {t.about.accessibility}
+        <Text variant="body" tone="muted">
+          {t.settings.hint}
         </Text>
+        <Button variant="secondary" label={t.settings.open} onPress={() => router.push("/ajustes")} />
       </View>
 
       <View style={styles.section}>
@@ -154,19 +123,6 @@ export default function About() {
   );
 }
 
-function Choices({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <View style={styles.group}>
-      <Text variant="caption" tone="muted">
-        {label}
-      </Text>
-      <View accessibilityRole="radiogroup" accessibilityLabel={label} style={styles.choices}>
-        {children}
-      </View>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   content: { paddingHorizontal: space[5], paddingTop: space[3], paddingBottom: layout.tabBarClearance, gap: space[10] },
   hero: { gap: space[3] },
@@ -174,7 +130,5 @@ const styles = StyleSheet.create({
   section: { gap: space[3] },
   promise: { flexDirection: "row", gap: space[4], paddingVertical: space[4], alignItems: "flex-start" },
   promiseText: { flex: 1, gap: space[0.5] },
-  group: { gap: space[2] },
-  choices: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   footer: { flexDirection: "row", justifyContent: "space-between", gap: space[2] },
 });

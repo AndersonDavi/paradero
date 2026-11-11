@@ -348,7 +348,17 @@ export const es = {
     view: "Ver el reporte",
   },
 
+  settings: {
+    title: "Ajustes",
+    open: "Ajustes",
+    hint: "Ciudad, idioma, apariencia y formato de hora",
+    city: "Ciudad",
+    cityHint: "Los paraderos, las rutas y los horarios son los de la ciudad que elijas.",
+    changeCity: (name: string) => `${name}, cambiar de ciudad`,
+  },
+
   onboarding: {
+    city: "¿En qué ciudad te mueves?",
     note: {
       rail: "Bienes Públicos Digitales",
       next: "Continuar",

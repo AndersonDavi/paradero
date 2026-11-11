@@ -7,8 +7,9 @@ import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
-import { city } from "@/cities";
+import { chooseCity, cities, useCity, type CityId } from "@/cities";
 import { Button } from "@/components/button";
+import { Chip } from "@/components/chip";
 import { CromaSymbol, CromaWordmark } from "@/components/croma-mark";
 import { Dot } from "@/components/dot";
 import { Glass } from "@/components/glass";
@@ -30,6 +31,7 @@ const PHOTOS: Record<number, number> = {
   2: require("@/assets/images/onboarding/location.jpg"),
 };
 const STEPS = 3;
+const CITIES = Object.keys(cities) as CityId[];
 
 const REASONS = [
   { icon: icons.stop, key: "stops" },
@@ -40,6 +42,7 @@ const REASONS = [
 export default function Onboarding() {
   const p = usePalette();
   const t = useT();
+  const city = useCity();
   // What names the city, its operator and its note; the rest of the welcome is the same everywhere.
   const here = t.places[city.id].onboarding;
   const large = useLargeText();
@@ -180,6 +183,17 @@ export default function Onboarding() {
             <Text variant="body" tone="muted">
               {here.body}
             </Text>
+            {/* Without the rider's location the app cannot tell the city, so they say it here; Settings changes it later. */}
+            <View style={styles.cities}>
+              <Text variant="caption" tone="muted">
+                {t.onboarding.city}
+              </Text>
+              <View accessibilityRole="radiogroup" accessibilityLabel={t.onboarding.city} style={styles.cityChips}>
+                {CITIES.map((id) => (
+                  <Chip key={id} radio label={cities[id].name} accessibilityLabel={`${cities[id].name}, ${t.settings.city}`} selected={city.id === id} onPress={() => chooseCity(id)} />
+                ))}
+              </View>
+            </View>
             <View style={styles.actions}>
               <Button label={t.onboarding.start} onPress={next} />
               <Text variant="chrome" tone="faint" style={styles.center}>
@@ -323,6 +337,8 @@ const styles = StyleSheet.create({
   },
   copy: { gap: space[3] },
   reasons: { gap: space[3], marginTop: space[1] },
+  cities: { gap: space[2], marginTop: space[2] },
+  cityChips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   reason: { flexDirection: "row", alignItems: "center", gap: space[3] },
   actions: { marginTop: space[6], gap: space[2] },
   center: { textAlign: "center", marginTop: space[1] },

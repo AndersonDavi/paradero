@@ -1,3 +1,6 @@
+import { useSyncExternalStore } from "react";
+
+import Storage from "@/lib/storage";
 import type { System } from "@/transit/types";
 
 import { barranquilla } from "./barranquilla";
@@ -8,12 +11,35 @@ export type { Box, City, CityId, Point, TransitSource } from "./types";
 
 export const cities: Record<CityId, City> = { bogota, barranquilla };
 
+const KEY = "city.v1";
+const isCity = (id: unknown): id is CityId => typeof id === "string" && id in cities;
+const saved = Storage.getItemSync(KEY);
+const built = process.env.EXPO_PUBLIC_CITY;
+const listeners = new Set<() => void>();
+
 /**
- * The city this build serves: Bogotá, unless the build sets EXPO_PUBLIC_CITY. Riders will choose in the app
- * once there is a picker; until then a build is for one city.
+ * The city the rider chose, kept on the phone. Before they choose, the one this build was made for
+ * (EXPO_PUBLIC_CITY), or Bogotá. A live binding: every module reads the current city; screens that draw it
+ * subscribe with useCity.
  */
-const chosen = process.env.EXPO_PUBLIC_CITY;
-export const city: City = chosen && chosen in cities ? cities[chosen as CityId] : bogota;
+export let city: City = isCity(saved) ? cities[saved] : isCity(built) ? cities[built] : bogota;
+
+export function chooseCity(id: CityId) {
+  if (city.id === id) return;
+  city = cities[id];
+  Storage.setItemSync(KEY, id);
+  listeners.forEach((l) => l());
+}
+
+export function useCity(): City {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => city,
+  );
+}
 
 const within = (box: Box, lat: number, lon: number) => lat > box.south && lat < box.north && lon > box.west && lon < box.east;
 

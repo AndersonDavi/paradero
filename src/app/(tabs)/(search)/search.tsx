@@ -46,7 +46,7 @@ export default function Search() {
   const typed = query.trim().length >= 2;
   const places = data?.places ?? [];
   const nothing = data && data.routes.length === 0 && data.stops.length === 0 && places.length === 0;
-  const placeholder = canPlan ? t.search.placeholderPlaces : t.search.placeholder;
+  const placeholder = canPlan() ? t.search.placeholderPlaces : t.search.placeholder;
 
   useEffect(() => {
     if (!typed) return;
@@ -66,7 +66,7 @@ export default function Search() {
           headerSearchBarOptions: {
             ref: bar,
             placeholder,
-            autoCapitalize: canPlan ? "sentences" : "characters",
+            autoCapitalize: canPlan() ? "sentences" : "characters",
             hideWhenScrolling: false,
             onChangeText: (e) => setText(e.nativeEvent.text),
             onCancelButtonPress: () => setText(""),
@@ -80,7 +80,7 @@ export default function Search() {
           <Animated.View entering={motion.appear()} style={styles.hint}>
             <Text variant="title">{t.search.hint}</Text>
             <Text variant="callout" tone="muted">
-              {canPlan ? t.search.placesHint : t.search.pairs}
+              {canPlan() ? t.search.placesHint : t.search.pairs}
             </Text>
             <View style={styles.chips}>
               {city.examples.map((e) => (
@@ -142,7 +142,7 @@ function Field({ value, onChange, placeholder }: { value: string; onChange: (tex
         onChangeText={onChange}
         placeholder={placeholder}
         placeholderTextColor={p.faint}
-        autoCapitalize={canPlan ? "sentences" : "characters"}
+        autoCapitalize={canPlan() ? "sentences" : "characters"}
         autoCorrect={false}
         returnKeyType="search"
         accessibilityLabel={placeholder}

@@ -62,4 +62,5 @@ export const icons = {
   park: { ios: "tree.fill", android: "park" },
   neighbourhood: { ios: "house.fill", android: "home" },
   place: { ios: "mappin.circle.fill", android: "place" },
+  settings: { ios: "gearshape.fill", android: "settings" },
 } satisfies Record<string, Name>;

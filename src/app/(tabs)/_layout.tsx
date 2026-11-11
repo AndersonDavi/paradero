@@ -2,6 +2,7 @@ import { NativeTabs } from "expo-router/native-tabs";
 import type { ReactNode } from "react";
 import { SafeAreaInsetsContext, useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { useCity } from "@/cities";
 import { useT } from "@/i18n";
 import { useCardShortcut } from "@/lib/tullave";
 import { usePalette } from "@/theme/colors";
@@ -24,9 +25,12 @@ export default function TabsLayout() {
   const p = usePalette();
   const t = useT();
   useCardShortcut();
+  // A change of city starts the tabs over, so every screen, map and list is the new city's.
+  const city = useCity();
   return (
     <BelowWebTabs>
       <NativeTabs
+        key={city.id}
         tintColor={p.ink}
         minimizeBehavior="onScrollDown"
         labelStyle={{ fontFamily: fonts[600] }}

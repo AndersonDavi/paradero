@@ -331,7 +331,17 @@ export const fr: Messages = {
     view: "Voir le signalement",
   },
 
+  settings: {
+    title: "Réglages",
+    open: "Réglages",
+    hint: "Ville, langue, apparence et format de l'heure",
+    city: "Ville",
+    cityHint: "Les arrêts, les lignes et les horaires sont ceux de la ville choisie.",
+    changeCity: (name) => `${name}, changer de ville`,
+  },
+
   onboarding: {
+    city: "Dans quelle ville vous déplacez-vous ?",
     note: {
       rail: "Biens publics numériques",
       next: "Continuer",

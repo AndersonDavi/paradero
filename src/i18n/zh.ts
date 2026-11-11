@@ -325,7 +325,17 @@ export const zh: Messages = {
     view: "查看报告",
   },
 
+  settings: {
+    title: "设置",
+    open: "设置",
+    hint: "城市、语言、外观和时间格式",
+    city: "城市",
+    cityHint: "站点、线路和时间都以你选择的城市为准。",
+    changeCity: (name) => `${name}，切换城市`,
+  },
+
   onboarding: {
+    city: "你在哪座城市出行？",
     note: {
       rail: "数字公共产品",
       next: "继续",

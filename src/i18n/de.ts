@@ -331,7 +331,17 @@ export const de: Messages = {
     view: "Meldung ansehen",
   },
 
+  settings: {
+    title: "Einstellungen",
+    open: "Einstellungen",
+    hint: "Stadt, Sprache, Darstellung und Zeitformat",
+    city: "Stadt",
+    cityHint: "Haltestellen, Linien und Zeiten sind die der gewählten Stadt.",
+    changeCity: (name) => `${name}, Stadt wechseln`,
+  },
+
   onboarding: {
+    city: "In welcher Stadt bist du unterwegs?",
     note: {
       rail: "Digitale Gemeingüter",
       next: "Weiter",
