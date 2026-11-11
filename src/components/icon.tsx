@@ -16,7 +16,9 @@ interface IconProps {
 export function Icon({ name, color, size = "md", weight = "semibold" }: IconProps) {
   const side = sizes.icon[size];
   if (Platform.OS === "android" && name === icons.starFill) return <FilledStar side={side} color={color} />;
-  return <SymbolView name={name} size={side} tintColor={color} weight={weight} resizeMode="scaleAspectFit" style={{ width: side, height: side }} />;
+  // The web draws the same Material Symbols as Android; without a web name it would draw nothing.
+  const named = Platform.OS === "web" && "android" in name ? ({ ...name, web: name.android } as Name) : name;
+  return <SymbolView name={named} size={side} tintColor={color} weight={weight} resizeMode="scaleAspectFit" style={{ width: side, height: side }} />;
 }
 
 /** Material Symbols on Android ships the outline only, so the saved star is drawn. */
@@ -52,4 +54,12 @@ export const icons = {
   check: { ios: "checkmark", android: "check" },
   flag: { ios: "exclamationmark.bubble", android: "feedback" },
   contactless: { ios: "wave.3.right", android: "contactless" },
+  directions: { ios: "arrow.triangle.turn.up.right.diamond.fill", android: "directions" },
+  finish: { ios: "flag.checkered", android: "sports_score" },
+  mall: { ios: "bag.fill", android: "shopping_bag" },
+  health: { ios: "cross.case.fill", android: "local_hospital" },
+  education: { ios: "graduationcap.fill", android: "school" },
+  park: { ios: "tree.fill", android: "park" },
+  neighbourhood: { ios: "house.fill", android: "home" },
+  place: { ios: "mappin.circle.fill", android: "place" },
 } satisfies Record<string, Name>;
