@@ -193,6 +193,23 @@ function install(map: MapLibreMap, scene: Scene) {
     .catch(() => undefined);
 }
 
+type Edges = typeof FIT_MARGIN;
+
+/**
+ * The framing margins, shrunk on a short map. MapLibre adds them to the inset the screen gave the map, and on a
+ * low window the two together can leave a route no room at all, so it is drawn at the widest zoom instead of framed.
+ * The margins never take more than half of what the inset leaves.
+ */
+function roomy(map: MapLibreMap, margin: Edges): Edges {
+  const { top = 0, right = 0, bottom = 0, left = 0 } = map.getPadding();
+  const inset = { top, right, bottom, left };
+  const { clientWidth: width, clientHeight: height } = map.getContainer();
+  const fit = (size: number, a: number, b: number) => Math.min(1, Math.max(0, size / 2) / Math.max(1, a + b));
+  const tall = fit(height - inset.top - inset.bottom, margin.top, margin.bottom);
+  const wide = fit(width - inset.left - inset.right, margin.left, margin.right);
+  return { top: margin.top * tall, right: margin.right * wide, bottom: margin.bottom * tall, left: margin.left * wide };
+}
+
 function setData(map: MapLibreMap | null, id: SourceId, data: Collection) {
   (map?.getSource(id) as GeoJSONSource | undefined)?.setData(data);
 }
@@ -399,7 +416,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
               [Math.min(...lons), Math.min(...lats)],
               [Math.max(...lons), Math.max(...lats)],
             ],
-            { padding: padding ? FIT_MARGIN : FIT_UNDER_SHEET, duration, essential: true },
+            { padding: roomy(map, padding ? FIT_MARGIN : FIT_UNDER_SHEET), duration, essential: true },
           ),
         );
       },
