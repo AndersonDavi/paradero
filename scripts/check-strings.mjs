@@ -5,9 +5,10 @@
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import ts from "typescript";
 
-const ROOT = new URL("..", import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL("..", import.meta.url));
 const DIRS = ["src/app", "src/components"];
 const SPOKEN_PROPS = new Set(["accessibilityLabel", "accessibilityHint", "label", "title", "placeholder", "body", "action", "detail", "description"]);
 const SAME_EVERYWHERE = new Set(["Paradero", "Croma", "TransMilenio", "usecroma.com", "C.C. Lourdes"]);
