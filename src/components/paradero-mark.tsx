@@ -1,3 +1,4 @@
+import { View } from "react-native";
 import Svg, { Circle, Defs, G, Mask, Rect } from "react-native-svg";
 
 /** Bars around the sign, in Croma's symbol language: [x, y, rotation] on a 1024 grid. */
@@ -63,26 +64,29 @@ const RING = [
 /** The Paradero mark: a stop sign inside a ring of data bars, the same drawing as the app icon. */
 export function ParaderoMark({ size, color, ring }: { size: number; color: string; ring: string }) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessible accessibilityRole="image" accessibilityLabel="Paradero">
-      <Defs>
-        <Mask id="sign" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
-          <Rect width="1024" height="1024" fill="black" />
-          <Rect x="300" y="170" width="424" height="424" rx="104" fill="white" />
-          <Rect x="376" y="246" width="272" height="252" rx="58" fill="black" />
-          <Rect x="410" y="284" width="204" height="102" rx="22" fill="white" />
-          <Circle cx="440" cy="448" r="19" fill="white" />
-          <Circle cx="584" cy="448" r="19" fill="white" />
-          <Rect x="404" y="486" width="46" height="52" rx="14" fill="black" />
-          <Rect x="574" y="486" width="46" height="52" rx="14" fill="black" />
-          <Rect x="484" y="594" width="56" height="250" rx="28" fill="white" />
-        </Mask>
-      </Defs>
-      <G>
-        {RING.map(([x, y, r]) => (
-          <Rect key={r} x={x - 5} y={y - 26} width="10" height="52" rx="5" fill={ring} transform={`rotate(${r} ${x} ${y})`} />
-        ))}
-      </G>
-      <Rect width="1024" height="1024" fill={color} mask="url(#sign)" />
-    </Svg>
+    // The label is on the View: on the web react-native-svg hands `accessible` to the <svg> element as is.
+    <View accessible accessibilityRole="image" accessibilityLabel="Paradero">
+      <Svg width={size} height={size} viewBox="0 0 1024 1024">
+        <Defs>
+          <Mask id="sign" maskUnits="userSpaceOnUse" x="0" y="0" width="1024" height="1024">
+            <Rect width="1024" height="1024" fill="black" />
+            <Rect x="300" y="170" width="424" height="424" rx="104" fill="white" />
+            <Rect x="376" y="246" width="272" height="252" rx="58" fill="black" />
+            <Rect x="410" y="284" width="204" height="102" rx="22" fill="white" />
+            <Circle cx="440" cy="448" r="19" fill="white" />
+            <Circle cx="584" cy="448" r="19" fill="white" />
+            <Rect x="404" y="486" width="46" height="52" rx="14" fill="black" />
+            <Rect x="574" y="486" width="46" height="52" rx="14" fill="black" />
+            <Rect x="484" y="594" width="56" height="250" rx="28" fill="white" />
+          </Mask>
+        </Defs>
+        <G>
+          {RING.map(([x, y, r]) => (
+            <Rect key={r} x={x - 5} y={y - 26} width="10" height="52" rx="5" fill={ring} transform={`rotate(${r} ${x} ${y})`} />
+          ))}
+        </G>
+        <Rect width="1024" height="1024" fill={color} mask="url(#sign)" />
+      </Svg>
+    </View>
   );
 }
