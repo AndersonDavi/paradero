@@ -8,6 +8,7 @@ import { toast } from "sonner-native";
 import { AlertCard } from "@/components/alert-card";
 import { Button } from "@/components/button";
 import { Chip } from "@/components/chip";
+import { city } from "@/cities";
 import { DetailScreen } from "@/components/detail-screen";
 import { ArrivalRow } from "@/components/arrival-row";
 import { FeedStatus } from "@/components/feed-status";
@@ -125,7 +126,7 @@ export default function StopScreen() {
               </Text>
               <View style={styles.meta}>
                 <Text variant="caption" tone="muted">
-                  {stop.kind === "station" ? t.stop.station : t.stop.sitp}
+                  {stop.kind === "station" ? t.stop.station(city.operator) : t.stop.sitp(city.network)}
                 </Text>
                 {stop.accessible && (
                   <View style={styles.meta}>
@@ -140,7 +141,7 @@ export default function StopScreen() {
           </View>
         )}
         {isLoading && <SkeletonList rows={5} kind="arrival" />}
-        {isError && !data && <Empty title={t.stop.failed.title} body={t.stop.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {isError && !data && <Empty title={t.stop.failed.title} body={t.stop.failed.body(city.operator)} action={t.common.retry} onAction={() => void refetch()} />}
 
         {data && (
           <>

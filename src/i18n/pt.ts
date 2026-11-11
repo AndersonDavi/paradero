@@ -6,6 +6,7 @@ export const pt: Messages = {
   time: {
     now: "Já",
     min: "min",
+    hour: "h",
     arriving: "Chegando",
     unknown: "sem horário previsto",
     secondsAgo: (s) => `há ${s} s`,
@@ -29,7 +30,11 @@ export const pt: Messages = {
     route: (code) => `Linha ${code}`,
     or: " ou ",
     arriving: "está chegando",
-    arrivesIn: (m) => `chega em ${m} ${m === 1 ? "minuto" : "minutos"}`,
+    arrivesIn: (m) => {
+      const [h, r] = [Math.floor(m / 60), m % 60];
+      const mins = (n: number) => `${n} ${n === 1 ? "minuto" : "minutos"}`;
+      return m < 60 ? `chega em ${mins(m)}` : `chega em ${h} ${h === 1 ? "hora" : "horas"}${r ? ` e ${mins(r)}` : ""}`;
+    },
     arrival: (route, toward, when, pace) => `${route}, sentido ${toward}, ${when}. ${pace}.`,
     nextBus: (arrival) => `Próximo ônibus. ${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join(". "),
@@ -42,7 +47,7 @@ export const pt: Messages = {
     live: "Ao vivo",
     scheduled: "Horário programado",
     updated: (since) => `Atualizado ${since}`,
-    notPublishing: "A TransMilenio não está publicando as posições",
+    notPublishing: (operator) => `A ${operator} não está publicando as posições`,
     noLive: "sem dados ao vivo",
     noLiveSince: (since) => `Sem dados ao vivo. Última atualização ${since}. Usamos o horário publicado.`,
   },
@@ -84,9 +89,7 @@ export const pt: Messages = {
     locate: "Centralizar o mapa na sua localização",
     yourStops: "Seus pontos",
     nearYou: "Perto de você",
-    fallbackArea: "Em Chapinero",
     count: (n) => `${n} ${n === 1 ? "ponto" : "pontos"} a menos de 700 m`,
-    outside: "Parece que você não está em Bogotá. Mostramos Chapinero; busque qualquer outro ponto acima.",
     denied: {
       title: "Sem sua localização, a gente te leva mesmo assim",
       body: "Busque qualquer linha ou ponto. Se ativar a localização, mostramos os que estão a uma quadra. Nunca a guardamos.",
@@ -94,6 +97,11 @@ export const pt: Messages = {
     },
     failed: { title: "Não conseguimos carregar os pontos", body: "Verifique sua conexão. Tentamos de novo assim que ela voltar." },
     none: { title: "Nenhum ponto a 700 m", body: "Busque o nome de uma estação ou a linha que você pega." },
+  },
+
+  places: {
+    bogota: { fallbackArea: "Em Chapinero", outside: "Parece que você não está em Bogotá. Mostramos Chapinero; busque qualquer outro ponto acima." },
+    barranquilla: { fallbackArea: "No Centro", outside: "Parece que você não está em Barranquilla. Mostramos o Centro; busque qualquer outro ponto acima." },
   },
 
   common: { retry: "Tentar de novo", station: "Estação", stop: "Ponto", accessible: "Acessível", done: "Pronto", close: "Fechar", clear: "Limpar" },
@@ -104,9 +112,9 @@ export const pt: Messages = {
 
   stop: {
     followHint: "Mostra este ônibus no mapa",
-    station: "Estação TransMilenio",
-    sitp: "Ponto SITP",
-    failed: { title: "Não conseguimos carregar este ponto", body: "Verifique sua conexão. Se continuar falhando, a TransMilenio pode não estar respondendo." },
+    station: (operator) => `Estação ${operator}`,
+    sitp: (network) => (network ? `Ponto ${network}` : "Ponto de ônibus"),
+    failed: { title: "Não conseguimos carregar este ponto", body: (operator) => `Verifique sua conexão. Se continuar falhando, a ${operator} pode não estar respondendo.` },
     all: "Todas",
     allLabel: "Todas as linhas",
     only: (code) => `Só a linha ${code}`,
@@ -128,7 +136,7 @@ export const pt: Messages = {
     first: "Primeiro ônibus",
     last: "Último ônibus",
     onRoad: "Circulando",
-    notPublishing: "A TransMilenio não está publicando as posições, então não desenhamos ônibus que podem não estar lá.",
+    notPublishing: (operator) => `A ${operator} não está publicando as posições, então não desenhamos ônibus que podem não estar lá.`,
     noneNow: (hours) => `Nenhum ônibus circulando agora.${hours ? ` Opera das ${hours}.` : ""}`,
     hours: (from, to) => `${from} às ${to}`,
     onRoadNow: (n) => `${n} ônibus circulando. Toque em um ponto para ver quando chega.`,
@@ -186,6 +194,7 @@ export const pt: Messages = {
     settingsTitle: "Aparência e acessibilidade",
     appearance: { label: "Aparência", system: "Automática", light: "Clara", dark: "Escura" },
     contrast: { label: "Contraste", system: "Contraste do celular", high: "Alto contraste" },
+    clock: { label: "Formato da hora", "12": "12 horas (AM/PM)", "24": "24 horas" },
     language: { label: "Idioma", system: "Do celular" },
     accessibility:
       "O Paradero segue a acessibilidade do seu celular: texto grande, negrito, mais contraste, menos movimento, menos transparência e leitores de tela como VoiceOver e TalkBack.",

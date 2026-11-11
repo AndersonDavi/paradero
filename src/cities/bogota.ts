@@ -5,6 +5,10 @@ import type { City } from "./types";
 export const bogota: City = {
   id: "bogota",
   name: "Bogotá",
+  operator: "TransMilenio",
+  network: "SITP",
+  // src/i18n already calls the trunk "TransMilenio" and the cable "TransMiCable".
+  systemNames: {},
   // Chapinero: where the map opens, and what a rider outside the city is shown.
   center: { lat: 4.6486, lon: -74.0628 },
   area: { west: -74.3, south: 4.4, east: -73.95, north: 4.85 },

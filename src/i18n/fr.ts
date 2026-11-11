@@ -6,6 +6,7 @@ export const fr: Messages = {
   time: {
     now: "Maintenant",
     min: "min",
+    hour: "h",
     arriving: "Arrive",
     unknown: "heure inconnue",
     secondsAgo: (s) => `il y a ${s} s`,
@@ -29,7 +30,11 @@ export const fr: Messages = {
     route: (code) => `Ligne ${code}`,
     or: " ou ",
     arriving: "arrive",
-    arrivesIn: (m) => `arrive dans ${m} ${m === 1 ? "minute" : "minutes"}`,
+    arrivesIn: (m) => {
+      const [h, r] = [Math.floor(m / 60), m % 60];
+      const mins = (n: number) => `${n} ${n === 1 ? "minute" : "minutes"}`;
+      return m < 60 ? `arrive dans ${mins(m)}` : `arrive dans ${h} ${h === 1 ? "heure" : "heures"}${r ? ` et ${mins(r)}` : ""}`;
+    },
     arrival: (route, toward, when, pace) => `${route}, direction ${toward}, ${when}. ${pace}.`,
     nextBus: (arrival) => `Prochain bus. ${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join(". "),
@@ -42,7 +47,7 @@ export const fr: Messages = {
     live: "En direct",
     scheduled: "Horaire prévu",
     updated: (since) => `Mis à jour ${since}`,
-    notPublishing: "TransMilenio ne publie pas la position des bus",
+    notPublishing: (operator) => `${operator} ne publie pas la position des bus`,
     noLive: "pas de données en direct",
     noLiveSince: (since) => `Pas de données en direct. Dernière mise à jour ${since}. Nous utilisons l’horaire publié.`,
   },
@@ -84,9 +89,7 @@ export const fr: Messages = {
     locate: "Centrer la carte sur votre position",
     yourStops: "Vos arrêts",
     nearYou: "Près de vous",
-    fallbackArea: "À Chapinero",
     count: (n) => `${n} ${n === 1 ? "arrêt" : "arrêts"} à moins de 700 m`,
-    outside: "Vous ne semblez pas être à Bogotá. Voici Chapinero ; cherchez n’importe quel autre arrêt ci-dessus.",
     denied: {
       title: "Sans votre position, on vous guide quand même",
       body: "Cherchez une ligne ou un arrêt. Si vous activez la localisation, nous montrons ceux à une rue de vous. Nous ne la gardons jamais.",
@@ -94,6 +97,11 @@ export const fr: Messages = {
     },
     failed: { title: "Impossible de charger les arrêts", body: "Vérifiez votre connexion. Nous réessayons dès qu’elle revient." },
     none: { title: "Aucun arrêt à moins de 700 m", body: "Cherchez le nom d’une station ou la ligne que vous prenez." },
+  },
+
+  places: {
+    bogota: { fallbackArea: "À Chapinero", outside: "Vous ne semblez pas être à Bogotá. Voici Chapinero ; cherchez n’importe quel autre arrêt ci-dessus." },
+    barranquilla: { fallbackArea: "Au centre-ville", outside: "Vous ne semblez pas être à Barranquilla. Voici le centre-ville ; cherchez n’importe quel autre arrêt ci-dessus." },
   },
 
   common: { retry: "Réessayer", station: "Station", stop: "Arrêt", accessible: "Accessible", done: "Terminé", close: "Fermer", clear: "Effacer" },
@@ -104,9 +112,9 @@ export const fr: Messages = {
 
   stop: {
     followHint: "Affiche ce bus sur la carte",
-    station: "Station TransMilenio",
-    sitp: "Arrêt SITP",
-    failed: { title: "Impossible de charger cet arrêt", body: "Vérifiez votre connexion. Si le problème persiste, TransMilenio ne répond peut-être pas." },
+    station: (operator) => `Station ${operator}`,
+    sitp: (network) => (network ? `Arrêt ${network}` : "Arrêt de bus"),
+    failed: { title: "Impossible de charger cet arrêt", body: (operator) => `Vérifiez votre connexion. Si le problème persiste, ${operator} ne répond peut-être pas.` },
     all: "Toutes",
     allLabel: "Toutes les lignes",
     only: (code) => `Seulement la ligne ${code}`,
@@ -128,7 +136,7 @@ export const fr: Messages = {
     first: "Premier bus",
     last: "Dernier bus",
     onRoad: "En service",
-    notPublishing: "TransMilenio ne publie pas la position des bus, donc nous n’affichons pas de bus qui pourraient ne pas être là.",
+    notPublishing: (operator) => `${operator} ne publie pas la position des bus, donc nous n’affichons pas de bus qui pourraient ne pas être là.`,
     noneNow: (hours) => `Aucun bus en circulation pour le moment.${hours ? ` Service de ${hours}.` : ""}`,
     hours: (from, to) => `${from} à ${to}`,
     onRoadNow: (n) => `${n} bus en circulation. Touchez un arrêt pour voir quand il arrive.`,
@@ -186,6 +194,7 @@ export const fr: Messages = {
     settingsTitle: "Apparence et accessibilité",
     appearance: { label: "Apparence", system: "Automatique", light: "Claire", dark: "Sombre" },
     contrast: { label: "Contraste", system: "Contraste du téléphone", high: "Contraste élevé" },
+    clock: { label: "Format de l’heure", "12": "12 heures (AM/PM)", "24": "24 heures" },
     language: { label: "Langue", system: "Du téléphone" },
     accessibility:
       "Paradero suit les réglages d’accessibilité de votre téléphone : grand texte, texte en gras, contraste accru, mouvements réduits, transparence réduite et lecteurs d’écran comme VoiceOver et TalkBack.",

@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
-import { city } from "@/cities";
+import { city, systemName } from "@/cities";
 import { AlertCard } from "@/components/alert-card";
 import { Button } from "@/components/button";
 import { DetailScreen } from "@/components/detail-screen";
@@ -20,6 +20,8 @@ import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
+import { useClock } from "@/lib/appearance";
+import { wallClock } from "@/lib/format";
 import { useRoute } from "@/lib/api";
 import { toggleRoute, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
@@ -30,6 +32,8 @@ export default function RouteScreen() {
   const p = usePalette();
   const t = useT();
   const large = useLargeText();
+  // Times follow the rider's 12 or 24 hour clock; this redraws them when it changes.
+  useClock();
   const { reduceMotion } = useAccessibility();
   const map = useRef<MapHandle>(null);
   const { data, isLoading, isError, refetch } = useRoute(id);
@@ -52,7 +56,7 @@ export default function RouteScreen() {
   };
 
   const tint = p.ink;
-  const hours = data?.route.firstDeparture && data.route.lastDeparture ? t.route.hours(data.route.firstDeparture, data.route.lastDeparture) : null;
+  const hours = data?.route.firstDeparture && data.route.lastDeparture ? t.route.hours(wallClock(data.route.firstDeparture), wallClock(data.route.lastDeparture)) : null;
   const buses = data?.feed.live ? data.buses.map((b) => ({ ...b, system: data.route.system })) : [];
 
   return (
@@ -86,13 +90,13 @@ export default function RouteScreen() {
                 {data.route.name}
               </Text>
               <Text variant="callout" tone="muted">
-                {[t.systems[data.route.system], data.route.variant ? (t.variants[data.route.variant] ?? data.route.variant) : null].filter(Boolean).join("  ·  ")}
+                {[systemName(data.route.system, t.systems), data.route.variant ? (t.variants[data.route.variant] ?? data.route.variant) : null].filter(Boolean).join("  ·  ")}
               </Text>
             </View>
 
             <View style={large ? styles.factsStacked : styles.facts}>
-              <Fact label={t.route.first} value={data.route.firstDeparture ?? "–"} />
-              <Fact label={t.route.last} value={data.route.lastDeparture ?? "–"} />
+              <Fact label={t.route.first} value={data.route.firstDeparture ? wallClock(data.route.firstDeparture) : "–"} />
+              <Fact label={t.route.last} value={data.route.lastDeparture ? wallClock(data.route.lastDeparture) : "–"} />
               <Fact label={t.route.onRoad} value={data.feed.live ? String(buses.length) : "–"} />
             </View>
 
@@ -101,7 +105,7 @@ export default function RouteScreen() {
             <View style={[styles.note, { backgroundColor: p.surface }]}>
               <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
               <Text variant="callout" tone="muted" style={{ flex: 1 }}>
-                {!data.feed.live ? t.route.notPublishing : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
+                {!data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
               </Text>
             </View>
 

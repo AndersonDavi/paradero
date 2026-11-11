@@ -6,6 +6,7 @@ export const zh: Messages = {
   time: {
     now: "即将",
     min: "分钟",
+    hour: "小时",
     arriving: "即将到站",
     unknown: "暂无预计时间",
     secondsAgo: (s) => `${s} 秒前`,
@@ -29,7 +30,7 @@ export const zh: Messages = {
     route: (code) => `${code} 路`,
     or: "或",
     arriving: "即将到站",
-    arrivesIn: (m) => `${m} 分钟后到站`,
+    arrivesIn: (m) => (m < 60 ? `${m} 分钟后到站` : `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分钟` : ""}后到站`),
     arrival: (route, toward, when, pace) => `${route}，开往 ${toward}，${when}。${pace}。`,
     nextBus: (arrival) => `下一班车。${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join("。"),
@@ -42,7 +43,7 @@ export const zh: Messages = {
     live: "实时",
     scheduled: "计划时刻",
     updated: (since) => `更新于${since}`,
-    notPublishing: "TransMilenio 目前没有发布车辆位置",
+    notPublishing: (operator) => `${operator} 目前没有发布车辆位置`,
     noLive: "暂无实时数据",
     noLiveSince: (since) => `暂无实时数据。最后更新于${since}。我们正在使用公布的时刻表。`,
   },
@@ -84,9 +85,7 @@ export const zh: Messages = {
     locate: "将地图定位到你的位置",
     yourStops: "你的站点",
     nearYou: "你附近",
-    fallbackArea: "查皮内罗",
     count: (n) => `700 米内有 ${n} 个站点`,
-    outside: "你似乎不在波哥大。我们为你显示查皮内罗；可以在上方搜索其他站点。",
     denied: {
       title: "没有位置信息，也能带你出发",
       body: "搜索任意线路或站点。开启定位后，我们会显示一个街区内的站点。我们从不保存你的位置。",
@@ -94,6 +93,11 @@ export const zh: Messages = {
     },
     failed: { title: "无法加载站点", body: "请检查网络连接。连接恢复后我们会自动重试。" },
     none: { title: "700 米内没有站点", body: "搜索车站名称或你乘坐的线路。" },
+  },
+
+  places: {
+    bogota: { fallbackArea: "查皮内罗", outside: "你似乎不在波哥大。我们为你显示查皮内罗；可以在上方搜索其他站点。" },
+    barranquilla: { fallbackArea: "市中心", outside: "你似乎不在巴兰基亚。我们为你显示市中心；可以在上方搜索其他站点。" },
   },
 
   common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭", clear: "清除" },
@@ -104,9 +108,9 @@ export const zh: Messages = {
 
   stop: {
     followHint: "在地图上显示这辆公交",
-    station: "TransMilenio 车站",
-    sitp: "SITP 站点",
-    failed: { title: "无法加载此站点", body: "请检查网络连接。如果仍然失败，可能是 TransMilenio 没有响应。" },
+    station: (operator) => `${operator} 车站`,
+    sitp: (network) => (network ? `${network} 站点` : "公交站点"),
+    failed: { title: "无法加载此站点", body: (operator) => `请检查网络连接。如果仍然失败，可能是 ${operator} 没有响应。` },
     all: "全部",
     allLabel: "全部线路",
     only: (code) => `只看 ${code} 路`,
@@ -128,7 +132,7 @@ export const zh: Messages = {
     first: "首班车",
     last: "末班车",
     onRoad: "运行中",
-    notPublishing: "TransMilenio 目前没有发布车辆位置，所以我们不会画出可能并不存在的车辆。",
+    notPublishing: (operator) => `${operator} 目前没有发布车辆位置，所以我们不会画出可能并不存在的车辆。`,
     noneNow: (hours) => `目前没有运行中的车辆。${hours ? `运营时间 ${hours}。` : ""}`,
     hours: (from, to) => `${from} 至 ${to}`,
     onRoadNow: (n) => `${n} 辆车正在运行。点击站点查看到站时间。`,
@@ -186,6 +190,7 @@ export const zh: Messages = {
     settingsTitle: "外观与辅助功能",
     appearance: { label: "外观", system: "自动", light: "浅色", dark: "深色" },
     contrast: { label: "对比度", system: "跟随手机", high: "高对比度" },
+    clock: { label: "时间格式", "12": "12 小时制（上午/下午）", "24": "24 小时制" },
     language: { label: "语言", system: "跟随手机" },
     accessibility: "Paradero 遵循手机的辅助功能设置：大字体、粗体文本、增强对比度、减弱动态效果、降低透明度，以及 VoiceOver 和 TalkBack 等读屏软件。",
     footerLeft: "+ 公共数据基础设施",

@@ -1,4 +1,6 @@
-import type { Health, Nearby, RouteDetail, SearchResult, StopDetail } from "@/transit/types";
+import type { Health, Nearby, RouteDetail, SearchResult, StopDetail, System } from "@/transit/types";
+
+export type CityId = "bogota" | "barranquilla";
 
 export interface Point {
   lat: number;
@@ -27,8 +29,14 @@ export interface TransitSource {
 }
 
 export interface City {
-  id: string;
+  id: CityId;
   name: string;
+  /** Who runs the buses, by its own name, which no language translates: "TransMilenio", "Transmetro". */
+  operator: string;
+  /** The network a street stop belongs to, if riders call it by one ("Paradero SITP"); null for a plain stop. */
+  network: string | null;
+  /** Systems a rider knows by a proper name in this city, ahead of the generic words in src/i18n. */
+  systemNames: Partial<Record<System, string>>;
   /** Where the map opens, and the neighbourhood shown to a rider who is not in the city. */
   center: Point;
   /** A rider inside this box is in the city, and sees the stops around them. */

@@ -6,6 +6,7 @@ export const de: Messages = {
   time: {
     now: "Jetzt",
     min: "Min.",
+    hour: "Std.",
     arriving: "Fährt ein",
     unknown: "keine geschätzte Zeit",
     secondsAgo: (s) => `vor ${s} s`,
@@ -29,7 +30,11 @@ export const de: Messages = {
     route: (code) => `Linie ${code}`,
     or: " oder ",
     arriving: "fährt gerade ein",
-    arrivesIn: (m) => `kommt in ${m} ${m === 1 ? "Minute" : "Minuten"}`,
+    arrivesIn: (m) => {
+      const [h, r] = [Math.floor(m / 60), m % 60];
+      const mins = (n: number) => `${n} ${n === 1 ? "Minute" : "Minuten"}`;
+      return m < 60 ? `kommt in ${mins(m)}` : `kommt in ${h} ${h === 1 ? "Stunde" : "Stunden"}${r ? ` und ${mins(r)}` : ""}`;
+    },
     arrival: (route, toward, when, pace) => `${route}, Richtung ${toward}, ${when}. ${pace}.`,
     nextBus: (arrival) => `Nächster Bus. ${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join(". "),
@@ -42,7 +47,7 @@ export const de: Messages = {
     live: "Live",
     scheduled: "Fahrplanzeiten",
     updated: (since) => `Aktualisiert ${since}`,
-    notPublishing: "TransMilenio veröffentlicht gerade keine Buspositionen",
+    notPublishing: (operator) => `${operator} veröffentlicht gerade keine Buspositionen`,
     noLive: "keine Live-Daten",
     noLiveSince: (since) => `Keine Live-Daten. Letzte Aktualisierung ${since}. Wir nutzen den veröffentlichten Fahrplan.`,
   },
@@ -84,9 +89,7 @@ export const de: Messages = {
     locate: "Karte auf deinen Standort zentrieren",
     yourStops: "Deine Haltestellen",
     nearYou: "In deiner Nähe",
-    fallbackArea: "In Chapinero",
     count: (n) => `${n} ${n === 1 ? "Haltestelle" : "Haltestellen"} im Umkreis von 700 m`,
-    outside: "Du scheinst nicht in Bogotá zu sein. Wir zeigen dir Chapinero; oben kannst du jede andere Haltestelle suchen.",
     denied: {
       title: "Auch ohne Standort kommst du ans Ziel",
       body: "Suche nach einer Linie oder Haltestelle. Mit Standort zeigen wir dir die, die einen Block entfernt sind. Wir speichern ihn nie.",
@@ -94,6 +97,11 @@ export const de: Messages = {
     },
     failed: { title: "Haltestellen konnten nicht geladen werden", body: "Prüfe deine Verbindung. Sobald sie zurück ist, versuchen wir es erneut." },
     none: { title: "Keine Haltestellen im Umkreis von 700 m", body: "Suche nach einem Stationsnamen oder deiner Linie." },
+  },
+
+  places: {
+    bogota: { fallbackArea: "In Chapinero", outside: "Du scheinst nicht in Bogotá zu sein. Wir zeigen dir Chapinero; oben kannst du jede andere Haltestelle suchen." },
+    barranquilla: { fallbackArea: "In der Innenstadt", outside: "Du scheinst nicht in Barranquilla zu sein. Wir zeigen dir die Innenstadt; oben kannst du jede andere Haltestelle suchen." },
   },
 
   common: { retry: "Erneut versuchen", station: "Station", stop: "Haltestelle", accessible: "Barrierefrei", done: "Fertig", close: "Schließen", clear: "Löschen" },
@@ -104,9 +112,9 @@ export const de: Messages = {
 
   stop: {
     followHint: "Zeigt diesen Bus auf der Karte",
-    station: "TransMilenio-Station",
-    sitp: "SITP-Haltestelle",
-    failed: { title: "Diese Haltestelle konnte nicht geladen werden", body: "Prüfe deine Verbindung. Wenn es weiter fehlschlägt, antwortet TransMilenio vielleicht nicht." },
+    station: (operator) => `${operator}-Station`,
+    sitp: (network) => (network ? `${network}-Haltestelle` : "Bushaltestelle"),
+    failed: { title: "Diese Haltestelle konnte nicht geladen werden", body: (operator) => `Prüfe deine Verbindung. Wenn es weiter fehlschlägt, antwortet ${operator} vielleicht nicht.` },
     all: "Alle",
     allLabel: "Alle Linien",
     only: (code) => `Nur Linie ${code}`,
@@ -128,7 +136,7 @@ export const de: Messages = {
     first: "Erster Bus",
     last: "Letzter Bus",
     onRoad: "Unterwegs",
-    notPublishing: "TransMilenio veröffentlicht gerade keine Buspositionen, deshalb zeichnen wir keine Busse, die vielleicht nicht da sind.",
+    notPublishing: (operator) => `${operator} veröffentlicht gerade keine Buspositionen, deshalb zeichnen wir keine Busse, die vielleicht nicht da sind.`,
     noneNow: (hours) => `Gerade sind keine Busse unterwegs.${hours ? ` Betrieb von ${hours}.` : ""}`,
     hours: (from, to) => `${from} bis ${to}`,
     onRoadNow: (n) => `${n} ${n === 1 ? "Bus" : "Busse"} unterwegs. Tippe auf eine Haltestelle, um zu sehen, wann er kommt.`,
@@ -186,6 +194,7 @@ export const de: Messages = {
     settingsTitle: "Darstellung und Bedienungshilfen",
     appearance: { label: "Darstellung", system: "Automatisch", light: "Hell", dark: "Dunkel" },
     contrast: { label: "Kontrast", system: "Kontrast des Telefons", high: "Hoher Kontrast" },
+    clock: { label: "Uhrzeitformat", "12": "12 Stunden (AM/PM)", "24": "24 Stunden" },
     language: { label: "Sprache", system: "Sprache des Telefons" },
     accessibility:
       "Paradero folgt den Bedienungshilfen deines Telefons: große Schrift, fette Schrift, mehr Kontrast, weniger Bewegung, weniger Transparenz und Bildschirmleser wie VoiceOver und TalkBack.",

@@ -44,14 +44,28 @@ export function Minutes({ value, size = "md" }: { value: number | null; size?: k
       </View>
     );
   }
+  const digits = { fontFamily: fonts[500], fontSize: px, lineHeight: px * (1 + ROOM), color: p.text, fontVariant: ["tabular-nums" as const] };
+  const unit = (label: string) => (
+    <Text variant="caption" tone="muted" style={{ marginBottom: (px - type.caption.fontSize) * DESCENT }}>
+      {label}
+    </Text>
+  );
+  // Past an hour a count of minutes is hard to read ("158 min"), so it reads as hours and minutes: "2 h 38 min".
+  const hours = Math.floor(value / 60);
   return (
     <View style={styles.row}>
+      {hours > 0 && (
+        <>
+          <View style={{ marginTop: -px * ROOM }}>
+            <NumberFlow value={hours} respectMotionPreference style={digits} />
+          </View>
+          {unit(t.time.hour)}
+        </>
+      )}
       <View style={{ marginTop: -px * ROOM }}>
-        <NumberFlow value={Math.min(value, 999)} respectMotionPreference style={{ fontFamily: fonts[500], fontSize: px, lineHeight: px * (1 + ROOM), color: p.text, fontVariant: ["tabular-nums"] }} />
+        <NumberFlow value={value % 60} respectMotionPreference style={digits} />
       </View>
-      <Text variant="caption" tone="muted" style={{ marginBottom: (px - type.caption.fontSize) * DESCENT }}>
-        {t.time.min}
-      </Text>
+      {unit(t.time.min)}
     </View>
   );
 }

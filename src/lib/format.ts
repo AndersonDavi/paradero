@@ -2,16 +2,27 @@ import { t, tag } from "@/i18n";
 import { sayable } from "@/transit/codes";
 import type { Arrival, Feed } from "@/transit/types";
 
+import { clockFormat } from "./appearance";
+
 const ZONE = "America/Bogota";
 const formats = new Map<string, Intl.DateTimeFormat>();
 
-function format(kind: "time" | "day" | "hour"): Intl.DateTimeFormat {
-  const key = `${tag()}:${kind}`;
+function format(kind: "time" | "day" | "year" | "hour", zone = ZONE): Intl.DateTimeFormat {
+  const cycle = clockFormat();
+  const key = `${tag()}:${kind}:${cycle}:${zone}`;
   let f = formats.get(key);
   if (!f) {
     const options: Intl.DateTimeFormatOptions =
-      kind === "time" ? { hour: "numeric", minute: "2-digit" } : kind === "day" ? { day: "numeric", month: "long" } : { hour: "numeric", hourCycle: "h23" };
-    f = new Intl.DateTimeFormat(tag(), { ...options, timeZone: ZONE });
+      kind === "time"
+        ? cycle === "24"
+          ? { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }
+          : { hour: "numeric", minute: "2-digit", hourCycle: "h12" }
+        : kind === "day"
+          ? { day: "numeric", month: "long" }
+          : kind === "year"
+            ? { day: "numeric", month: "long", year: "numeric" }
+            : { hour: "numeric", hourCycle: "h23" };
+    f = new Intl.DateTimeFormat(tag(), { ...options, timeZone: zone });
     formats.set(key, f);
   }
   return f;
@@ -52,6 +63,13 @@ export function clock(iso: string): string {
   return format("time").format(new Date(iso));
 }
 
+/** A timetable's wall-clock "17:10", written the way the rider reads times: "5:10 p. m." or "17:10". */
+export function wallClock(hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return hhmm;
+  return format("time", "UTC").format(new Date(Date.UTC(2000, 0, 1, h % 24, m)));
+}
+
 export function since(iso: string, now = Date.now()): string {
   const time = t().time;
   const s = Math.max(0, Math.round((now - Date.parse(iso)) / 1000));
@@ -60,7 +78,10 @@ export function since(iso: string, now = Date.now()): string {
   if (m < 60) return time.minutesAgo(m);
   const h = Math.round(m / 60);
   if (h < 24) return time.hoursAgo(h);
-  return time.sinceDay(format("day").format(new Date(iso)), clock(iso));
+  // A timetable can be years old; past this year the date says which year, or it would read as recent.
+  const then = new Date(iso);
+  const sameYear = format("year").formatToParts(then).find((p) => p.type === "year")?.value === format("year").formatToParts(new Date(now)).find((p) => p.type === "year")?.value;
+  return time.sinceDay(format(sameYear ? "day" : "year").format(then), clock(iso));
 }
 
 export function feedText(feed: Feed): string {

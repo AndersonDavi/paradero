@@ -6,6 +6,7 @@ export const ja: Messages = {
   time: {
     now: "まもなく",
     min: "分",
+    hour: "時間",
     arriving: "到着中",
     unknown: "到着予定なし",
     secondsAgo: (s) => `${s}秒前`,
@@ -29,7 +30,7 @@ export const ja: Messages = {
     route: (code) => `${code}系統`,
     or: "または",
     arriving: "まもなく到着します",
-    arrivesIn: (m) => `${m}分後に到着`,
+    arrivesIn: (m) => (m < 60 ? `${m}分後に到着` : `${Math.floor(m / 60)}時間${m % 60 ? `${m % 60}分` : ""}後に到着`),
     arrival: (route, toward, when, pace) => `${route}、${toward}行き、${when}。${pace}。`,
     nextBus: (arrival) => `次のバス。${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join("。"),
@@ -42,7 +43,7 @@ export const ja: Messages = {
     live: "リアルタイム",
     scheduled: "時刻表",
     updated: (since) => `${since}に更新`,
-    notPublishing: "TransMilenioがバスの位置情報を公開していません",
+    notPublishing: (operator) => `${operator}がバスの位置情報を公開していません`,
     noLive: "リアルタイム情報なし",
     noLiveSince: (since) => `リアルタイム情報がありません。最終更新は${since}です。公開されている時刻表を使っています。`,
   },
@@ -84,9 +85,7 @@ export const ja: Messages = {
     locate: "地図を現在地に合わせる",
     yourStops: "あなたの停留所",
     nearYou: "近くの停留所",
-    fallbackArea: "チャピネロ周辺",
     count: (n) => `700 m以内に${n}か所`,
-    outside: "ボゴタにいないようです。チャピネロを表示しています。上の検索でほかの停留所を探せます。",
     denied: {
       title: "位置情報がなくても大丈夫",
       body: "路線や停留所を検索できます。位置情報をオンにすると、1ブロック先の停留所を表示します。位置情報は保存しません。",
@@ -94,6 +93,11 @@ export const ja: Messages = {
     },
     failed: { title: "停留所を読み込めませんでした", body: "接続を確認してください。接続が戻りしだい再試行します。" },
     none: { title: "700 m以内に停留所がありません", body: "駅名か、乗る路線で検索してください。" },
+  },
+
+  places: {
+    bogota: { fallbackArea: "チャピネロ周辺", outside: "ボゴタにいないようです。チャピネロを表示しています。上の検索でほかの停留所を探せます。" },
+    barranquilla: { fallbackArea: "セントロ周辺", outside: "バランキージャにいないようです。セントロを表示しています。上の検索でほかの停留所を探せます。" },
   },
 
   common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる", clear: "消去" },
@@ -104,9 +108,9 @@ export const ja: Messages = {
 
   stop: {
     followHint: "このバスを地図に表示します",
-    station: "TransMilenio 駅",
-    sitp: "SITP 停留所",
-    failed: { title: "この停留所を読み込めませんでした", body: "接続を確認してください。失敗が続く場合、TransMilenioが応答していない可能性があります。" },
+    station: (operator) => `${operator} 駅`,
+    sitp: (network) => (network ? `${network} 停留所` : "バス停"),
+    failed: { title: "この停留所を読み込めませんでした", body: (operator) => `接続を確認してください。失敗が続く場合、${operator}が応答していない可能性があります。` },
     all: "すべて",
     allLabel: "すべての路線",
     only: (code) => `${code}のみ`,
@@ -128,7 +132,7 @@ export const ja: Messages = {
     first: "始発",
     last: "終発",
     onRoad: "運行中",
-    notPublishing: "TransMilenioがバスの位置情報を公開していないため、実際にいないかもしれないバスは表示しません。",
+    notPublishing: (operator) => `${operator}がバスの位置情報を公開していないため、実際にいないかもしれないバスは表示しません。`,
     noneNow: (hours) => `現在運行中のバスはありません。${hours ? `運行時間は${hours}です。` : ""}`,
     hours: (from, to) => `${from}〜${to}`,
     onRoadNow: (n) => `${n}台が運行中です。停留所をタップすると到着時刻がわかります。`,
@@ -186,6 +190,7 @@ export const ja: Messages = {
     settingsTitle: "表示とアクセシビリティ",
     appearance: { label: "表示", system: "自動", light: "ライト", dark: "ダーク" },
     contrast: { label: "コントラスト", system: "端末の設定", high: "高コントラスト" },
+    clock: { label: "時刻の表示", "12": "12時間（午前/午後）", "24": "24時間" },
     language: { label: "言語", system: "端末の言語" },
     accessibility:
       "Paraderoは端末のアクセシビリティ設定に従います。文字サイズ、太字、コントラストを上げる、視差効果を減らす、透明度を下げる、VoiceOverやTalkBackなどのスクリーンリーダーに対応しています。",

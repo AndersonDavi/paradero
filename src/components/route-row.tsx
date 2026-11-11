@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
+import { systemName } from "@/cities";
 import { useT } from "@/i18n";
 import { prefetchRoute } from "@/lib/api";
 import { spokenCode } from "@/lib/format";
@@ -20,7 +21,7 @@ export function RouteRow({ route }: { route: Pick<RouteRef, "id" | "code" | "nam
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={`${route.code}, ${t.speech.route(spokenCode(route.code))}, ${route.name}, ${t.systems[route.system]}`}
+      accessibilityLabel={`${route.code}, ${t.speech.route(spokenCode(route.code))}, ${route.name}, ${systemName(route.system, t.systems)}`}
       accessibilityHint={t.routeRow.open}
       onPressIn={() => prefetchRoute(route.id)}
       onPress={() => {
@@ -36,7 +37,7 @@ export function RouteRow({ route }: { route: Pick<RouteRef, "id" | "code" | "nam
           {route.name}
         </Text>
         <Text variant="caption" tone="muted">
-          {t.systems[route.system]}
+          {systemName(route.system, t.systems)}
         </Text>
       </View>
       <Icon name={icons.chevron} color={p.faint} size="xs" />

@@ -53,3 +53,28 @@ export function setContrast(value: Contrast) {
   Storage.setItemSync(CONTRAST_KEY, value);
   listeners.forEach((l) => l());
 }
+
+export type Clock = "12" | "24";
+
+const CLOCK_KEY = "clock.v1";
+let clock: Clock = Storage.getItemSync(CLOCK_KEY) === "24" ? "24" : "12";
+
+/** Times read "5:10 p. m." unless the rider asks for "17:10". For formatting outside React. */
+export const clockFormat = (): Clock => clock;
+
+/** The rider's clock; screens that show times subscribe so they redraw when it changes. */
+export function useClock(): Clock {
+  return useSyncExternalStore(
+    (l) => {
+      listeners.add(l);
+      return () => listeners.delete(l);
+    },
+    () => clock,
+  );
+}
+
+export function setClock(value: Clock) {
+  clock = value;
+  Storage.setItemSync(CLOCK_KEY, value);
+  listeners.forEach((l) => l());
+}

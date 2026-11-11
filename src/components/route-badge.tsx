@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View, type ViewStyle } from "react-native";
 
+import { systemName } from "@/cities";
 import { useT } from "@/i18n";
 import { spokenCode } from "@/lib/format";
 import { systems, usePalette } from "@/theme/colors";
@@ -64,7 +65,7 @@ export function RouteBadge({
   return (
     <View
       accessible={labelled}
-      accessibilityLabel={labelled ? `${t.speech.route(spokenCode(code))}, ${t.systems[system]}` : undefined}
+      accessibilityLabel={labelled ? `${t.speech.route(spokenCode(code))}, ${systemName(system, t.systems)}` : undefined}
       importantForAccessibility={labelled ? "yes" : "no-hide-descendants"}
       accessibilityElementsHidden={!labelled}
       style={[

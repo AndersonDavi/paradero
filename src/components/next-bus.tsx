@@ -2,6 +2,7 @@ import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
 import { useT } from "@/i18n";
+import { useClock } from "@/lib/appearance";
 import { useLargeText } from "@/lib/accessibility";
 import { clock, spokenArrival } from "@/lib/format";
 import { usePalette } from "@/theme/colors";
@@ -18,6 +19,7 @@ export function NextBus({ arrival, following = false, onPress }: { arrival: Arri
   const p = usePalette();
   const large = useLargeText();
   const t = useT();
+  useClock();
   const at = arrival.at ? clock(arrival.at) : null;
   return (
     <PressableScale

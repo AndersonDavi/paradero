@@ -12,7 +12,7 @@ import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
 import { LANGUAGES, setLanguage, useLanguageChoice, useT, type Language, type LanguageChoice } from "@/i18n";
 import { useHealth } from "@/lib/api";
-import { setAppearance, setContrast, useAppearance, useContrast, type Appearance, type Contrast } from "@/lib/appearance";
+import { setAppearance, setClock, setContrast, useAppearance, useClock, useContrast, type Appearance, type Clock, type Contrast } from "@/lib/appearance";
 import { usePalette } from "@/theme/colors";
 import { layout, size, space } from "@/theme/tokens";
 
@@ -29,6 +29,7 @@ const PROMISES = [
 
 const APPEARANCES: Appearance[] = ["system", "light", "dark"];
 const CONTRASTS: Contrast[] = ["system", "high"];
+const CLOCKS: Clock[] = ["12", "24"];
 const CHOICES: LanguageChoice[] = ["system", ...(Object.keys(LANGUAGES) as Language[])];
 
 export default function About() {
@@ -36,6 +37,7 @@ export default function About() {
   const health = useHealth();
   const appearance = useAppearance();
   const contrast = useContrast();
+  const clock = useClock();
   const language = useLanguageChoice();
   const t = useT();
 
@@ -123,6 +125,11 @@ export default function About() {
         <Choices label={t.about.contrast.label}>
           {CONTRASTS.map((c) => (
             <Chip key={c} radio label={t.about.contrast[c]} accessibilityLabel={`${t.about.contrast[c]}, ${t.about.contrast.label}`} selected={contrast === c} onPress={() => setContrast(c)} />
+          ))}
+        </Choices>
+        <Choices label={t.about.clock.label}>
+          {CLOCKS.map((c) => (
+            <Chip key={c} radio label={t.about.clock[c]} accessibilityLabel={`${t.about.clock[c]}, ${t.about.clock.label}`} selected={clock === c} onPress={() => setClock(c)} />
           ))}
         </Choices>
         <Text variant="callout" tone="muted">

@@ -136,12 +136,12 @@ export default function Home() {
 
           <View style={styles.section}>
             <SectionTitle
-              title={outside ? t.home.fallbackArea : t.home.nearYou}
+              title={outside ? t.places[city.id].fallbackArea : t.home.nearYou}
               detail={stops.length > 0 ? t.home.count(stops.length) : undefined}
             />
             {outside && (
               <Text variant="callout" weight={400} tone="muted" style={styles.note}>
-                {t.home.outside}
+                {t.places[city.id].outside}
               </Text>
             )}
             {state.status === "loading" && <SkeletonList rows={4} />}

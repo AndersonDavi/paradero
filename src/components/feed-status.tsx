@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { city } from "@/cities";
 import { useT } from "@/i18n";
+import { useClock } from "@/lib/appearance";
 import { useLargeText } from "@/lib/accessibility";
 import { since } from "@/lib/format";
 import { signal, usePalette } from "@/theme/colors";
@@ -25,12 +27,13 @@ export function FeedStatus({ feed, floating = false }: { feed: Feed | undefined;
   const p = usePalette();
   const large = useLargeText();
   const t = useT();
+  useClock();
   useTick(5_000);
   if (!feed) return null;
 
   const title = feed.live ? t.feed.live : t.feed.scheduled;
   const detail = feed.live ? t.feed.updated(since(feed.asOf)) : t.feed.noLiveSince(since(feed.asOf));
-  const label = `${title}. ${feed.live ? detail : `${t.feed.notPublishing}. ${detail}`}`;
+  const label = `${title}. ${feed.live ? detail : `${t.feed.notPublishing(city.operator)}. ${detail}`}`;
 
   if (floating) {
     return (

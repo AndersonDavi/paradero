@@ -8,6 +8,7 @@ export const es = {
   time: {
     now: "Ya",
     min: "min",
+    hour: "h",
     arriving: "Llegando",
     unknown: "sin hora estimada",
     secondsAgo: (s: number) => `hace ${s} s`,
@@ -31,7 +32,11 @@ export const es = {
     route: (code: string) => `Ruta ${code}`,
     or: " o ",
     arriving: "está llegando",
-    arrivesIn: (m: number) => `llega en ${m} ${m === 1 ? "minuto" : "minutos"}`,
+    arrivesIn: (m: number) => {
+      const [h, r] = [Math.floor(m / 60), m % 60];
+      const mins = (n: number) => `${n} ${n === 1 ? "minuto" : "minutos"}`;
+      return m < 60 ? `llega en ${mins(m)}` : `llega en ${h} ${h === 1 ? "hora" : "horas"}${r ? ` y ${mins(r)}` : ""}`;
+    },
     arrival: (route: string, toward: string, when: string, pace: string) => `${route}, hacia ${toward}, ${when}. ${pace}.`,
     nextBus: (arrival: string) => `Próximo bus. ${arrival}`,
     savedCard: (title: string, lines: string[]) => [title, ...lines].join(". "),
@@ -45,7 +50,7 @@ export const es = {
     live: "En vivo",
     scheduled: "Horario programado",
     updated: (since: string) => `Actualizado ${since}`,
-    notPublishing: "TransMilenio no está publicando posiciones",
+    notPublishing: (operator: string) => `${operator} no está publicando posiciones`,
     noLive: "sin datos en vivo",
     noLiveSince: (since: string) => `Sin datos en vivo. Última actualización ${since}. Usamos el horario publicado.`,
   },
@@ -87,9 +92,7 @@ export const es = {
     locate: "Centrar el mapa en tu ubicación",
     yourStops: "Tus paraderos",
     nearYou: "Cerca de ti",
-    fallbackArea: "En Chapinero",
     count: (n: number) => `${n} ${n === 1 ? "paradero" : "paraderos"} a menos de 700 m`,
-    outside: "Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba.",
     denied: {
       title: "Sin tu ubicación, igual te llevamos",
       body: "Busca cualquier ruta o paradero. Si activas la ubicación, te mostramos los que tienes a una cuadra. Nunca la guardamos.",
@@ -97,6 +100,12 @@ export const es = {
     },
     failed: { title: "No pudimos cargar los paraderos", body: "Revisa tu conexión. Lo intentamos de nuevo apenas vuelva." },
     none: { title: "No hay paraderos a 700 m", body: "Busca el nombre de una estación o la ruta que tomas." },
+  },
+
+  /** What depends on the city the rider is in. Place names are written the way each language says them. */
+  places: {
+    bogota: { fallbackArea: "En Chapinero", outside: "Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba." },
+    barranquilla: { fallbackArea: "En el Centro", outside: "Parece que no estás en Barranquilla. Te mostramos el Centro; busca cualquier otro paradero arriba." },
   },
 
   common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar", clear: "Borrar" },
@@ -107,9 +116,9 @@ export const es = {
 
   stop: {
     followHint: "Muestra este bus en el mapa",
-    station: "Estación TransMilenio",
-    sitp: "Paradero SITP",
-    failed: { title: "No pudimos cargar este paradero", body: "Revisa tu conexión. Si sigue fallando, puede que TransMilenio no esté respondiendo." },
+    station: (operator: string) => `Estación ${operator}`,
+    sitp: (network: string | null) => (network ? `Paradero ${network}` : "Paradero"),
+    failed: { title: "No pudimos cargar este paradero", body: (operator: string) => `Revisa tu conexión. Si sigue fallando, puede que ${operator} no esté respondiendo.` },
     all: "Todas",
     allLabel: "Todas las rutas",
     only: (code: string) => `Solo la ruta ${code}`,
@@ -131,7 +140,7 @@ export const es = {
     first: "Primer bus",
     last: "Último bus",
     onRoad: "En vía",
-    notPublishing: "TransMilenio no está publicando posiciones, así que no dibujamos buses que podrían no estar ahí.",
+    notPublishing: (operator: string) => `${operator} no está publicando posiciones, así que no dibujamos buses que podrían no estar ahí.`,
     noneNow: (hours: string | null) => `No vemos buses en vía ahora.${hours ? ` Opera de ${hours}.` : ""}`,
     hours: (from: string, to: string) => `${from} a ${to}`,
     onRoadNow: (n: number) => `${n} ${n === 1 ? "bus" : "buses"} en vía. Toca un paradero para ver cuándo llega.`,
@@ -189,6 +198,7 @@ export const es = {
     settingsTitle: "Apariencia y accesibilidad",
     appearance: { label: "Apariencia", system: "Automática", light: "Clara", dark: "Oscura" },
     contrast: { label: "Contraste", system: "Contraste del teléfono", high: "Alto contraste" },
+    clock: { label: "Formato de hora", "12": "12 horas (a. m. y p. m.)", "24": "24 horas" },
     language: { label: "Idioma", system: "Del teléfono" },
     accessibility:
       "Paradero sigue la accesibilidad de tu teléfono: texto grande, negrita, más contraste, menos movimiento, menos transparencia y lectores de pantalla como VoiceOver y TalkBack.",

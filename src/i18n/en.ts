@@ -6,6 +6,7 @@ export const en: Messages = {
   time: {
     now: "Now",
     min: "min",
+    hour: "h",
     arriving: "Arriving",
     unknown: "no estimated time",
     secondsAgo: (s) => `${s} s ago`,
@@ -29,7 +30,11 @@ export const en: Messages = {
     route: (code) => `Route ${code}`,
     or: " or ",
     arriving: "is arriving",
-    arrivesIn: (m) => `arrives in ${m} ${m === 1 ? "minute" : "minutes"}`,
+    arrivesIn: (m) => {
+      const [h, r] = [Math.floor(m / 60), m % 60];
+      const mins = (n: number) => `${n} ${n === 1 ? "minute" : "minutes"}`;
+      return m < 60 ? `arrives in ${mins(m)}` : `arrives in ${h} ${h === 1 ? "hour" : "hours"}${r ? ` and ${mins(r)}` : ""}`;
+    },
     arrival: (route, toward, when, pace) => `${route}, toward ${toward}, ${when}. ${pace}.`,
     nextBus: (arrival) => `Next bus. ${arrival}`,
     savedCard: (title, lines) => [title, ...lines].join(". "),
@@ -42,7 +47,7 @@ export const en: Messages = {
     live: "Live",
     scheduled: "Scheduled times",
     updated: (since) => `Updated ${since}`,
-    notPublishing: "TransMilenio is not publishing bus positions",
+    notPublishing: (operator) => `${operator} is not publishing bus positions`,
     noLive: "no live data",
     noLiveSince: (since) => `No live data. Last update ${since}. We are using the published schedule.`,
   },
@@ -84,9 +89,7 @@ export const en: Messages = {
     locate: "Center the map on your location",
     yourStops: "Your stops",
     nearYou: "Near you",
-    fallbackArea: "In Chapinero",
     count: (n) => `${n} ${n === 1 ? "stop" : "stops"} within 700 m`,
-    outside: "It looks like you are not in Bogotá. Here is Chapinero; search for any other stop above.",
     denied: {
       title: "No location? We'll still get you there",
       body: "Search for any route or stop. If you turn on location, we show the ones a block away. We never store it.",
@@ -94,6 +97,11 @@ export const en: Messages = {
     },
     failed: { title: "We couldn't load the stops", body: "Check your connection. We'll try again as soon as it's back." },
     none: { title: "No stops within 700 m", body: "Search for a station name or the route you take." },
+  },
+
+  places: {
+    bogota: { fallbackArea: "In Chapinero", outside: "It looks like you are not in Bogotá. Here is Chapinero; search for any other stop above." },
+    barranquilla: { fallbackArea: "Downtown", outside: "It looks like you are not in Barranquilla. Here is downtown; search for any other stop above." },
   },
 
   common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close", clear: "Clear" },
@@ -104,9 +112,9 @@ export const en: Messages = {
 
   stop: {
     followHint: "Shows this bus on the map",
-    station: "TransMilenio station",
-    sitp: "SITP stop",
-    failed: { title: "We couldn't load this stop", body: "Check your connection. If it keeps failing, TransMilenio may not be responding." },
+    station: (operator) => `${operator} station`,
+    sitp: (network) => (network ? `${network} stop` : "Bus stop"),
+    failed: { title: "We couldn't load this stop", body: (operator) => `Check your connection. If it keeps failing, ${operator} may not be responding.` },
     all: "All",
     allLabel: "All routes",
     only: (code) => `Only route ${code}`,
@@ -128,7 +136,7 @@ export const en: Messages = {
     first: "First bus",
     last: "Last bus",
     onRoad: "Running",
-    notPublishing: "TransMilenio is not publishing bus positions, so we don't draw buses that might not be there.",
+    notPublishing: (operator) => `${operator} is not publishing bus positions, so we don't draw buses that might not be there.`,
     noneNow: (hours) => `No buses running right now.${hours ? ` Runs ${hours}.` : ""}`,
     hours: (from, to) => `${from} to ${to}`,
     onRoadNow: (n) => `${n} ${n === 1 ? "bus" : "buses"} running. Tap a stop to see when it arrives.`,
@@ -186,6 +194,7 @@ export const en: Messages = {
     settingsTitle: "Appearance and accessibility",
     appearance: { label: "Appearance", system: "Automatic", light: "Light", dark: "Dark" },
     contrast: { label: "Contrast", system: "Phone contrast", high: "High contrast" },
+    clock: { label: "Time format", "12": "12-hour (AM/PM)", "24": "24-hour" },
     language: { label: "Language", system: "Phone language" },
     accessibility:
       "Paradero follows your phone's accessibility settings: large text, bold text, increased contrast, reduced motion, reduced transparency and screen readers like VoiceOver and TalkBack.",
