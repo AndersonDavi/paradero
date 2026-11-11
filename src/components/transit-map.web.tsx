@@ -7,6 +7,7 @@ import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { mapBounds } from "@/cities";
 import { useAccessibility } from "@/lib/accessibility";
 import { useLocation } from "@/lib/location";
 import { useMovingBuses } from "@/lib/moving-buses";
@@ -25,11 +26,6 @@ const STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
   dark: "https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
 };
-
-const BOUNDS: [[number, number], [number, number]] = [
-  [-74.45, 4.3],
-  [-73.85, 4.95],
-];
 
 /** Room left around what is framed on a map that sits above its sheet: clear of the header buttons, and wide enough that a bus at the edge is drawn whole. */
 const FIT_MARGIN = { top: 76, right: 56, bottom: 88, left: 56 };
@@ -299,7 +295,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
         center: [center.lon, center.lat],
         zoom,
         minZoom: 10,
-        maxBounds: BOUNDS,
+        maxBounds: mapBounds(),
         attributionControl: false,
         dragRotate: false,
         pitchWithRotate: false,

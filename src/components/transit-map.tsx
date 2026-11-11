@@ -2,6 +2,7 @@ import { Camera, GeoJSONSource, Images, Layer, Map, UserLocation, type CameraRef
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { mapBounds } from "@/cities";
 import { useAccessibility } from "@/lib/accessibility";
 import { useMovingBuses } from "@/lib/moving-buses";
 import { systems, usePalette } from "@/theme/colors";
@@ -64,7 +65,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
       <Map style={StyleSheet.absoluteFill} mapStyle={p.dark ? STYLES.dark : STYLES.light} logo={false} attribution={false} compass={false} touchPitch={false} contentInset={padding}>
-        <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={[-74.45, 4.3, -73.85, 4.95]} />
+        <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={mapBounds()} />
 
         {path && path.length > 1 && <RouteLine path={path} quiet={!!approach} />}
         {approach && approach.length > 1 && <Approach key={focusBusId ?? "none"} path={approach} still={reduceMotion} />}

@@ -2,17 +2,15 @@ import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
 import { Linking, Platform } from "react-native";
 
-import { queryClient } from "./api";
+import { inCity } from "@/cities";
 
-export const BOGOTA = { lat: 4.6486, lon: -74.0628 };
+import { queryClient } from "./api";
 
 export type LocationState =
   | { status: "loading" }
   | { status: "denied" }
   | { status: "outside" }
   | { status: "ready"; lat: number; lon: number };
-
-export const inBogota = (lat: number, lon: number) => lat > 4.4 && lat < 4.85 && lon > -74.3 && lon < -73.95;
 
 /** A fix this fresh is good enough to list nearby stops. */
 const RECENT = 2 * 60_000;
@@ -63,7 +61,7 @@ export function useLocation() {
     ? { status: "loading" }
     : !query.data
       ? { status: "denied" }
-      : inBogota(query.data.lat, query.data.lon)
+      : inCity(query.data.lat, query.data.lon)
         ? { status: "ready", ...query.data }
         : { status: "outside" };
   return { state, retry: askForLocation };

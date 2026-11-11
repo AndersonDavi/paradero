@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
+import { city } from "@/cities";
 import { AlertCard } from "@/components/alert-card";
 import { Button } from "@/components/button";
 import { DetailScreen } from "@/components/detail-screen";
@@ -20,7 +21,6 @@ import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
 import { useRoute } from "@/lib/api";
-import { BOGOTA } from "@/lib/location";
 import { toggleRoute, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -64,7 +64,7 @@ export default function RouteScreen() {
           data && (
             <TransitMap
               ref={map}
-              center={data.stops[0] ?? BOGOTA}
+              center={data.stops[0] ?? city.center}
               zoom={12}
               path={data.path}
               system={data.route.system}

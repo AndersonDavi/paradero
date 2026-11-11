@@ -7,6 +7,7 @@ import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { city } from "@/cities";
 import { CardEntry } from "@/components/card-entry";
 import { FeedStatus } from "@/components/feed-status";
 import { Glass } from "@/components/glass";
@@ -23,7 +24,7 @@ import { useT } from "@/i18n";
 import { useAccessibility } from "@/lib/accessibility";
 import { prefetchStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
-import { BOGOTA, useLocation } from "@/lib/location";
+import { useLocation } from "@/lib/location";
 import { useSaved, type SavedStop } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -44,7 +45,7 @@ export default function Home() {
 
   const here = state.status === "ready" ? { lat: state.lat, lon: state.lon } : null;
   const outside = state.status === "outside";
-  const anchor = here ?? (outside ? BOGOTA : null);
+  const anchor = here ?? (outside ? city.center : null);
   const nearby = useNearby(anchor);
   const stops = nearby.data?.stops ?? [];
   const closest = stops.slice(0, 3).map((s) => s.id).join(",");
@@ -63,7 +64,7 @@ export default function Home() {
       <TransitMap
         key={anchor ? `${anchor.lat.toFixed(3)},${anchor.lon.toFixed(3)}` : "city"}
         ref={map}
-        center={anchor ?? BOGOTA}
+        center={anchor ?? city.center}
         zoom={anchor ? 16 : 12}
         stops={stops}
         padding={{ top: insets.top + size.control.lg + space[2], right: 0, bottom: height * 0.58, left: 0 }}

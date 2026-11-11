@@ -3,6 +3,7 @@ import { useEffect } from "react";
 
 import Tullave from "../../modules/tullave";
 
+import { city } from "@/cities";
 import { t, tag } from "@/i18n";
 import { CardError, parseCard, type Card } from "@/transit/tullave";
 
@@ -17,9 +18,10 @@ export class ReadError extends Error {
 const FAILURES = new Set<ReadFailure>(["unsupported", "cancelled", "timeout", "lost", "not_tullave", "failed"]);
 
 /** This build has the card reader. The phone itself may still lack NFC; `canReadCards` says that. */
-export const hasCardReader = Tullave != null;
+export const hasCardReader = city.card && Tullave != null;
 
 export function canReadCards(): boolean {
+  if (!city.card) return false;
   try {
     return Tullave?.isAvailable() ?? false;
   } catch {
