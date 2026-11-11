@@ -88,6 +88,8 @@ export interface StopDetail {
   arrivals: Arrival[];
   incoming: IncomingBus[];
   alerts: Alert[];
+  /** No route here has a timetable: the city knows where they stop, not when. From cities on the phone. */
+  untimed?: boolean;
 }
 
 export type ServiceDay = "weekday" | "saturday" | "sunday";

@@ -406,7 +406,8 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       const index = await load();
       const i = index.stopById.get(id);
       if (i === undefined) throw new ApiError(404, "not_found");
-      return { feed: index.feed, stop: { ...index.stops[i], distanceM: null }, arrivals: arrivalsAt(index, i, new Date()), incoming: [], alerts: [] };
+      const untimed = !index.patterns.some((p) => p.perWeek > 0 && p.stops.includes(i));
+      return { feed: index.feed, stop: { ...index.stops[i], distanceM: null }, arrivals: arrivalsAt(index, i, new Date()), incoming: [], alerts: [], untimed };
     },
 
     async route(id): Promise<RouteDetail> {

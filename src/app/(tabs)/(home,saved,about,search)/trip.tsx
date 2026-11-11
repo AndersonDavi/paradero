@@ -102,6 +102,8 @@ export default function TripScreen() {
   // The way to the first stop the rider chose, then the soonest way on from each stop to the next.
   const chain = useMemo(() => [journey, ...(data?.then ?? [])].filter((j): j is Journey => !!j), [journey, data]);
   const map = useRef<MapHandle>(null);
+  // The stop the rider tapped in the list, drawn large on the map while the others shrink.
+  const [spot, setSpot] = useState<number | null>(null);
 
   const path = useMemo(() => chain.flatMap((j) => j.legs.flatMap((l) => l.path)), [chain]);
   const legs = useMemo(() => chain.flatMap((j) => j.legs.map((l) => ({ kind: l.kind, path: l.path }))), [chain]);
@@ -118,6 +120,11 @@ export default function TripScreen() {
   }, [way, reduceMotion]);
 
   const count = journeys.length;
+  // The first stop no bus reaches from the one before: the trip is shown up to there.
+  const short = useMemo(() => {
+    const k = (data?.then ?? []).findIndex((leg, i) => !leg && (i === 0 ? !!journey : !!data?.then[i - 1]));
+    return k >= 0 && stops[k + 1] ? { reached: stops[k].name, missing: stops[k + 1].name } : null;
+  }, [data, journey, stops]);
   useEffect(() => {
     if (!data) return;
     announce(count ? `${t.trip.options}: ${count}` : t.trip.none.title);
@@ -137,9 +144,9 @@ export default function TripScreen() {
       ),
     );
     const unique = [...new Map(list.map((s) => [s.id, s])).values()];
-    const places = stops.map((s, i) => ({ id: `${DESTINATION}-${i}`, name: s.name, lat: s.lat, lon: s.lon, kind: "station" as const, system: "other" as const, tone: "focus" as const }));
+    const places = stops.map((s, i) => ({ id: `${DESTINATION}-${i}`, name: s.name, lat: s.lat, lon: s.lon, kind: "station" as const, system: "other" as const, tone: spot === null || spot === i ? ("focus" as const) : ("pass" as const) }));
     return [...unique, ...places];
-  }, [chain, stops]);
+  }, [chain, stops, spot]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
 
   // The stops after the first live in the screen's address, so they survive going back and forth. This screen's own
@@ -153,6 +160,24 @@ export default function TripScreen() {
     if (i > 0) return setLater(later.filter((_, k) => k !== i - 1));
     const [next, ...rest] = later;
     if (next) setParams({ name: next.name, lat: String(next.lat), lon: String(next.lon), then: rest.length ? JSON.stringify(rest) : undefined });
+  };
+  /** Stop i one place earlier or later in the trip. Each place keeps how long the rider stays there. */
+  const moveStop = (i: number, by: -1 | 1) => {
+    const j = i + by;
+    if (j < 0 || j >= stops.length) return;
+    void Haptics.selectionAsync();
+    const places = stops.map((s, k) => ({ name: s.name, lat: s.lat, lon: s.lon, here: later[k]?.stay ?? 0 }));
+    [places[i], places[j]] = [places[j], places[i]];
+    const [first, ...rest] = places;
+    const next = rest.map((s, k) => ({ name: s.name, lat: s.lat, lon: s.lon, stay: places[k].here }));
+    setSpot(null);
+    setParams({ name: first.name, lat: String(first.lat), lon: String(first.lon), then: next.length ? JSON.stringify(next) : undefined });
+    announce(t.trip.moved(stops[i].name, j + 1));
+  };
+  const showStop = (i: number) => {
+    void Haptics.selectionAsync();
+    setSpot(i);
+    map.current?.flyTo(stops[i].lat, stops[i].lon, 16);
   };
   /** Minutes the rider stays at stop i before going on to the next one. */
   const setStay = (i: number, minutes: number) => {
@@ -228,10 +253,18 @@ export default function TripScreen() {
                   <Text variant="headline" tabular style={styles.stopNumber}>
                     {i + 1}
                   </Text>
-                  <Text variant="headline" style={styles.stopName}>
-                    {s.name}
-                  </Text>
-                  <Pressable accessibilityRole="button" accessibilityLabel={t.trip.removeStop(s.name)} onPress={() => removeStop(i)} hitSlop={space[3]}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={s.name} accessibilityHint={t.trip.showStop} onPress={() => showStop(i)} style={styles.stopName}>
+                    <Text variant="headline" weight={spot === i ? 700 : undefined}>
+                      {s.name}
+                    </Text>
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel={t.trip.moveUp(s.name)} disabled={i === 0} onPress={() => moveStop(i, -1)} hitSlop={space[2]} style={styles.move}>
+                    <Icon name={icons.up} color={i === 0 ? p.separator : p.text} size="sm" />
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel={t.trip.moveDown(s.name)} disabled={i === stops.length - 1} onPress={() => moveStop(i, 1)} hitSlop={space[2]} style={styles.move}>
+                    <Icon name={icons.down} color={i === stops.length - 1 ? p.separator : p.text} size="sm" />
+                  </Pressable>
+                  <Pressable accessibilityRole="button" accessibilityLabel={t.trip.removeStop(s.name)} onPress={() => removeStop(i)} hitSlop={space[2]} style={styles.move}>
                     <Icon name={icons.close} color={p.faint} size="sm" />
                   </Pressable>
                 </View>
@@ -275,6 +308,14 @@ export default function TripScreen() {
         {from && data && count > 0 && (
           <>
             <FeedStatus feed={data.feed} />
+            {short && (
+              <View accessibilityRole="alert" style={[styles.notice, { backgroundColor: p.surface }]}>
+                <Dot color={signal.alert} />
+                <Text variant="callout" style={styles.noticeText}>
+                  {t.trip.cutShort(short.reached, short.missing, city.operator)}
+                </Text>
+              </View>
+            )}
             <View style={styles.list}>
               <Text variant="title" accessibilityRole="header">
                 {t.trip.options}
@@ -362,7 +403,7 @@ function Stay({ place, arrives, stay, next, to, onStay }: { place: string; arriv
   const ride = next?.legs.find((l): l is Extract<Leg, { kind: "ride" }> => l.kind === "ride");
   const ready = Date.parse(arrives) + stay * 60_000;
   const wait = next ? Math.max(0, Math.round((Date.parse(next.departs) - ready) / 60_000)) : 0;
-  const missed = !next;
+  const missed = !next && stay > 0;
   return (
     <View style={styles.list}>
       <Text variant="title" accessibilityRole="header">
@@ -471,6 +512,7 @@ const styles = StyleSheet.create({
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
   stop: { gap: space[2] },
   stopRow: { flexDirection: "row", alignItems: "center", gap: space[3] },
+  move: { minWidth: size.control.sm, minHeight: size.control.sm, alignItems: "center", justifyContent: "center" },
   stopNumber: { minWidth: size.icon.md },
   stopName: { flex: 1 },
   from: { gap: space[2] },

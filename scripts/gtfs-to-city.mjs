@@ -26,7 +26,8 @@ const CITIES = {
       license: "CC BY-SA 4.0",
     },
     // Transmetro: the A and U routes feed the trunk from the neighbourhoods; R, S and B run on the trunk.
-    system: (code) => (/^[AU]/.test(code) ? "alimentador" : /^[RSB]/.test(code) ? "troncal" : "other"),
+    // Gran Malecón runs only on some days and hours: a special route, in its own colour.
+    system: (code) => (code === "GM" ? "zonal_especial" : /^[AU]/.test(code) ? "alimentador" : /^[RSB]/.test(code) ? "troncal" : "other"),
     newer: {
       name: "Transmetro, Paraderos del Sistema (datos.gov.co, 2020)",
       url: "https://www.datos.gov.co/d/hxy3-94yh",
@@ -150,7 +151,8 @@ if (newerFile && city.newer) {
     list.push(row);
     byRoute.set(row.nombre_ruta, list);
   }
-  const plain = (text) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  // "Est. Joe Arroyo" in the list is the timetable's "Joe Arroyo": the word for station is left out to compare.
+  const plain = (text) => text.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim().replace(/^(est|estacion) /, "");
   const far = (a, b) => Math.hypot((a[0] - b[0]) * 110_540, (a[1] - b[1]) * 111_320 * Math.cos((a[0] * Math.PI) / 180));
   /** The timetable's own stop when this one is it: the same name close by, or any stop a few metres away. */
   const stopFor = (row, newId) => {

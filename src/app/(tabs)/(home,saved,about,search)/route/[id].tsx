@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams } from "expo-router";
 import { PressableScale } from "pressto";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import { toast } from "sonner-native";
 
@@ -22,7 +22,7 @@ import { useT } from "@/i18n";
 import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
 import { useClock } from "@/lib/appearance";
 import { wallClock } from "@/lib/format";
-import { useRoute } from "@/lib/api";
+import { useEveryStop, useRoute } from "@/lib/api";
 import { toggleRoute, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -57,6 +57,22 @@ export default function RouteScreen() {
 
   const tint = p.ink;
   const hours = data?.route.firstDeparture && data.route.lastDeparture ? t.route.hours(wallClock(data.route.firstDeparture), wallClock(data.route.lastDeparture)) : null;
+  // The route's stops on top; every other stop stays, faint, to see what is around. A station on the way keeps its
+  // own look and colour (a trunk station on a feeder's route is still red), and the route's plain stops take its colour.
+  const every = useEveryStop().data;
+  const mapStops = useMemo(() => {
+    if (!data) return [];
+    const known = new Map((every ?? []).map((s) => [s.id, s]));
+    const mine = new Set(data.stops.map((s) => s.id));
+    const own = data.stops.map((s) => {
+      const k = known.get(s.id);
+      return k?.kind === "station" ? { ...s, kind: "station" as const, routes: k.routes } : { ...s, kind: "stop" as const };
+    });
+    return [...own, ...(every ?? []).filter((s) => !mine.has(s.id)).map((s) => ({ ...s, tone: "faint" as const }))];
+  }, [data, every]);
+  // A route with no timetable has no hours to show: the screen says so once instead of "does not run" every day.
+  const untimed = data?.route.tripsPerWeek === 0;
+  const special = !!data && !!city.specialRoutes?.includes(data.route.code);
   const buses = data?.feed.live ? data.buses.map((b) => ({ ...b, system: data.route.system })) : [];
 
   return (
@@ -72,7 +88,7 @@ export default function RouteScreen() {
               zoom={12}
               path={data.path}
               system={data.route.system}
-              stops={data.stops.map((s) => ({ ...s, kind: "stop" as const }))}
+              stops={mapStops}
               buses={buses}
               padding={layout.mapInset}
               onStopPress={(stopId) => router.push({ pathname: "/stop/[id]", params: { id: stopId } })}
@@ -94,13 +110,15 @@ export default function RouteScreen() {
               </Text>
             </View>
 
-            <View style={large ? styles.factsStacked : styles.facts}>
-              <Fact label={t.route.first} value={data.route.firstDeparture ? wallClock(data.route.firstDeparture) : "–"} />
-              <Fact label={t.route.last} value={data.route.lastDeparture ? wallClock(data.route.lastDeparture) : "–"} />
-              <Fact label={t.route.onRoad} value={data.feed.live ? String(buses.length) : "–"} />
-            </View>
+            {!untimed && (
+              <View style={large ? styles.factsStacked : styles.facts}>
+                <Fact label={t.route.first} value={data.route.firstDeparture ? wallClock(data.route.firstDeparture) : "–"} />
+                <Fact label={t.route.last} value={data.route.lastDeparture ? wallClock(data.route.lastDeparture) : "–"} />
+                <Fact label={t.route.onRoad} value={data.feed.live ? String(buses.length) : "–"} />
+              </View>
+            )}
 
-            {data.days && (
+            {data.days && !untimed && (
               <View style={styles.days}>
                 <Text variant="eyebrow" tone="faint" accessibilityRole="header">
                   {t.route.byDay}
@@ -128,14 +146,18 @@ export default function RouteScreen() {
               </View>
             )}
 
-            <FeedStatus feed={data.feed} />
+            {/* One word on the times, not two: a route with no timetable or a special one says so itself; any other
+                route without live buses has the feed's notice, which already says the times come from the timetable. */}
+            {!untimed && !special && <FeedStatus feed={data.feed} />}
 
-            <View style={[styles.note, { backgroundColor: p.surface }]}>
-              <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
-              <Text variant="callout" tone="muted" style={{ flex: 1 }}>
-                {city.specialRoutes?.includes(data.route.code) ? t.route.special(city.operator) : data.route.tripsPerWeek === 0 ? t.route.noTimetable(city.operator) : !data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
-              </Text>
-            </View>
+            {(untimed || special || data.feed.live) && (
+              <View style={[styles.note, { backgroundColor: p.surface }]}>
+                <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
+                <Text variant="callout" tone="muted" style={{ flex: 1 }}>
+                  {special ? t.route.special(city.operator) : untimed ? t.route.noTimetable(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
+                </Text>
+              </View>
+            )}
 
             <AlertCard alerts={data.alerts} />
 

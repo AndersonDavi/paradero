@@ -1,5 +1,5 @@
 import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { PressableScale } from "pressto";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
@@ -40,6 +40,9 @@ const RIDER_IN_FRAME_M = 1_500;
 /** How long the map rests after framing a bus before it will move again on its own. */
 const FRAME_REST_MS = 20_000;
 
+/** How close the map comes to a stop. */
+const STOP_ZOOM = 15.5;
+
 const keyOf = (a: Arrival) => `${a.routeId ?? a.code}-${a.plate ?? a.vehicle ?? a.at}`;
 
 export default function StopScreen() {
@@ -48,12 +51,14 @@ export default function StopScreen() {
   const t = useT();
   const large = useLargeText();
   const { data, isLoading, isError, refetch } = useStop(id);
-  const [early] = useState(() => knownStop(id));
-  const stop = data?.stop ?? early;
+  // The stop's name and place are known before its arrivals: the screen shows them while those load.
+  const stop = data?.stop ?? knownStop(id);
   // This stop stands out; the others stay on the map, faint, to see what is around and open them.
   const every = useEveryStop().data;
   const saved = useIsSaved("stop", id);
   const [only, setOnly] = useState<string | null>(null);
+  // A mouse cannot drag a row sideways, so on the web the route chips wrap onto more lines instead.
+  const wrap = process.env.EXPO_OS === "web";
 
   // In a fixed order, so the chips stay put as buses come and go and a tap lands on the route the rider meant.
   const codes = useMemo(() => [...new Set((data?.arrivals ?? []).map((a) => a.code))].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })), [data]);
@@ -62,6 +67,13 @@ export default function StopScreen() {
 
   // The bus the map follows: the next one, until the rider picks another.
   const [picked, setPicked] = useState<string | null>(null);
+  // Another stop tapped on the map takes this one's place on the same screen: the route and bus picked here go.
+  const [showing, setShowing] = useState(id);
+  if (showing !== id) {
+    setShowing(id);
+    setOnly(null);
+    setPicked(null);
+  }
   const followed = arrivals.find((a) => keyOf(a) === picked) ?? next;
   const live = !!data?.feed.live && followed?.basis !== "scheduled";
   // The line of the bus followed live, or of the route the rider picked, drawn on the map with its stops.
@@ -93,11 +105,22 @@ export default function StopScreen() {
     map.current?.fit([[stop.lon, stop.lat], [focus.lon, focus.lat], ...(rider ? [[rider.lon, rider.lat] as [number, number]] : [])]);
   }, [focus, stop, rider, place.status]);
 
-  // Picking a route shows its whole line, so the rider sees where it goes from here.
+  // Picking a route shows its whole line, drawn strong end to end, so the rider sees where it goes from here.
   const line = !live && only ? way?.line : undefined;
   useEffect(() => {
     if (line && line.length > 1) map.current?.fit(line);
   }, [line]);
+
+  // A stop tapped on the map opens in place, so the map and the sheet stay and the camera glides there, instead of
+  // a whole new screen loading on top. Back still returns to where the rider came from.
+  const navigation = useNavigation();
+  const openHere = (other: string) => {
+    void Haptics.selectionAsync();
+    framed.current = { bus: null, at: 0 };
+    navigation.setParams({ id: other } as never);
+    const to = knownStop(other);
+    if (to) map.current?.flyTo(to.lat, to.lon, STOP_ZOOM);
+  };
 
   const follow = (a: Arrival) => {
     void Haptics.selectionAsync();
@@ -124,11 +147,11 @@ export default function StopScreen() {
             <TransitMap
               ref={map}
               center={{ lat: stop.lat, lon: stop.lon }}
-              zoom={15.5}
+              zoom={STOP_ZOOM}
               stops={mapStops}
-              onStopPress={(id) => id !== stop.id && router.push({ pathname: "/stop/[id]", params: { id } })}
+              onStopPress={(other) => other !== stop.id && openHere(other)}
               path={way?.line}
-              approach={way?.approach}
+              approach={line ?? way?.approach}
               system={followed?.system}
               buses={mapBuses}
               showCodes={!route}
@@ -166,7 +189,7 @@ export default function StopScreen() {
         {data && (
           <>
             {codes.length > 1 && (
-              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={styles.bleed}>
+              <ScrollView horizontal={!wrap} scrollEnabled={!wrap} showsHorizontalScrollIndicator={false} contentContainerStyle={[styles.filters, wrap && styles.wrap]} style={styles.bleed}>
                 <Chip label={t.stop.all} accessibilityLabel={`${t.stop.all}, ${t.stop.allLabel}`} selected={!only} onPress={() => setOnly(null)} />
                 {codes.map((c) => {
                   const a = data.arrivals.find((x) => x.code === c)!;
@@ -190,10 +213,11 @@ export default function StopScreen() {
               </ScrollView>
             )}
 
-            {next ? <NextBus arrival={next} following={!!focus && followed === next} onPress={() => follow(next)} /> : <Empty title={t.stop.none.title} body={t.stop.none.body} />}
+            {next ? <NextBus arrival={next} following={!!focus && followed === next} onPress={() => follow(next)} /> : data.untimed ? <Empty title={t.stop.untimed.title} body={t.stop.untimed.body} /> : <Empty title={t.stop.none.title} body={t.stop.none.body} />}
 
-            {/* Each live arrival already says so; the notice is for when times fall back to the timetable. */}
-            {!data.feed.live && <FeedStatus feed={data.feed} />}
+            {/* Each live arrival already says so; the notice is for when times fall back to the timetable. A stop with no
+                timetable at all already says that, so it needs no second word on the times. */}
+            {!data.feed.live && !data.untimed && <FeedStatus feed={data.feed} />}
             <AlertCard alerts={data.alerts} />
 
             {later.length > 0 && (
@@ -231,6 +255,7 @@ const styles = StyleSheet.create({
   meta: { flexDirection: "row", alignItems: "center", gap: space[1.5], flexWrap: "wrap" },
   bleed: { marginHorizontal: -layout.gutter },
   filters: { gap: space[2], alignItems: "center", paddingHorizontal: layout.gutter },
+  wrap: { flexDirection: "row", flexWrap: "wrap" },
   chip: { padding: space[0.5], borderRadius: radius.md, borderWidth: size.line.rule, borderCurve: "continuous" },
   heading: { marginBottom: space[1] },
 });

@@ -39,6 +39,8 @@ export const icons = {
   location: { ios: "location.fill", android: "my_location" },
   search: { ios: "magnifyingglass", android: "search" },
   chevron: { ios: "chevron.right", android: "chevron_right" },
+  up: { ios: "chevron.up", android: "keyboard_arrow_up" },
+  down: { ios: "chevron.down", android: "keyboard_arrow_down" },
   wheelchair: { ios: "figure.roll", android: "accessible" },
   warning: { ios: "exclamationmark.triangle.fill", android: "warning" },
   clock: { ios: "clock", android: "schedule" },
