@@ -75,6 +75,9 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: roomy(padding ? FIT_MARGIN : FIT_UNDER_SHEET), duration });
   };
 
+  // The native map takes a moment to take its new size after the view's; framing before that frames the old one.
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => clearTimeout(settle.current ?? undefined), []);
   // The sheet moved: glide to keep what was framed in the part of the map left to see.
   // The map takes its new inset first; framing in the same moment would frame for the old one.
   const reframe = useEffectEvent(() => {
@@ -94,12 +97,12 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
       if (coords.length < 2) return;
       framed.current = coords;
       frame(coords, glide);
+      // A map that just opened takes its inset a moment later; framing again then keeps the route above the sheet.
+      clearTimeout(settle.current ?? undefined);
+      settle.current = setTimeout(() => framed.current === coords && frame(coords, glide), FIRST_FRAME_SETTLE_MS);
     },
   }));
 
-  // The native map takes a moment to take its new size after the view's; framing before that frames the old one.
-  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
-  useEffect(() => () => clearTimeout(settle.current ?? undefined), []);
   const resized = (e: LayoutChangeEvent) => {
     width.current = e.nativeEvent.layout.width;
     const h = e.nativeEvent.layout.height;
@@ -158,6 +161,7 @@ const CASING_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 1
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
 const RESIZE_SETTLE_MS = 300;
 const INSET_SETTLE_MS = 120;
+const FIRST_FRAME_SETTLE_MS = 450;
 /** The line is drawn under the stops, and so under the buses: a bus rides on its line. */
 const UNDER = "stops-dot";
 
