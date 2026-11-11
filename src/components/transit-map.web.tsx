@@ -15,7 +15,7 @@ import { systems, usePalette, type Palette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
 import { Text } from "./text";
-import { MAP_CREDIT, tripData, WALK_DASH, type MapHandle, type TransitMapProps } from "./transit-map.types";
+import { MAP_CREDIT, stopColor, tripData, WALK_DASH, type MapHandle, type TransitMapProps } from "./transit-map.types";
 
 /**
  * The same map as the app, drawn in the browser with MapLibre GL JS. It reads the same props and draws the
@@ -135,7 +135,7 @@ function layers({ p, quiet, showCodes, lit }: Scene): LayerSpecification[] {
         // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
         "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.6, 1], 13, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
         "circle-color": p.background,
-        "circle-stroke-color": p.ink,
+        "circle-stroke-color": ["coalesce", ["get", "color"], p.ink],
         "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.2, 0.8], 13, ["case", ["get", "station"], 3, 2]],
       },
     },
@@ -253,7 +253,7 @@ function useFill(still: boolean, restartOn: string): number | null {
 }
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, legs, showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system, showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
   ref,
 ) {
   const p = usePalette();
@@ -265,7 +265,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
-  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station" })), [stops]);
+  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system) })), [stops, system]);
   const pathData = useMemo(() => line(path), [path]);
   const hasApproach = !!approach && approach.length > 1;
   const approachData = useMemo(() => line(approach), [approach]);

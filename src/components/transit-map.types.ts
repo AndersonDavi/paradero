@@ -1,4 +1,5 @@
-import type { Bus, Stop, System } from "@/transit/types";
+import { systems } from "@/theme/colors";
+import type { Bus, RouteRef, Stop, System } from "@/transit/types";
 
 export interface TripLeg {
   kind: "walk" | "ride";
@@ -13,7 +14,8 @@ export interface MapHandle {
 export interface TransitMapProps {
   center: { lat: number; lon: number };
   zoom?: number;
-  stops?: Pick<Stop, "id" | "name" | "kind" | "lat" | "lon">[];
+  /** Each stop is ringed in the colour of the busiest kind of route that calls there, from its routes or `system`. */
+  stops?: (Pick<Stop, "id" | "name" | "kind" | "lat" | "lon"> & { routes?: Pick<RouteRef, "system">[]; system?: System })[];
   buses?: (Bus & { system?: System; code?: string })[];
   path?: [number, number][];
   /** The stretch of the path still to be driven to the stop; drawn strong, with the rest of the path faint. */
@@ -39,6 +41,16 @@ export const tripData = (legs: TripLeg[]) => ({
     .filter((l) => l.path.length > 1)
     .map((l) => ({ type: "Feature" as const, geometry: { type: "LineString" as const, coordinates: l.path }, properties: { kind: l.kind } })),
 });
+
+/** Which kind of route a stop is known for when several call there: a trunk station before a feeder stop. */
+const RANK: System[] = ["troncal", "transmicable", "dual", "alimentador", "zonal_urbano", "zonal_complementario", "zonal_especial", "other"];
+
+/** The ring colour of a stop on the map, or null to draw it in ink. */
+export function stopColor(stop: { routes?: Pick<RouteRef, "system">[]; system?: System }, fallback?: System): string | null {
+  const here = new Set(stop.routes?.map((r) => r.system));
+  const system = stop.system ?? RANK.find((s) => here.has(s)) ?? fallback;
+  return system && system !== "other" ? systems[system].dot : null;
+}
 
 /** Who the map is from. It sits on the map in plain sight in place of an info button, and reads the same in every language. */
 export const MAP_CREDIT = "© OpenStreetMap · © CARTO";

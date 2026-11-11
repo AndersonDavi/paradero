@@ -9,7 +9,7 @@ import { systems, usePalette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
 import { Text } from "./text";
-import { MAP_CREDIT, tripData, WALK_DASH, type MapHandle, type TransitMapProps, type TripLeg } from "./transit-map.types";
+import { MAP_CREDIT, stopColor, tripData, WALK_DASH, type MapHandle, type TransitMapProps, type TripLeg } from "./transit-map.types";
 
 const STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -59,7 +59,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     },
   }));
 
-  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station" })), [stops]);
+  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system) })), [stops, system]);
   const ink = p.ink;
 
   return (
@@ -86,7 +86,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
               // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
               "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.6, 1], 13, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
               "circle-color": p.background,
-              "circle-stroke-color": ink,
+              "circle-stroke-color": ["coalesce", ["get", "color"], ink],
               "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.2, 0.8], 13, ["case", ["get", "station"], 3, 2]],
             }}
           />
