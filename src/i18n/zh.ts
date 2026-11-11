@@ -179,11 +179,16 @@ export const zh: Messages = {
   saved: {
     empty: {
       title: "收藏家附近和公司附近的站点",
-      body: "点击任意站点或线路上的星标，它们会和接下来的车次一起出现在这里和「附近」，每天早上不用再搜索。收藏只保存在你的手机上。",
+      body: "在任意站点、线路或行程上点星标，或把一个地点标为家或公司。它们会显示在这里和“附近”，不用每天早上再找。只保存在你的手机上。",
       action: "查找我的站点",
     },
     stops: "站点",
     routes: "线路",
+    places: "你的地点",
+    trips: "你的行程",
+    home: "家",
+    work: "公司",
+    toPlace: (name) => `怎么去 ${name}`,
   },
 
   search: {
@@ -206,6 +211,21 @@ export const zh: Messages = {
 
   trip: {
     title: "怎么去",
+    save: "保存这个行程",
+    unsave: "从你的行程中移除",
+    savedTrip: { title: "行程已保存", body: "在“已保存”中可以找到，并显示你该出发的时间。" },
+    removedTrip: "已从你的行程中移除",
+    fromPlace: (name) => `从 ${name} 出发`,
+    leaveFrom: "出发地",
+    here: "当前位置",
+    asHome: "这是我家",
+    asWork: "这是我公司",
+    keep: "保存地点",
+    placeSaved: "地点已保存",
+    placeRemoved: "已从你的地点中移除",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `${leave} 出发，${arrive} 到达`,
+    noneToday: "暂时没有公交",
     fromHere: "从你所在位置",
     options: "方案",
     steps: "分步路线",

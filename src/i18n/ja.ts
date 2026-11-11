@@ -179,11 +179,16 @@ export const ja: Messages = {
   saved: {
     empty: {
       title: "自宅と職場の停留所を保存しましょう",
-      body: "停留所や路線の星をタップすると、ここと「近く」に次のバスと一緒に表示されます。毎朝探す必要はありません。保存内容はこの端末にだけ残ります。",
+      body: "停留所、路線、ルートの星をタップするか、場所を自宅や職場に設定してください。ここと「近く」に表示され、毎朝探す必要はありません。保存内容はこの端末にだけ残ります。",
       action: "停留所を探す",
     },
     stops: "停留所",
     routes: "路線",
+    places: "あなたの場所",
+    trips: "あなたのルート",
+    home: "自宅",
+    work: "職場",
+    toPlace: (name) => `${name}への行き方`,
   },
 
   search: {
@@ -206,6 +211,21 @@ export const ja: Messages = {
 
   trip: {
     title: "行き方",
+    save: "このルートを保存",
+    unsave: "ルートから削除",
+    savedTrip: { title: "ルートを保存しました", body: "「保存済み」に、出発すべき時刻と一緒に表示されます。" },
+    removedTrip: "ルートから削除しました",
+    fromPlace: (name) => `${name}から`,
+    leaveFrom: "出発地",
+    here: "現在地",
+    asHome: "自宅に設定",
+    asWork: "職場に設定",
+    keep: "場所を保存",
+    placeSaved: "場所を保存しました",
+    placeRemoved: "場所から削除しました",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `${leave}に出発、${arrive}に到着`,
+    noneToday: "現在バスはありません",
     fromHere: "現在地から",
     options: "候補",
     steps: "ルートの詳細",

@@ -183,11 +183,16 @@ export const en: Messages = {
   saved: {
     empty: {
       title: "Save the stops near home and work",
-      body: "Tap the star on any stop or route. They show up here and in Nearby with their next buses, so you don't search every morning. They are saved only on your phone.",
+      body: "Tap the star on any stop, route or trip, or mark a place as your home or your work. They show up here and in Nearby, so you don't search every morning. They are saved only on your phone.",
       action: "Find my stop",
     },
     stops: "Stops",
     routes: "Routes",
+    places: "Your places",
+    trips: "Your trips",
+    home: "Home",
+    work: "Work",
+    toPlace: (name) => `How to get to ${name}`,
   },
 
   search: {
@@ -210,6 +215,21 @@ export const en: Messages = {
 
   trip: {
     title: "How to get there",
+    save: "Save this trip",
+    unsave: "Remove from your trips",
+    savedTrip: { title: "Trip saved", body: "Find it in Saved, with the time you need to leave." },
+    removedTrip: "Removed from your trips",
+    fromPlace: (name) => `From ${name}`,
+    leaveFrom: "Leave from",
+    here: "Where you are",
+    asHome: "It's my home",
+    asWork: "It's my work",
+    keep: "Save place",
+    placeSaved: "Place saved",
+    placeRemoved: "Removed from your places",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `Leave at ${leave}, arrive ${arrive}`,
+    noneToday: "No buses for now",
     fromHere: "From where you are",
     options: "Options",
     steps: "Step by step",

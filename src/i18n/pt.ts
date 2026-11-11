@@ -183,11 +183,16 @@ export const pt: Messages = {
   saved: {
     empty: {
       title: "Salve o ponto de casa e o do trabalho",
-      body: "Toque na estrela em qualquer ponto ou linha. Eles aparecem aqui e em Perto com os próximos ônibus, sem buscar toda manhã. Ficam salvos só no seu celular.",
+      body: "Toque na estrela de qualquer ponto, linha ou viagem, ou marque um lugar como sua casa ou seu trabalho. Eles aparecem aqui e em Perto, sem procurar toda manhã. Ficam salvos só no seu celular.",
       action: "Buscar meu ponto",
     },
     stops: "Pontos",
     routes: "Linhas",
+    places: "Seus lugares",
+    trips: "Suas viagens",
+    home: "Casa",
+    work: "Trabalho",
+    toPlace: (name) => `Como chegar a ${name}`,
   },
 
   search: {
@@ -210,6 +215,21 @@ export const pt: Messages = {
 
   trip: {
     title: "Como chegar",
+    save: "Salvar esta viagem",
+    unsave: "Remover das suas viagens",
+    savedTrip: { title: "Viagem salva", body: "Está em Salvos, com a hora em que você deve sair." },
+    removedTrip: "Removida das suas viagens",
+    fromPlace: (name) => `De ${name}`,
+    leaveFrom: "Sair de",
+    here: "Onde você está",
+    asHome: "É minha casa",
+    asWork: "É meu trabalho",
+    keep: "Salvar lugar",
+    placeSaved: "Lugar salvo",
+    placeRemoved: "Removido dos seus lugares",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `Saia às ${leave}, chegue às ${arrive}`,
+    noneToday: "Sem ônibus por enquanto",
     fromHere: "De onde você está",
     options: "Opções",
     steps: "Passo a passo",

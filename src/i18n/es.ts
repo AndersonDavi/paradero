@@ -191,11 +191,16 @@ export const es = {
   saved: {
     empty: {
       title: "Guarda el paradero de tu casa y el del trabajo",
-      body: "Toca la estrella en cualquier paradero o ruta. Aparecen aquí y en Cerca con sus próximos buses, sin buscarlos cada mañana. Se guardan solo en tu teléfono.",
+      body: "Toca la estrella en cualquier paradero, ruta o viaje, o marca un lugar como tu casa o tu trabajo. Aparecen aquí y en Cerca, sin buscarlos cada mañana. Se guardan solo en tu teléfono.",
       action: "Buscar mi paradero",
     },
     stops: "Paraderos",
     routes: "Rutas",
+    places: "Tus lugares",
+    trips: "Tus viajes",
+    home: "Casa",
+    work: "Trabajo",
+    toPlace: (name: string) => `Cómo llegar a ${name}`,
   },
 
   search: {
@@ -227,6 +232,21 @@ export const es = {
 
   trip: {
     title: "Cómo llegar",
+    save: "Guardar este viaje",
+    unsave: "Quitar de tus viajes",
+    savedTrip: { title: "Viaje guardado", body: "Lo encuentras en Guardados, con la hora a la que debes salir." },
+    removedTrip: "Lo quitamos de tus viajes",
+    fromPlace: (name: string) => `Desde ${name}`,
+    leaveFrom: "Salir desde",
+    here: "Donde estás",
+    asHome: "Es mi casa",
+    asWork: "Es mi trabajo",
+    keep: "Guardar lugar",
+    placeSaved: "Lugar guardado",
+    placeRemoved: "Lo quitamos de tus lugares",
+    pair: (from: string, to: string) => `${from} → ${to}`,
+    next: (leave: string, arrive: string) => `Sal a las ${leave}, llegas ${arrive}`,
+    noneToday: "Sin buses por ahora",
     fromHere: "Desde donde estás",
     options: "Opciones",
     steps: "Paso a paso",

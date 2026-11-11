@@ -4,11 +4,15 @@ import { PressableScale } from "pressto";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 
+import { toast } from "sonner-native";
+
 import { city } from "@/cities";
+import { Chip } from "@/components/chip";
 import { DetailScreen } from "@/components/detail-screen";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { RouteBadge } from "@/components/route-badge";
+import { SaveButton } from "@/components/save-button";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
 import { Text } from "@/components/text";
@@ -20,6 +24,7 @@ import { usePlan } from "@/lib/api";
 import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
 import { useLocation } from "@/lib/location";
+import { placeId, placesInOrder, setPlace, toggleTrip, tripId, useIsSaved, useSaved, type SavedPlace } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
 import type { Journey, Leg } from "@/transit/types";
@@ -27,9 +32,12 @@ import type { Journey, Leg } from "@/transit/types";
 /** The place itself, drawn on the map among the stops. */
 const DESTINATION = "destination";
 
-/** How to get from where the rider is to a place: a few ways to choose from, and the chosen one step by step. */
+/**
+ * How to get to a place, from where the rider is or from one of their places: a few ways to choose from, and the
+ * chosen one step by step. The place can be kept as home, work or a saved place, and the trip itself saved.
+ */
 export default function TripScreen() {
-  const { name, lat, lon } = useLocalSearchParams<{ name?: string; lat?: string; lon?: string }>();
+  const { name, lat, lon, fromName, fromLat, fromLon } = useLocalSearchParams<{ name?: string; lat?: string; lon?: string; fromName?: string; fromLat?: string; fromLon?: string }>();
   const t = useT();
   // Times follow the rider's 12 or 24 hour clock; this redraws them when it changes.
   useClock();
@@ -39,7 +47,17 @@ export default function TripScreen() {
     const point = { lat: Number(lat), lon: Number(lon) };
     return Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : null;
   }, [lat, lon]);
-  const from = here.status === "ready" ? { lat: here.lat, lon: here.lon } : null;
+  // From one of the rider's places when they chose one; otherwise from where they are.
+  const start = useMemo(() => {
+    const point = { lat: Number(fromLat), lon: Number(fromLon) };
+    return fromLat && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : null;
+  }, [fromLat, fromLon]);
+  const from = start ?? (here.status === "ready" ? { lat: here.lat, lon: here.lon } : null);
+  const saved = useSaved();
+  const places = placesInOrder(saved);
+  const destination = to ? places.find((p) => p.id === placeId(to)) : undefined;
+  const trip = to ? { from: start ? { name: fromName ?? "", ...start } : null, to: { name: name ?? "", ...to } } : null;
+  const tripSaved = useIsSaved("trip", trip ? tripId(trip.from, trip.to) : undefined);
   const { data, isLoading, isError, refetch } = usePlan(from, to);
   const [chosen, setChosen] = useState(0);
   const journeys = data?.journeys ?? [];
@@ -83,60 +101,109 @@ export default function TripScreen() {
   }, [journey, to, name]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
 
+  const keep = (label: SavedPlace["label"]) => {
+    if (!to) return;
+    void Haptics.selectionAsync();
+    const added = setPlace({ name: name ?? "", ...to }, label);
+    announce(added ? t.trip.placeSaved : t.trip.placeRemoved);
+    if (added) toast.success(t.trip.placeSaved);
+  };
+
+  const saveTrip = () => {
+    if (!trip) return;
+    const added = toggleTrip(trip.from, trip.to);
+    void Haptics.notificationAsync(added ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
+    if (added) toast.success(t.trip.savedTrip.title, { description: t.trip.savedTrip.body });
+    else toast(t.trip.removedTrip);
+    announce(added ? `${t.trip.savedTrip.title}. ${t.trip.savedTrip.body}` : t.trip.removedTrip);
+  };
+
+  const leaveFrom = (place: SavedPlace | null) => {
+    void Haptics.selectionAsync();
+    router.setParams(place ? { fromName: place.name, fromLat: String(place.lat), fromLon: String(place.lon) } : { fromName: undefined, fromLat: undefined, fromLon: undefined });
+  };
+  const origins = places.filter((p) => p.id !== destination?.id);
+  const placeName = (p: SavedPlace) => (p.label === "home" ? t.saved.home : p.label === "work" ? t.saved.work : p.name);
+
   const pick = (i: number) => {
     void Haptics.selectionAsync();
     setChosen(i);
   };
 
   return (
-    <DetailScreen
-      map={
-        <TransitMap
-          ref={map}
-          center={to ?? city.center}
-          zoom={14}
-          legs={legs}
-          system={system}
-          stops={stops}
-          padding={layout.mapInset}
-          onStopPress={(id) => id !== DESTINATION && router.push({ pathname: "/stop/[id]", params: { id } })}
-        />
-      }>
-      <View style={styles.header}>
-        <Text variant="eyebrow" tone="faint">
-          {t.trip.title}
-        </Text>
-        <Text variant="heading" accessibilityRole="header">
-          {name}
-        </Text>
-        <Text variant="callout" tone="muted">
-          {t.trip.fromHere}
-        </Text>
-      </View>
+    <>
+      {trip && <SaveButton saved={tripSaved} label={tripSaved ? t.trip.unsave : t.trip.save} onPress={saveTrip} />}
+      <DetailScreen
+        map={
+          <TransitMap
+            ref={map}
+            center={to ?? city.center}
+            zoom={14}
+            legs={legs}
+            system={system}
+            stops={stops}
+            padding={layout.mapInset}
+            onStopPress={(id) => id !== DESTINATION && router.push({ pathname: "/stop/[id]", params: { id } })}
+          />
+        }>
+        <View style={styles.header}>
+          <Text variant="eyebrow" tone="faint">
+            {t.trip.title}
+          </Text>
+          <Text variant="heading" accessibilityRole="header">
+            {name}
+          </Text>
+          <Text variant="callout" tone="muted">
+            {start ? t.trip.fromPlace(fromName ?? "") : t.trip.fromHere}
+          </Text>
+        </View>
 
-      {!to && <Empty title={t.trip.failed.title} body={t.trip.failed.body} />}
-      {to && here.status === "loading" && <SkeletonList rows={3} kind="arrival" />}
-      {to && here.status === "denied" && <Empty title={t.trip.needLocation.title} body={t.trip.needLocation.body} action={t.trip.needLocation.action} onAction={() => void retry()} />}
-      {to && here.status === "outside" && <Empty title={t.trip.outside(city.name)} body={t.trip.needLocation.body} />}
-      {from && isLoading && <SkeletonList rows={3} kind="arrival" />}
-      {from && isError && !data && <Empty title={t.trip.failed.title} body={t.trip.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
-      {from && data && count === 0 && <Empty title={t.trip.none.title} body={t.trip.none.body(city.operator)} />}
-
-      {from && data && count > 0 && (
-        <>
-          <FeedStatus feed={data.feed} />
-          <View style={styles.list}>
-            <Text variant="title" accessibilityRole="header">
-              {t.trip.options}
-            </Text>
-            {journeys.map((j, i) => (
-              <Option key={i} journey={j} selected={j === journey} onPress={() => pick(i)} />
-            ))}
+        {to && (
+          <View style={styles.chips}>
+            <Chip label={t.trip.asHome} selected={destination?.label === "home"} onPress={() => keep("home")} />
+            <Chip label={t.trip.asWork} selected={destination?.label === "work"} onPress={() => keep("work")} />
+            <Chip label={t.trip.keep} selected={!!destination && destination.label === null} onPress={() => keep(null)} />
           </View>
-          {journey && <Steps journey={journey} name={name ?? ""} />}
-        </>
-      )}
-    </DetailScreen>
+        )}
+
+        {origins.length > 0 && (
+          <View style={styles.from}>
+            <Text variant="caption" tone="muted">
+              {t.trip.leaveFrom}
+            </Text>
+            <View accessibilityRole="radiogroup" accessibilityLabel={t.trip.leaveFrom} style={styles.chips}>
+              <Chip radio label={t.trip.here} selected={!start} onPress={() => leaveFrom(null)} />
+              {origins.map((p) => (
+                <Chip key={p.id} radio label={placeName(p)} selected={!!start && placeId(start) === p.id} onPress={() => leaveFrom(p)} />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {!to && <Empty title={t.trip.failed.title} body={t.trip.failed.body} />}
+        {to && !start && here.status === "loading" && <SkeletonList rows={3} kind="arrival" />}
+        {to && !start && here.status === "denied" && <Empty title={t.trip.needLocation.title} body={t.trip.needLocation.body} action={t.trip.needLocation.action} onAction={() => void retry()} />}
+        {to && !start && here.status === "outside" && <Empty title={t.trip.outside(city.name)} body={t.trip.needLocation.body} />}
+        {from && isLoading && <SkeletonList rows={3} kind="arrival" />}
+        {from && isError && !data && <Empty title={t.trip.failed.title} body={t.trip.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {from && data && count === 0 && <Empty title={t.trip.none.title} body={t.trip.none.body(city.operator)} />}
+
+        {from && data && count > 0 && (
+          <>
+            <FeedStatus feed={data.feed} />
+            <View style={styles.list}>
+              <Text variant="title" accessibilityRole="header">
+                {t.trip.options}
+              </Text>
+              {journeys.map((j, i) => (
+                <Option key={i} journey={j} selected={j === journey} onPress={() => pick(i)} />
+              ))}
+            </View>
+            {journey && <Steps journey={journey} name={name ?? ""} />}
+          </>
+        )}
+      </DetailScreen>
+    </>
   );
 }
 
@@ -272,6 +339,8 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
 
 const styles = StyleSheet.create({
   header: { gap: space[2] },
+  chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  from: { gap: space[2] },
   list: { gap: space[3] },
   option: { padding: space[4], borderRadius: radius.lg, borderCurve: "continuous", gap: space[2] },
   optionTop: { flexDirection: "row", alignItems: "baseline", justifyContent: "space-between", gap: space[2], flexWrap: "wrap" },

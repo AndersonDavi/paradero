@@ -12,7 +12,9 @@ import { CardEntry } from "@/components/card-entry";
 import { FeedStatus } from "@/components/feed-status";
 import { Glass } from "@/components/glass";
 import { Icon, icons } from "@/components/icon";
+import { Chip } from "@/components/chip";
 import { Rail } from "@/components/rail";
+import { openTrip, usePlaceName } from "@/components/saved-rows";
 import { SavedStopCard } from "@/components/saved-stop-card";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
@@ -25,7 +27,7 @@ import { useAccessibility } from "@/lib/accessibility";
 import { canPlan, prefetchStop, useEveryStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
 import { useLocation } from "@/lib/location";
-import { useSaved, type SavedStop } from "@/lib/saved";
+import { placesInOrder, useSaved, type SavedStop } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
 
@@ -42,7 +44,10 @@ export default function Home() {
   const position = useSharedValue(height);
   const { state, retry } = useLocation();
   const health = useHealth();
-  const savedStops = useSaved().filter((s): s is SavedStop => s.type === "stop");
+  const saved = useSaved();
+  const savedStops = saved.filter((s): s is SavedStop => s.type === "stop");
+  const places = placesInOrder(saved);
+  const placeName = usePlaceName();
 
   const here = state.status === "ready" ? { lat: state.lat, lon: state.lon } : null;
   const outside = state.status === "outside";
@@ -142,6 +147,15 @@ export default function Home() {
             </Text>
           </PressableScale>
 
+          {/* Home, work and the rider's places, one tap from how to get there. */}
+          {places.length > 0 && (
+            <View accessibilityLabel={t.saved.places} style={styles.places}>
+              {places.map((p) => (
+                <Chip key={p.id} label={placeName(p)} accessibilityLabel={t.saved.toPlace(placeName(p))} onPress={() => openTrip({ name: placeName(p), lat: p.lat, lon: p.lon })} />
+              ))}
+            </View>
+          )}
+
           <CardEntry />
 
           {savedStops.length > 0 && (
@@ -228,6 +242,7 @@ const styles = StyleSheet.create({
     borderCurve: "continuous",
   },
   section: { marginTop: space[6], gap: space[1] },
+  places: { flexDirection: "row", flexWrap: "wrap", gap: space[2], paddingHorizontal: space[4], marginTop: space[3] },
   sectionTitle: { paddingHorizontal: layout.gutter, marginBottom: space[1], gap: space[0.5] },
   note: { paddingHorizontal: space[4], marginBottom: space[2] },
 });

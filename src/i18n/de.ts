@@ -183,11 +183,16 @@ export const de: Messages = {
   saved: {
     empty: {
       title: "Speichere die Haltestellen bei dir zu Hause und bei der Arbeit",
-      body: "Tippe auf den Stern bei einer Haltestelle oder Linie. Sie erscheinen hier und unter In der Nähe mit den nächsten Bussen. Sie bleiben nur auf deinem Telefon.",
+      body: "Tippe auf den Stern bei einer Haltestelle, Linie oder Fahrt, oder markiere einen Ort als Zuhause oder Arbeit. Sie erscheinen hier und unter In der Nähe, ohne jeden Morgen zu suchen. Sie werden nur auf deinem Handy gespeichert.",
       action: "Meine Haltestelle finden",
     },
     stops: "Haltestellen",
     routes: "Linien",
+    places: "Deine Orte",
+    trips: "Deine Fahrten",
+    home: "Zuhause",
+    work: "Arbeit",
+    toPlace: (name) => `Wie komme ich zu ${name}`,
   },
 
   search: {
@@ -210,6 +215,21 @@ export const de: Messages = {
 
   trip: {
     title: "Wie komme ich hin",
+    save: "Diese Fahrt speichern",
+    unsave: "Aus deinen Fahrten entfernen",
+    savedTrip: { title: "Fahrt gespeichert", body: "Du findest sie unter Gespeichert, mit der Zeit, zu der du losmusst." },
+    removedTrip: "Aus deinen Fahrten entfernt",
+    fromPlace: (name) => `Von ${name}`,
+    leaveFrom: "Losfahren von",
+    here: "Dein Standort",
+    asHome: "Das ist mein Zuhause",
+    asWork: "Das ist meine Arbeit",
+    keep: "Ort speichern",
+    placeSaved: "Ort gespeichert",
+    placeRemoved: "Aus deinen Orten entfernt",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `Los um ${leave}, Ankunft ${arrive}`,
+    noneToday: "Gerade keine Busse",
     fromHere: "Von deinem Standort",
     options: "Möglichkeiten",
     steps: "Schritt für Schritt",

@@ -183,11 +183,16 @@ export const fr: Messages = {
   saved: {
     empty: {
       title: "Enregistrez l’arrêt de la maison et celui du travail",
-      body: "Touchez l’étoile sur n’importe quel arrêt ou ligne. Ils apparaissent ici et dans À proximité avec leurs prochains bus. Ils restent uniquement sur votre téléphone.",
+      body: "Touchez l'étoile sur un arrêt, une ligne ou un trajet, ou marquez un lieu comme votre maison ou votre travail. Ils apparaissent ici et dans À proximité, sans chercher chaque matin. Ils ne sont enregistrés que sur votre téléphone.",
       action: "Trouver mon arrêt",
     },
     stops: "Arrêts",
     routes: "Lignes",
+    places: "Vos lieux",
+    trips: "Vos trajets",
+    home: "Maison",
+    work: "Travail",
+    toPlace: (name) => `Comment aller à ${name}`,
   },
 
   search: {
@@ -210,6 +215,21 @@ export const fr: Messages = {
 
   trip: {
     title: "Comment y aller",
+    save: "Enregistrer ce trajet",
+    unsave: "Retirer de vos trajets",
+    savedTrip: { title: "Trajet enregistré", body: "Retrouvez-le dans Enregistrés, avec l'heure à laquelle partir." },
+    removedTrip: "Retiré de vos trajets",
+    fromPlace: (name) => `Depuis ${name}`,
+    leaveFrom: "Partir de",
+    here: "Où vous êtes",
+    asHome: "C'est ma maison",
+    asWork: "C'est mon travail",
+    keep: "Enregistrer le lieu",
+    placeSaved: "Lieu enregistré",
+    placeRemoved: "Retiré de vos lieux",
+    pair: (from, to) => `${from} → ${to}`,
+    next: (leave, arrive) => `Partez à ${leave}, arrivée ${arrive}`,
+    noneToday: "Pas de bus pour l'instant",
     fromHere: "Depuis où vous êtes",
     options: "Options",
     steps: "Étape par étape",
