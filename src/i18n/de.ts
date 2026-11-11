@@ -98,7 +98,6 @@ export const de: Messages = {
 
   common: { retry: "Erneut versuchen", station: "Station", stop: "Haltestelle", accessible: "Barrierefrei", done: "Fertig", close: "Schließen", clear: "Löschen" },
 
-  map: { webOnly: "Die Karte gibt es in der App für iOS und Android." },
 
   stopRow: { open: "Öffnet die nächsten Abfahrten" },
   routeRow: { open: "Öffnet den Linienverlauf und die Busse unterwegs" },

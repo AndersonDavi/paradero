@@ -98,7 +98,6 @@ export const en: Messages = {
 
   common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close", clear: "Clear" },
 
-  map: { webOnly: "The map is available in the iOS and Android app." },
 
   stopRow: { open: "Opens the next arrivals" },
   routeRow: { open: "Opens the route and the buses on it" },

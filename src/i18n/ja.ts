@@ -98,7 +98,6 @@ export const ja: Messages = {
 
   common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる", clear: "消去" },
 
-  map: { webOnly: "地図はiOSとAndroidのアプリで利用できます。" },
 
   stopRow: { open: "次の到着を表示します" },
   routeRow: { open: "経路と運行中のバスを表示します" },

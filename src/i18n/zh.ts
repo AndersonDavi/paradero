@@ -98,7 +98,6 @@ export const zh: Messages = {
 
   common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭", clear: "清除" },
 
-  map: { webOnly: "地图可在 iOS 和 Android 应用中使用。" },
 
   stopRow: { open: "查看接下来的到站" },
   routeRow: { open: "查看线路走向和运行中的车辆" },
