@@ -24,7 +24,7 @@ import { askForLocation } from "@/lib/location";
 import { finishOnboarding } from "@/lib/onboarding";
 import { photo, signal, usePalette } from "@/theme/colors";
 import { motion } from "@/theme/motion";
-import { radius, size, space } from "@/theme/tokens";
+import { layout, radius, size, space } from "@/theme/tokens";
 
 const PHOTOS: Record<number, number> = {
   0: require("@/assets/images/onboarding/welcome.jpg"),
@@ -330,10 +330,14 @@ const styles = StyleSheet.create({
   },
   previewEta: { flexDirection: "row", alignItems: "center", gap: space[1.5] },
   scroll: { flex: 1 },
+  // On a large screen the words and buttons keep a readable column instead of running edge to edge.
   content: {
     flexGrow: 1,
     justifyContent: "flex-end",
     paddingHorizontal: space[6],
+    width: "100%",
+    maxWidth: layout.column,
+    alignSelf: "center",
   },
   copy: { gap: space[3] },
   reasons: { gap: space[3], marginTop: space[1] },

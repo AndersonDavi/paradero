@@ -253,8 +253,8 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   ref,
 ) {
   // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
-  const cover = useContext(SheetCover);
-  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + cover } : undefined), [own, cover]);
+  const { bottom: coverBottom, left: coverLeft } = useContext(SheetCover);
+  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + coverBottom, left: own.left + coverLeft } : undefined), [own, coverBottom, coverLeft]);
   const p = usePalette();
   const { reduceMotion } = useAccessibility();
   const still = usePrefersReducedMotion() || reduceMotion;
@@ -430,7 +430,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     const map = mapRef.current;
     if (map && framed.current) frame(map, framed.current, glide);
   });
-  useEffect(() => reframe(), [cover]);
+  useEffect(() => reframe(), [coverBottom, coverLeft]);
 
   useImperativeHandle(ref, () => {
     const camera = (go: (map: MapLibreMap, duration: number) => void) => {

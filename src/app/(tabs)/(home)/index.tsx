@@ -16,6 +16,7 @@ import { Chip } from "@/components/chip";
 import { Rail } from "@/components/rail";
 import { openTrip, usePlaceName } from "@/components/saved-rows";
 import { SavedStopCard } from "@/components/saved-stop-card";
+import { PANEL_COVER, SidePanel, useWide } from "@/components/side-panel";
 import { SkeletonList } from "@/components/skeleton";
 import { Empty } from "@/components/state";
 import { StopRow } from "@/components/stop-row";
@@ -40,6 +41,8 @@ export default function Home() {
   const { screenReader } = useAccessibility();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
+  // A wide web window: the sheet is a panel on the left and the map fills the rest.
+  const wide = useWide();
   const map = useRef<MapHandle>(null);
   const position = useSharedValue(height);
   const { state, retry } = useLocation();
@@ -70,6 +73,82 @@ export default function Home() {
     opacity: interpolate(position.value, [height * 0.25, height * 0.4], [0, 1], "clamp"),
   }));
 
+  const content = (
+    <>
+      <View style={styles.notice}>
+        <FeedStatus feed={health.data?.feed} compact />
+      </View>
+      <View style={styles.hello}>
+        <Text variant="eyebrow" tone="faint">
+          {greeting()}
+        </Text>
+        <Text variant="heading">{t.home.question}</Text>
+      </View>
+
+      <PressableScale
+        accessibilityRole="button"
+        accessibilityLabel={t.home.searchLabel}
+        onPress={() => router.navigate("/search")}
+        style={[styles.where, { backgroundColor: p.surface }]}>
+        <Icon name={icons.search} color={p.text} size="md" weight="bold" />
+        <Text variant="body" tone="muted">
+          {canPlan() ? t.search.placeholderPlaces : t.home.searchPlaceholder}
+        </Text>
+      </PressableScale>
+
+      {/* Home, work and the rider's places, one tap from how to get there. */}
+      {places.length > 0 && (
+        <View accessibilityLabel={t.saved.places} style={styles.places}>
+          {places.map((p) => (
+            <Chip key={p.id} label={placeName(p)} accessibilityLabel={t.saved.toPlace(placeName(p))} onPress={() => openTrip({ name: placeName(p), lat: p.lat, lon: p.lon })} />
+          ))}
+        </View>
+      )}
+
+      <CardEntry />
+
+      {savedStops.length > 0 && (
+        <View style={styles.section}>
+          <SectionTitle title={t.home.yourStops} />
+          <Rail>
+            {savedStops.slice(0, 6).map((s) => (
+              <SavedStopCard key={s.id} saved={s} width={layout.cardWidth} />
+            ))}
+          </Rail>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <SectionTitle
+          title={outside ? t.places[city.id].fallbackArea : t.home.nearYou}
+          detail={stops.length > 0 ? t.home.count(stops.length) : undefined}
+        />
+        {outside && (
+          <Text variant="callout" weight={400} tone="muted" style={styles.note}>
+            {t.places[city.id].outside}
+          </Text>
+        )}
+        {state.status === "loading" && <SkeletonList rows={4} />}
+        {state.status === "denied" && (
+          <Empty
+            title={t.home.denied.title}
+            body={t.home.denied.body}
+            action={t.home.denied.action}
+            onAction={() => void retry()}
+          />
+        )}
+        {anchor && nearby.isLoading && <SkeletonList rows={4} />}
+        {anchor && nearby.isError && (
+          <Empty title={t.home.failed.title} body={t.home.failed.body} action={t.common.retry} onAction={() => void nearby.refetch()} />
+        )}
+        {anchor && nearby.data && stops.length === 0 && <Empty title={t.home.none.title} body={t.home.none.body} />}
+        {stops.map((stop) => (
+          <StopRow key={stop.id} stop={stop} nickname={savedStops.find((s) => s.id === stop.id)?.nickname} />
+        ))}
+      </View>
+    </>
+  );
+
   return (
     <View style={[styles.screen, { backgroundColor: p.background }]}>
       <View accessibilityElementsHidden importantForAccessibility="no-hide-descendants" style={StyleSheet.absoluteFill}>
@@ -79,13 +158,13 @@ export default function Home() {
         center={anchor ?? city.center}
         zoom={anchor ? 16 : 12}
         stops={mapStops}
-        padding={{ top: insets.top + size.control.lg + space[2], right: 0, bottom: height * 0.58, left: 0 }}
+        padding={{ top: insets.top + size.control.lg + space[2], right: 0, bottom: wide ? layout.mapInset.bottom : height * 0.58, left: wide ? PANEL_COVER : 0 }}
         onStopPress={(id) => router.push({ pathname: "/stop/[id]", params: { id } })}
       />
       </View>
 
       {/* The city the map is on, and the way to change it with the rest of the settings. */}
-      <View pointerEvents="box-none" style={[styles.top, { top: insets.top + space[2] }]}>
+      <View pointerEvents="box-none" style={[styles.top, { top: wide ? space[5] : insets.top + space[2] }]}>
         <PressableScale accessibilityRole="button" accessibilityLabel={t.settings.changeCity(city.name)} onPress={() => router.push("/ajustes")}>
           <Glass interactive style={styles.cityGlass}>
             <Icon name={icons.place} color={p.text} size="sm" />
@@ -99,7 +178,7 @@ export default function Home() {
         </PressableScale>
       </View>
 
-      <Animated.View style={[styles.locate, locateStyle]} pointerEvents={screenReader ? "none" : "box-none"} accessibilityElementsHidden={screenReader} importantForAccessibility={screenReader ? "no-hide-descendants" : "auto"}>
+      <Animated.View style={wide ? styles.locateWide : [styles.locate, locateStyle]} pointerEvents={screenReader ? "none" : "box-none"} accessibilityElementsHidden={screenReader} importantForAccessibility={screenReader ? "no-hide-descendants" : "auto"}>
         <PressableScale
           accessibilityRole="button"
           accessibilityLabel={t.home.locate}
@@ -114,91 +193,26 @@ export default function Home() {
         </PressableScale>
       </Animated.View>
 
-      <BottomSheet
-        accessible={false}
-        index={1}
-        snapPoints={SNAPS}
-        enableDynamicSizing={false}
-        animatedPosition={position}
-        topInset={insets.top}
-        backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp, borderWidth: size.line.hair, borderColor: p.border }}
-        handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
-        handleComponent={QuietHandle}
->
-        <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
-          <View style={styles.notice}>
-            <FeedStatus feed={health.data?.feed} compact />
-          </View>
-          <View style={styles.hello}>
-            <Text variant="eyebrow" tone="faint">
-              {greeting()}
-            </Text>
-            <Text variant="heading">{t.home.question}</Text>
-          </View>
-
-          <PressableScale
-            accessibilityRole="button"
-            accessibilityLabel={t.home.searchLabel}
-            onPress={() => router.navigate("/search")}
-            style={[styles.where, { backgroundColor: p.surface }]}>
-            <Icon name={icons.search} color={p.text} size="md" weight="bold" />
-            <Text variant="body" tone="muted">
-              {canPlan() ? t.search.placeholderPlaces : t.home.searchPlaceholder}
-            </Text>
-          </PressableScale>
-
-          {/* Home, work and the rider's places, one tap from how to get there. */}
-          {places.length > 0 && (
-            <View accessibilityLabel={t.saved.places} style={styles.places}>
-              {places.map((p) => (
-                <Chip key={p.id} label={placeName(p)} accessibilityLabel={t.saved.toPlace(placeName(p))} onPress={() => openTrip({ name: placeName(p), lat: p.lat, lon: p.lon })} />
-              ))}
-            </View>
-          )}
-
-          <CardEntry />
-
-          {savedStops.length > 0 && (
-            <View style={styles.section}>
-              <SectionTitle title={t.home.yourStops} />
-              <Rail>
-                {savedStops.slice(0, 6).map((s) => (
-                  <SavedStopCard key={s.id} saved={s} width={layout.cardWidth} />
-                ))}
-              </Rail>
-            </View>
-          )}
-
-          <View style={styles.section}>
-            <SectionTitle
-              title={outside ? t.places[city.id].fallbackArea : t.home.nearYou}
-              detail={stops.length > 0 ? t.home.count(stops.length) : undefined}
-            />
-            {outside && (
-              <Text variant="callout" weight={400} tone="muted" style={styles.note}>
-                {t.places[city.id].outside}
-              </Text>
-            )}
-            {state.status === "loading" && <SkeletonList rows={4} />}
-            {state.status === "denied" && (
-              <Empty
-                title={t.home.denied.title}
-                body={t.home.denied.body}
-                action={t.home.denied.action}
-                onAction={() => void retry()}
-              />
-            )}
-            {anchor && nearby.isLoading && <SkeletonList rows={4} />}
-            {anchor && nearby.isError && (
-              <Empty title={t.home.failed.title} body={t.home.failed.body} action={t.common.retry} onAction={() => void nearby.refetch()} />
-            )}
-            {anchor && nearby.data && stops.length === 0 && <Empty title={t.home.none.title} body={t.home.none.body} />}
-            {stops.map((stop) => (
-              <StopRow key={stop.id} stop={stop} nickname={savedStops.find((s) => s.id === stop.id)?.nickname} />
-            ))}
-          </View>
-        </BottomSheetScrollView>
-      </BottomSheet>
+      {wide ? (
+        <SidePanel top={insets.top + space[2]} contentStyle={styles.panelContent}>
+          {content}
+        </SidePanel>
+      ) : (
+        <BottomSheet
+          accessible={false}
+          index={1}
+          snapPoints={SNAPS}
+          enableDynamicSizing={false}
+          animatedPosition={position}
+          topInset={insets.top}
+          backgroundStyle={{ backgroundColor: p.background, borderRadius: radius.sheet, boxShadow: p.shadowUp, borderWidth: size.line.hair, borderColor: p.border }}
+          handleIndicatorStyle={{ backgroundColor: p.fillStrong, width: size.control.sm }}
+          handleComponent={QuietHandle}>
+          <BottomSheetScrollView contentContainerStyle={{ paddingBottom: insets.bottom + layout.tabBarClearance }} showsVerticalScrollIndicator={false}>
+            {content}
+          </BottomSheetScrollView>
+        </BottomSheet>
+      )}
     </View>
   );
 }
@@ -227,6 +241,8 @@ const styles = StyleSheet.create({
   cityGlass: { flexDirection: "row", alignItems: "center", gap: space[2], minHeight: size.control.md, paddingHorizontal: space[4], borderRadius: radius.pill },
   notice: { paddingHorizontal: layout.gutter, paddingBottom: space[3] },
   locate: { position: "absolute", top: 0, right: space[4] },
+  locateWide: { position: "absolute", right: space[4], bottom: space[4] },
+  panelContent: { paddingTop: space[4], paddingBottom: space[6] },
   locateGlass: { width: size.control.md, height: size.control.md, borderRadius: radius.pill, alignItems: "center", justifyContent: "center" },
   hello: { paddingHorizontal: layout.gutter, paddingTop: space[1], gap: space[0.5] },
   where: {

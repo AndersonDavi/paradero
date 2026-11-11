@@ -25,6 +25,11 @@ export const layout = {
   badgeColumn: 116,
   mapInset: { top: 96, right: space[6], bottom: space[10], left: space[6] },
   sheetMap: 0.38,
+  /** On a web window at least this wide, the sheet is a panel on the side of the map. */
+  wideFrom: 900,
+  panel: 420,
+  /** The widest a column of text and buttons gets on a large screen. */
+  column: 640,
 } as const;
 
 export const fonts = {

@@ -46,8 +46,8 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   ref,
 ) {
   // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
-  const cover = useContext(SheetCover);
-  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + cover } : undefined), [own, cover]);
+  const { bottom: coverBottom, left: coverLeft } = useContext(SheetCover);
+  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + coverBottom, left: own.left + coverLeft } : undefined), [own, coverBottom, coverLeft]);
   const p = usePalette();
   const { reduceMotion } = useAccessibility();
   const glide = reduceMotion ? 0 : 700;
@@ -86,7 +86,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   useEffect(() => {
     const timer = setTimeout(reframe, INSET_SETTLE_MS);
     return () => clearTimeout(timer);
-  }, [cover]);
+  }, [coverBottom, coverLeft]);
 
   useImperativeHandle(ref, () => ({
     flyTo: (lat, lon, z = 16) => {
