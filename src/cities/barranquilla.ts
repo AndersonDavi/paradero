@@ -1,3 +1,4 @@
+import { timetable } from "./barranquilla-timetable";
 import { localSource } from "./local";
 import type { City } from "./types";
 
@@ -17,5 +18,5 @@ export const barranquilla: City = {
   area: { west: -74.92, south: 10.84, east: -74.72, north: 11.06 },
   bounds: { west: -75.0, south: 10.78, east: -74.65, north: 11.12 },
   card: false,
-  source: localSource("/cities/barranquilla.json"),
+  source: localSource(timetable),
 };

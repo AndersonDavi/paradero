@@ -1,17 +1,17 @@
-import { ApiError, get } from "@/lib/http";
+import { ApiError } from "@/lib/http";
 import type { Arrival, Feed, Nearby, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
 
 import type { Point, TransitSource } from "./types";
 
 /**
- * A city answered on the phone from its published timetable, made by scripts/gtfs-to-city.mjs. The file is
- * fetched the first time the city is used and kept in memory, so a rider of any other city never downloads it.
- * Nothing here is live: every time is from the timetable, and the feed says so.
+ * A city answered on the phone from its published timetable, made by scripts/gtfs-to-city.mjs. The timetable is
+ * read the first time the city is used and kept in memory: the web fetches it, the app carries it inside, so it
+ * works with no signal. Nothing here is live: every time is from the timetable, and the feed says so.
  */
 
 type Day = "weekday" | "saturday" | "sunday";
 
-interface CityData {
+export interface CityData {
   version: 1;
   city: string;
   source: { name: string; url: string; license: string };
@@ -178,10 +178,10 @@ function arrivalsAt(index: Index, stop: number, now: Date): Arrival[] {
 
 const pathOf = (index: Index, p: Pattern): [number, number][] => p.line ?? p.stops.map((s) => [index.stops[s].lon, index.stops[s].lat]);
 
-export function localSource(url: string): TransitSource {
+export function localSource(read: () => Promise<CityData>): TransitSource {
   let loading: Promise<Index> | null = null;
   const load = () => {
-    loading ??= get<CityData>(url)
+    loading ??= read()
       .then(build)
       .catch((error: unknown) => {
         loading = null;
