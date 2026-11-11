@@ -93,12 +93,56 @@ const ADDRESS_LIKE = /^\s*(av(enida)?\.?\s+)?(calle|cll?|carrera|cra|kra|kr|cr|d
 
 /** The city's clock: which timetable runs today and how many minutes of it have gone by. */
 function cityClock(now: Date): { day: Day; tomorrow: Day; minute: number } {
-  const parts = new Intl.DateTimeFormat("en-US", { timeZone: ZONE, weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
-  const part = (type: string) => parts.find((p) => p.type === type)?.value ?? "";
-  const weekday = part("weekday");
-  const dayOf = (w: string): Day => (w === "Sat" ? "saturday" : w === "Sun" ? "sunday" : "weekday");
-  const next: Record<string, string> = { Mon: "Tue", Tue: "Wed", Wed: "Thu", Thu: "Fri", Fri: "Sat", Sat: "Sun", Sun: "Mon" };
-  return { day: dayOf(weekday), tomorrow: dayOf(next[weekday] ?? "Mon"), minute: Number(part("hour")) * 60 + Number(part("minute")) };
+  const parts = new Intl.DateTimeFormat("en-US", { timeZone: ZONE, year: "numeric", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(now);
+  const part = (type: string) => Number(parts.find((p) => p.type === type)?.value ?? 0);
+  // The city's calendar date, as a UTC date so the day after is plain arithmetic.
+  const today = new Date(Date.UTC(part("year"), part("month") - 1, part("day")));
+  const tomorrow = new Date(today.getTime() + 86_400_000);
+  return { day: serviceDay(today), tomorrow: serviceDay(tomorrow), minute: part("hour") * 60 + part("minute") };
+}
+
+/** Buses keep the Sunday timetable on Colombia's public holidays. */
+function serviceDay(date: Date): Day {
+  const w = date.getUTCDay();
+  if (w === 0 || holidays(date.getUTCFullYear()).has(date.getTime())) return "sunday";
+  return w === 6 ? "saturday" : "weekday";
+}
+
+const holidayCache = new Map<number, Set<number>>();
+
+/**
+ * Colombia's public holidays for a year (Ley 51 de 1983): a few on their date, most moved to the next Monday, and
+ * those that follow Easter.
+ */
+function holidays(year: number): Set<number> {
+  const cached = holidayCache.get(year);
+  if (cached) return cached;
+  const day = (m: number, d: number) => new Date(Date.UTC(year, m - 1, d));
+  const monday = (date: Date) => new Date(date.getTime() + ((8 - date.getUTCDay()) % 7) * 86_400_000);
+  const plus = (date: Date, days: number) => new Date(date.getTime() + days * 86_400_000);
+  // Easter Sunday (anonymous Gregorian algorithm).
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31);
+  const easter = day(month, ((h + l - 7 * m + 114) % 31) + 1);
+  const dates = [
+    day(1, 1), day(5, 1), day(7, 20), day(8, 7), day(12, 8), day(12, 25),
+    ...[day(1, 6), day(3, 19), day(6, 29), day(8, 15), day(10, 12), day(11, 1), day(11, 11)].map(monday),
+    plus(easter, -3), plus(easter, -2), plus(easter, 43), plus(easter, 64), plus(easter, 71),
+  ];
+  const set = new Set(dates.map((date) => date.getTime()));
+  holidayCache.set(year, set);
+  return set;
 }
 
 /** Google's encoded polyline, 5 decimals, back to lon/lat pairs. */
@@ -370,13 +414,21 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       if (r === undefined) throw new ApiError(404, "not_found");
       const own = index.patterns.filter((p) => p.route === r).sort((a, b) => b.perWeek - a.perWeek);
       const main = own[0];
-      const weekday = own.flatMap((p) => p.departures.weekday ?? []);
+      // First and last bus of each timetable, and today's (a holiday runs Sunday's).
+      const span = (day: Day) => {
+        const all = own.flatMap((p) => p.departures[day] ?? []);
+        return all.length ? { first: hhmm(Math.min(...all)), last: hhmm(Math.max(...all)) } : null;
+      };
+      const days = { weekday: span("weekday"), saturday: span("saturday"), sunday: span("sunday") };
+      const today = cityClock(new Date()).day;
       return {
         feed: index.feed,
+        today,
+        days,
         route: {
           ...index.routes[r],
-          firstDeparture: weekday.length ? hhmm(Math.min(...weekday)) : null,
-          lastDeparture: weekday.length ? hhmm(Math.max(...weekday)) : null,
+          firstDeparture: days[today]?.first ?? null,
+          lastDeparture: days[today]?.last ?? null,
           tripsPerWeek: own.reduce((sum, p) => sum + p.perWeek, 0),
         },
         // The timetable has no drawn shapes, so a route is drawn from stop to stop.

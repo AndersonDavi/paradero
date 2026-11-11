@@ -100,12 +100,40 @@ export default function RouteScreen() {
               <Fact label={t.route.onRoad} value={data.feed.live ? String(buses.length) : "–"} />
             </View>
 
+            {data.days && (
+              <View style={styles.days}>
+                <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+                  {t.route.byDay}
+                </Text>
+                {(["weekday", "saturday", "sunday"] as const).map((day) => {
+                  const span = data.days?.[day];
+                  const label = t.route.days[day];
+                  const hours = span ? `${wallClock(span.first)} – ${wallClock(span.last)}` : t.route.noService;
+                  const isToday = data.today === day;
+                  return (
+                    <View
+                      key={day}
+                      accessible
+                      accessibilityLabel={`${isToday ? `${t.route.today}. ` : ""}${span ? t.route.dayHours(label, wallClock(span.first), wallClock(span.last)) : `${label}: ${t.route.noService}`}`}
+                      style={styles.dayRow}>
+                      <Text variant="callout" weight={isToday ? 600 : 400} style={{ flex: 1 }}>
+                        {isToday ? `${label} · ${t.route.today}` : label}
+                      </Text>
+                      <Text variant="callout" tone={isToday ? "default" : "muted"} weight={isToday ? 600 : 400} tabular>
+                        {hours}
+                      </Text>
+                    </View>
+                  );
+                })}
+              </View>
+            )}
+
             <FeedStatus feed={data.feed} />
 
             <View style={[styles.note, { backgroundColor: p.surface }]}>
               <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
               <Text variant="callout" tone="muted" style={{ flex: 1 }}>
-                {data.route.tripsPerWeek === 0 ? t.route.noTimetable(city.operator) : !data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
+                {city.specialRoutes?.includes(data.route.code) ? t.route.special(city.operator) : data.route.tripsPerWeek === 0 ? t.route.noTimetable(city.operator) : !data.feed.live ? t.route.notPublishing(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
               </Text>
             </View>
 
@@ -172,6 +200,8 @@ const styles = StyleSheet.create({
   fact: { flex: 1, padding: space[3], borderRadius: radius.lg, borderCurve: "continuous", gap: space[1], borderWidth: StyleSheet.hairlineWidth },
   note: { flexDirection: "row", alignItems: "center", gap: space[3], padding: space[4], borderRadius: radius.lg, borderCurve: "continuous" },
   heading: { marginBottom: space[2] },
+  days: { gap: space[2] },
+  dayRow: { flexDirection: "row", alignItems: "baseline", gap: space[3] },
   stopRow: { flexDirection: "row", alignItems: "center", gap: space[3], minHeight: size.control.md },
   rail: { width: size.icon.md, alignItems: "center", alignSelf: "stretch" },
   line: { width: size.line.rule, flex: 1 },

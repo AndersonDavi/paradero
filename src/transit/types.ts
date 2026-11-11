@@ -90,8 +90,13 @@ export interface StopDetail {
   alerts: Alert[];
 }
 
+export type ServiceDay = "weekday" | "saturday" | "sunday";
+
 export interface RouteDetail {
   feed: Feed;
+  /** Which timetable runs today (a holiday runs Sunday's), and each timetable's first and last bus. From cities on the phone. */
+  today?: ServiceDay;
+  days?: Record<ServiceDay, { first: string; last: string } | null>;
   route: RouteRef & {
     firstDeparture: string | null;
     lastDeparture: string | null;

@@ -51,6 +51,8 @@ export interface City {
   area: Box;
   /** The map never pans past this box. */
   bounds: Box;
+  /** Routes that run only on some days and at some hours the operator has not published, by the code riders see. */
+  specialRoutes?: string[];
   /** What the search screen offers to try before the rider types: routes, stations and places riders know. */
   examples: string[];
   /** The city's fare card can be read over NFC, as TuLlave in Bogotá. */
