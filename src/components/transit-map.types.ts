@@ -1,6 +1,37 @@
 import { systems } from "@/theme/colors";
 import type { Bus, RouteRef, Stop, System } from "@/transit/types";
 
+/**
+ * How a stop is drawn. Plain: ringed in its kind of route's colour. Focus: the stop the screen is about, or where a
+ * rider gets on or off, filled in its colour and larger. Pass: a stop a bus calls at on the way, a small white dot.
+ * Faint: every other stop, there to find but out of the way.
+ */
+export type StopTone = "plain" | "focus" | "pass" | "faint";
+
+export type MapStop = Pick<Stop, "id" | "name" | "kind" | "lat" | "lon"> & { routes?: Pick<RouteRef, "system">[]; system?: System; tone?: StopTone };
+
+/** Stops in the order they are drawn, faint ones under the rest and the focus on top. */
+const TONE_ORDER: Record<StopTone, number> = { faint: 0, pass: 1, plain: 2, focus: 3 };
+export const stopsInOrder = (stops: MapStop[]) => [...stops].sort((a, b) => TONE_ORDER[a.tone ?? "plain"] - TONE_ORDER[b.tone ?? "plain"]);
+
+type Expression = unknown[];
+
+/** The stop layer's paint, the same on the phone and the web. */
+export function stopPaint(ink: string, background: string): Record<string, Expression> {
+  const tone = ["coalesce", ["get", "tone"], "plain"];
+  const size = (focus: number, pass: number, faint: number, station: number, stop: number) => ["match", tone, "focus", focus, "pass", pass, "faint", faint, ["case", ["get", "station"], station, stop]];
+  return {
+    // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
+    "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, size(3, 1, 1, 1.6, 1), 13, size(6, 2.5, 2.5, 4, 2.5), 17, size(11, 5, 5, 9, 6)],
+    "circle-color": ["match", tone, "focus", ["coalesce", ["get", "color"], ink], background],
+    // A faint stop keeps its kind's colour, only quieter, so trunk and feeder stops still read apart.
+    "circle-stroke-color": ["match", tone, "focus", ink, "pass", ink, ["coalesce", ["get", "color"], ink]],
+    "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, size(1.5, 0.8, 0.8, 1.2, 0.8), 13, size(3, 2, 1.6, 3, 2)],
+    "circle-opacity": ["match", tone, "faint", 0.7, 1],
+    "circle-stroke-opacity": ["match", tone, "faint", 0.7, 1],
+  };
+}
+
 export interface TripLeg {
   kind: "walk" | "ride";
   path: [number, number][];
@@ -15,7 +46,7 @@ export interface TransitMapProps {
   center: { lat: number; lon: number };
   zoom?: number;
   /** Each stop is ringed in the colour of the busiest kind of route that calls there, from its routes or `system`. */
-  stops?: (Pick<Stop, "id" | "name" | "kind" | "lat" | "lon"> & { routes?: Pick<RouteRef, "system">[]; system?: System })[];
+  stops?: MapStop[];
   buses?: (Bus & { system?: System; code?: string })[];
   path?: [number, number][];
   /** The stretch of the path still to be driven to the stop; drawn strong, with the rest of the path faint. */

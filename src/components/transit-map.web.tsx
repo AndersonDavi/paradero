@@ -4,7 +4,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 import { Asset } from "expo-asset";
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MapLibreMap, Point } from "maplibre-gl";
-import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useContext, useEffect, useEffectEvent, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { mapBounds } from "@/cities";
@@ -14,8 +14,9 @@ import { useMovingBuses } from "@/lib/moving-buses";
 import { systems, usePalette, type Palette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
+import { SheetCover } from "./sheet-cover";
 import { Text } from "./text";
-import { MAP_CREDIT, stopColor, tripData, WALK_DASH, type MapHandle, type TransitMapProps } from "./transit-map.types";
+import { MAP_CREDIT, stopColor, stopPaint, stopsInOrder, tripData, WALK_DASH, type MapHandle, type TransitMapProps } from "./transit-map.types";
 
 /**
  * The same map as the app, drawn in the browser with MapLibre GL JS. It reads the same props and draws the
@@ -131,13 +132,7 @@ function layers({ p, quiet, showCodes, lit }: Scene): LayerSpecification[] {
       id: "stops-dot",
       type: "circle",
       source: "stops",
-      paint: {
-        // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
-        "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.6, 1], 13, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
-        "circle-color": p.background,
-        "circle-stroke-color": ["coalesce", ["get", "color"], p.ink],
-        "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.2, 0.8], 13, ["case", ["get", "station"], 3, 2]],
-      },
+      paint: stopPaint(p.ink, p.background) as never,
     },
     {
       id: "buses-halo",
@@ -209,7 +204,8 @@ function roomy(map: MapLibreMap, margin: Edges): Edges {
   const { top = 0, right = 0, bottom = 0, left = 0 } = map.getPadding();
   const inset = { top, right, bottom, left };
   const { clientWidth: width, clientHeight: height } = map.getContainer();
-  const fit = (size: number, a: number, b: number) => Math.min(1, Math.max(0, size / 2) / Math.max(1, a + b));
+  // The margins give way so the route keeps at least three quarters of what the inset leaves.
+  const fit = (size: number, a: number, b: number) => Math.min(1, Math.max(0, size / 4) / Math.max(1, a + b));
   const tall = fit(height - inset.top - inset.bottom, margin.top, margin.bottom);
   const wide = fit(width - inset.left - inset.right, margin.left, margin.right);
   return { top: margin.top * tall, right: margin.right * wide, bottom: margin.bottom * tall, left: margin.left * wide };
@@ -253,9 +249,12 @@ function useFill(still: boolean, restartOn: string): number | null {
 }
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system, showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system, showUser = true, showCodes = false, focusBusId = null, padding: own, onStopPress },
   ref,
 ) {
+  // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
+  const cover = useContext(SheetCover);
+  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + cover } : undefined), [own, cover]);
   const p = usePalette();
   const { reduceMotion } = useAccessibility();
   const still = usePrefersReducedMotion() || reduceMotion;
@@ -265,7 +264,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const container = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
 
-  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system) })), [stops, system]);
+  const stopData = useMemo(() => points(stopsInOrder(stops), (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system), tone: s.tone ?? "plain" })), [stops, system]);
   const pathData = useMemo(() => line(path), [path]);
   const hasApproach = !!approach && approach.length > 1;
   const approachData = useMemo(() => line(approach), [approach]);
@@ -425,6 +424,13 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     }
     height.current = h;
   };
+
+  // The sheet moved: glide to keep what was framed in the part of the map left to see.
+  const reframe = useEffectEvent(() => {
+    const map = mapRef.current;
+    if (map && framed.current) frame(map, framed.current, glide);
+  });
+  useEffect(() => reframe(), [cover]);
 
   useImperativeHandle(ref, () => {
     const camera = (go: (map: MapLibreMap, duration: number) => void) => {

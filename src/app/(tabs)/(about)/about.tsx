@@ -8,6 +8,7 @@ import { CromaWordmark } from "@/components/croma-mark";
 import { FeedStatus } from "@/components/feed-status";
 import { Icon, icons } from "@/components/icon";
 import { Text } from "@/components/text";
+import { useCity } from "@/cities";
 import { useT } from "@/i18n";
 import { useHealth } from "@/lib/api";
 import { usePalette } from "@/theme/colors";
@@ -29,6 +30,8 @@ export default function About() {
   const p = usePalette();
   const health = useHealth();
   const t = useT();
+  // The words that name a city, its operator and its data; the promises and the rest are the same everywhere.
+  const here = t.places[useCity().id].about;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -49,9 +52,9 @@ export default function About() {
             Croma
           </Text>
         </Text>
-        <Text variant="heading">{t.about.title}</Text>
+        <Text variant="heading">{here.title}</Text>
         <Text variant="body" tone="muted">
-          {t.about.intro}
+          {here.intro}
         </Text>
       </View>
 
@@ -66,7 +69,7 @@ export default function About() {
               <View style={styles.promiseText}>
                 <Text variant="headline">{t.about.promises[item.key].title}</Text>
                 <Text variant="callout" tone="muted">
-                  {t.about.promises[item.key].body}
+                  {item.key === "live" ? here.live : t.about.promises[item.key].body}
                 </Text>
               </View>
             </View>
@@ -79,7 +82,7 @@ export default function About() {
           {t.about.dataTitle}
         </Text>
         <Text variant="body" tone="muted">
-          {t.about.data}
+          {here.data}
         </Text>
         <FeedStatus feed={health.data?.feed} />
       </View>

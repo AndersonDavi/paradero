@@ -99,6 +99,12 @@ export const zh: Messages = {
     bogota: {
       fallbackArea: "查皮内罗",
       outside: "你似乎不在波哥大。我们为你显示查皮内罗；可以在上方搜索其他站点。",
+      about: {
+        title: "波哥大值得拥有最好的出行应用。",
+        intro: "Paradero 免费、开放，属于每一个人。我们将它提供给波哥大市政府和 TransMilenio，让他们采用、维护并把它变成自己的应用。",
+        live: "如果 TransMilenio 停止发布数据，屏幕上会提示，我们改用公布的时刻表。",
+        data: "来自 TransMilenio 的开放数据：每 20 秒更新一次的每辆车位置、时刻表和运营通知。Croma 将其整理好，让任何人都能在此基础上开发。",
+      },
       onboarding: {
         eyebrow: "为波哥大打造的公共产品",
         body: "从街角的站点到总站，随时知道公交何时到。TransMilenio、SITP 和接驳线，一处查看。",
@@ -109,6 +115,12 @@ export const zh: Messages = {
     barranquilla: {
       fallbackArea: "市中心",
       outside: "你似乎不在巴兰基亚。我们为你显示市中心；可以在上方搜索其他站点。",
+      about: {
+        title: "巴兰基亚值得拥有最好的出行应用。",
+        intro: "Paradero 免费、开放，属于每个人。Croma 为波哥大打造了它；这个版本用 Transmetro 公布的数据把它带到巴兰基亚。",
+        live: "Transmetro 目前还没有公布车辆位置，所以每个时间都来自公布的时刻表，我们也会一直标明。",
+        data: "来自 Transmetro 公布的时刻表和它在 datos.gov.co 上 2020 年的站点列表，以及 OpenStreetMap 的街道和地点。一切都在你的手机上计算。",
+      },
       onboarding: {
         eyebrow: "为巴兰基亚打造的公共产品",
         body: "你的公交什么时候来、怎么去目的地，从街角站点到总站。Transmetro 和接驳线路尽在一处。",
@@ -233,18 +245,15 @@ export const zh: Messages = {
   about: {
     publicGoods: "数字公共产品",
     cromaHint: "打开 Croma 网站",
-    title: "波哥大值得拥有最好的出行应用。",
-    intro: "Paradero 免费、开放，属于每一个人。我们将它提供给波哥大市政府和 TransMilenio，让他们采用、维护并把它变成自己的应用。",
     promisesTitle: "我们的承诺",
     promises: {
       account: { title: "无需账号", body: "打开就能用。不要求邮箱、电话或身份证件。" },
       ads: { title: "永远没有广告", body: "在自己的城市出行，不该被广告打扰。" },
       location: { title: "不保存你的位置", body: "只在应用打开时使用，并模糊到一个街区左右。" },
-      live: { title: "清楚告诉你什么是实时的", body: "如果 TransMilenio 停止发布数据，屏幕上会提示，我们改用公布的时刻表。" },
+      live: { title: "清楚告诉你什么是实时的" },
       code: { title: "开源", body: "任何人都可以查看、改进或拿去使用。MIT 许可证。" },
     },
     dataTitle: "数据来源",
-    data: "来自 TransMilenio 的开放数据：每 20 秒更新一次的每辆车位置、时刻表和运营通知。Croma 将其整理好，让任何人都能在此基础上开发。",
     helpTitle: "和我们一起改进",
     help: "如果某条线路找不到、时间不对，或者你有让出行更方便的想法，请告诉我们。无需账号。",
     report: "报告问题或提出想法",

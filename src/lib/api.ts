@@ -87,6 +87,16 @@ export function useRoute(id: string | undefined) {
   return useQuery({ ...routeQuery(id ?? ""), enabled: !!id, refetchInterval: LIVE });
 }
 
+/** Every stop in the city, when its stops are on the phone; empty otherwise. Read once. */
+export function useEveryStop() {
+  return useQuery({
+    queryKey: ["everyStop", city.id],
+    queryFn: () => source().everyStop?.() ?? Promise.resolve([]),
+    enabled: typeof source().everyStop === "function",
+    staleTime: Infinity,
+  });
+}
+
 /** Whether this city can plan a trip on the phone. */
 export const canPlan = () => typeof source().plan === "function";
 

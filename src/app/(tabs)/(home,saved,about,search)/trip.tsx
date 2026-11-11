@@ -72,14 +72,14 @@ export default function TripScreen() {
       journey?.legs.flatMap((l) =>
         l.kind === "ride"
           ? [
-              { ...l.from, system: l.route.system, kind: "station" as const },
-              ...(l.via ?? []).map((s) => ({ ...s, system: l.route.system, kind: "stop" as const })),
-              { ...l.to, system: l.route.system, kind: "station" as const },
+              { ...l.from, system: l.route.system, kind: "station" as const, tone: "focus" as const },
+              ...(l.via ?? []).map((s) => ({ ...s, system: l.route.system, kind: "stop" as const, tone: "pass" as const })),
+              { ...l.to, system: l.route.system, kind: "station" as const, tone: "focus" as const },
             ]
           : [],
       ) ?? [];
     const unique = [...new Map(list.map((s) => [s.id, s])).values()];
-    return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const, system: "other" as const }] : unique;
+    return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const, system: "other" as const, tone: "focus" as const }] : unique;
   }, [journey, to, name]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
 

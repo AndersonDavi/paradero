@@ -99,6 +99,12 @@ export const ja: Messages = {
     bogota: {
       fallbackArea: "チャピネロ周辺",
       outside: "ボゴタにいないようです。チャピネロを表示しています。上の検索でほかの停留所を探せます。",
+      about: {
+        title: "ボゴタには、移動のための最高のアプリがふさわしい。",
+        intro: "Paraderoは無料で、オープンで、みんなのものです。ボゴタ市とTransMilenioが採用し、維持し、自分たちのものにできるよう提供しています。",
+        live: "TransMilenioが公開を止めたら画面に表示し、公開済みの時刻表を使います。",
+        data: "TransMilenioのオープンデータです。20秒ごとの各バスの位置、時刻表、運行情報。Cromaが整理し、誰でもその上に作れるようにしています。",
+      },
       onboarding: {
         eyebrow: "ボゴタのための公共財",
         body: "角の停留所からターミナルまで、バスがいつ来るかがわかります。TransMilenio、SITP、フィーダー線をひとつに。",
@@ -109,6 +115,12 @@ export const ja: Messages = {
     barranquilla: {
       fallbackArea: "セントロ周辺",
       outside: "バランキージャにいないようです。セントロを表示しています。上の検索でほかの停留所を探せます。",
+      about: {
+        title: "バランキージャにも最高の移動アプリを。",
+        intro: "Paraderoは無料でオープン、みんなのものです。Cromaがボゴタのために作り、このバージョンはTransmetroが公開したデータでバランキージャに対応しています。",
+        live: "Transmetroはまだバスの位置を公開していないため、時刻はすべて公開時刻表にもとづき、そのことを常に表示します。",
+        data: "Transmetroが公開した時刻表と、datos.gov.coにある2020年の停留所リスト、OpenStreetMapの道路と場所を使っています。計算はすべてスマートフォン上で行います。",
+      },
       onboarding: {
         eyebrow: "バランキージャのための公共財",
         body: "バスがいつ来るか、目的地への行き方まで。角の停留所からターミナルまで、Transmetroとフィーダー線をひとつに。",
@@ -233,18 +245,15 @@ export const ja: Messages = {
   about: {
     publicGoods: "デジタル公共財",
     cromaHint: "Cromaのウェブサイトを開きます",
-    title: "ボゴタには、移動のための最高のアプリがふさわしい。",
-    intro: "Paraderoは無料で、オープンで、みんなのものです。ボゴタ市とTransMilenioが採用し、維持し、自分たちのものにできるよう提供しています。",
     promisesTitle: "私たちの約束",
     promises: {
       account: { title: "アカウント不要", body: "アプリを開くだけ。メール、電話番号、身分証は求めません。" },
       ads: { title: "広告はずっとなし", body: "街を移動するのに広告はいりません。" },
       location: { title: "位置情報は保存しません", body: "アプリを開いている間だけ、1ブロック程度に丸めて使います。" },
-      live: { title: "リアルタイムかどうかを明示", body: "TransMilenioが公開を止めたら画面に表示し、公開済みの時刻表を使います。" },
+      live: { title: "リアルタイムかどうかを明示" },
       code: { title: "オープンソース", body: "誰でも確認、改善、再利用できます。MITライセンス。" },
     },
     dataTitle: "データの出どころ",
-    data: "TransMilenioのオープンデータです。20秒ごとの各バスの位置、時刻表、運行情報。Cromaが整理し、誰でもその上に作れるようにしています。",
     helpTitle: "一緒に良くしましょう",
     help: "路線が見つからない、時刻が違う、もっと便利になるアイデアがある。そんなときは教えてください。アカウントは不要です。",
     report: "問題やアイデアを報告",

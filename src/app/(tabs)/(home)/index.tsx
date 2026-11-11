@@ -2,7 +2,7 @@ import BottomSheet, { BottomSheetHandle, BottomSheetScrollView, type BottomSheet
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
 import { PressableScale } from "pressto";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
 import Animated, { interpolate, useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -22,7 +22,7 @@ import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { useAccessibility } from "@/lib/accessibility";
-import { canPlan, prefetchStop, useHealth, useNearby } from "@/lib/api";
+import { canPlan, prefetchStop, useEveryStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
 import { useLocation } from "@/lib/location";
 import { useSaved, type SavedStop } from "@/lib/saved";
@@ -48,7 +48,13 @@ export default function Home() {
   const outside = state.status === "outside";
   const anchor = here ?? (outside ? city.center : null);
   const nearby = useNearby(anchor);
-  const stops = nearby.data?.stops ?? [];
+  const stops = useMemo(() => nearby.data?.stops ?? [], [nearby.data]);
+  // The stops around the rider as they are; the rest of the city's, faint, to see the whole network when zooming out.
+  const every = useEveryStop().data;
+  const mapStops = useMemo(() => {
+    const near = new Set(stops.map((s) => s.id));
+    return [...stops, ...(every ?? []).filter((s) => !near.has(s.id)).map((s) => ({ ...s, tone: "faint" as const }))];
+  }, [stops, every]);
   const closest = stops.slice(0, 3).map((s) => s.id).join(",");
   useEffect(() => {
     if (closest) closest.split(",").forEach(prefetchStop);
@@ -67,7 +73,7 @@ export default function Home() {
         ref={map}
         center={anchor ?? city.center}
         zoom={anchor ? 16 : 12}
-        stops={stops}
+        stops={mapStops}
         padding={{ top: insets.top + size.control.lg + space[2], right: 0, bottom: height * 0.58, left: 0 }}
         onStopPress={(id) => router.push({ pathname: "/stop/[id]", params: { id } })}
       />

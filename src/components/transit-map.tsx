@@ -1,5 +1,5 @@
 import { Camera, GeoJSONSource, Images, Layer, Map, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
+import { forwardRef, useContext, useEffect, useEffectEvent, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { mapBounds } from "@/cities";
@@ -8,8 +8,9 @@ import { useMovingBuses } from "@/lib/moving-buses";
 import { systems, usePalette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
+import { SheetCover } from "./sheet-cover";
 import { Text } from "./text";
-import { MAP_CREDIT, stopColor, tripData, WALK_DASH, type MapHandle, type TransitMapProps, type TripLeg } from "./transit-map.types";
+import { MAP_CREDIT, stopColor, stopPaint, stopsInOrder, tripData, WALK_DASH, type MapHandle, type TransitMapProps, type TripLeg } from "./transit-map.types";
 
 const STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -41,9 +42,12 @@ const points = <T extends { lat: number; lon: number }>(items: T[], props: (item
 });
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system = "other", showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system = "other", showUser = true, showCodes = false, focusBusId = null, padding: own, onStopPress },
   ref,
 ) {
+  // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
+  const cover = useContext(SheetCover);
+  const padding = useMemo(() => (own ? { ...own, bottom: own.bottom + cover } : undefined), [own, cover]);
   const p = usePalette();
   const { reduceMotion } = useAccessibility();
   const glide = reduceMotion ? 0 : 700;
@@ -51,12 +55,35 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   // What the screen last asked to frame, framed again when the map changes size (the sheet over it moved).
   const framed = useRef<[number, number][] | null>(null);
   const height = useRef(0);
+  const width = useRef(0);
+
+  /**
+   * On a short map the margins and the screen's inset can leave no room for the route, and the camera zooms out
+   * to the whole city. The margins give way, so the route keeps at least three quarters of what is left.
+   */
+  const roomy = (margin: typeof FIT_MARGIN) => {
+    const inset = padding ?? { top: 0, right: 0, bottom: 0, left: 0 };
+    const fit = (size: number, a: number, b: number) => (size ? Math.min(1, Math.max(0, size / 4) / Math.max(1, a + b)) : 1);
+    const tall = fit(height.current - inset.top - inset.bottom, margin.top, margin.bottom);
+    const wide = fit(width.current - inset.left - inset.right, margin.left, margin.right);
+    return { top: margin.top * tall, right: margin.right * wide, bottom: margin.bottom * tall, left: margin.left * wide };
+  };
 
   const frame = (coords: [number, number][], duration: number) => {
     const lons = coords.map((c) => c[0]);
     const lats = coords.map((c) => c[1]);
-    camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ? FIT_MARGIN : FIT_UNDER_SHEET, duration });
+    camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: roomy(padding ? FIT_MARGIN : FIT_UNDER_SHEET), duration });
   };
+
+  // The sheet moved: glide to keep what was framed in the part of the map left to see.
+  // The map takes its new inset first; framing in the same moment would frame for the old one.
+  const reframe = useEffectEvent(() => {
+    if (framed.current) frame(framed.current, glide);
+  });
+  useEffect(() => {
+    const timer = setTimeout(reframe, INSET_SETTLE_MS);
+    return () => clearTimeout(timer);
+  }, [cover]);
 
   useImperativeHandle(ref, () => ({
     flyTo: (lat, lon, z = 16) => {
@@ -74,6 +101,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => clearTimeout(settle.current ?? undefined), []);
   const resized = (e: LayoutChangeEvent) => {
+    width.current = e.nativeEvent.layout.width;
     const h = e.nativeEvent.layout.height;
     if (height.current && Math.abs(h - height.current) > 1 && framed.current) {
       const coords = framed.current;
@@ -83,7 +111,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     height.current = h;
   };
 
-  const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system) })), [stops, system]);
+  const stopData = useMemo(() => points(stopsInOrder(stops), (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system), tone: s.tone ?? "plain" })), [stops, system]);
   const ink = p.ink;
 
   return (
@@ -106,13 +134,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
           <Layer
             id="stops-dot"
             type="circle"
-            paint={{
-              // Zoomed out to a whole route, stops shrink to beads on the line so the buses stay the thing to look at.
-              "circle-radius": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.6, 1], 13, ["case", ["get", "station"], 4, 2.5], 17, ["case", ["get", "station"], 9, 6]],
-              "circle-color": p.background,
-              "circle-stroke-color": ["coalesce", ["get", "color"], ink],
-              "circle-stroke-width": ["interpolate", ["linear"], ["zoom"], 10, ["case", ["get", "station"], 1.2, 0.8], 13, ["case", ["get", "station"], 3, 2]],
-            }}
+            paint={stopPaint(ink, p.background) as never}
           />
         </GeoJSONSource>
 
@@ -135,6 +157,7 @@ const LINE_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 1.25, 16
 const CASING_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 6];
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
 const RESIZE_SETTLE_MS = 300;
+const INSET_SETTLE_MS = 120;
 /** The line is drawn under the stops, and so under the buses: a bus rides on its line. */
 const UNDER = "stops-dot";
 

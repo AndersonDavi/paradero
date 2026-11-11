@@ -103,6 +103,12 @@ export const pt: Messages = {
     bogota: {
       fallbackArea: "Em Chapinero",
       outside: "Parece que você não está em Bogotá. Mostramos Chapinero; busque qualquer outro ponto acima.",
+      about: {
+        title: "Bogotá merece o melhor app para se locomover.",
+        intro: "O Paradero é gratuito, aberto e de todos. Nós o oferecemos à Prefeitura de Bogotá e à TransMilenio para que o adotem, mantenham e façam dele seu.",
+        live: "Se a TransMilenio parar de publicar, você vê na tela e usamos o horário publicado.",
+        data: "Dos dados abertos da TransMilenio: a posição de cada ônibus a cada 20 segundos, os horários e os avisos do serviço. A Croma os organiza para que qualquer pessoa possa construir sobre eles.",
+      },
       onboarding: {
         eyebrow: "Um bem público para Bogotá",
         body: "Quando seu ônibus chega, do ponto da esquina até o terminal. TransMilenio, SITP e alimentadores em um só lugar.",
@@ -113,6 +119,12 @@ export const pt: Messages = {
     barranquilla: {
       fallbackArea: "No Centro",
       outside: "Parece que você não está em Barranquilla. Mostramos o Centro; busque qualquer outro ponto acima.",
+      about: {
+        title: "Barranquilla merece o melhor app para se locomover.",
+        intro: "O Paradero é gratuito, aberto e de todos. A Croma o fez para Bogotá; esta versão o leva a Barranquilla com os dados que o Transmetro publicou.",
+        live: "O Transmetro ainda não publica onde estão seus ônibus, então cada horário vem da tabela publicada, e sempre dizemos isso.",
+        data: "Do horário que o Transmetro publicou e da sua lista de pontos de 2020 no datos.gov.co, com as ruas e os lugares do OpenStreetMap. Tudo é calculado no seu celular.",
+      },
       onboarding: {
         eyebrow: "Um bem público para Barranquilla",
         body: "Quando passa o seu ônibus e como chegar aonde você vai, do ponto da esquina até o terminal. Transmetro e alimentadores em um só lugar.",
@@ -238,18 +250,15 @@ export const pt: Messages = {
   about: {
     publicGoods: "Bens Públicos Digitais",
     cromaHint: "Abre o site da Croma",
-    title: "Bogotá merece o melhor app para se locomover.",
-    intro: "O Paradero é gratuito, aberto e de todos. Nós o oferecemos à Prefeitura de Bogotá e à TransMilenio para que o adotem, mantenham e façam dele seu.",
     promisesTitle: "O que prometemos",
     promises: {
       account: { title: "Sem conta", body: "Abra o app e pronto. Não pedimos e-mail, telefone nem documento." },
       ads: { title: "Sem anúncios, nunca", body: "Se locomover pela sua cidade não deveria vir com anúncios." },
       location: { title: "Sua localização não é guardada", body: "Só a usamos com o app aberto, arredondada a uma quadra." },
-      live: { title: "Dizemos o que é ao vivo", body: "Se a TransMilenio parar de publicar, você vê na tela e usamos o horário publicado." },
+      live: { title: "Dizemos o que é ao vivo" },
       code: { title: "Código aberto", body: "Qualquer pessoa pode revisá-lo, melhorá-lo ou levá-lo. Licença MIT." },
     },
     dataTitle: "De onde vêm os dados",
-    data: "Dos dados abertos da TransMilenio: a posição de cada ônibus a cada 20 segundos, os horários e os avisos do serviço. A Croma os organiza para que qualquer pessoa possa construir sobre eles.",
     helpTitle: "Melhore com a gente",
     help: "Se uma linha não aparece, um horário está errado ou você tem uma ideia que facilitaria seu dia, conte para nós. Não precisa de conta.",
     report: "Relatar um problema ou uma ideia",

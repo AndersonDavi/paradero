@@ -111,6 +111,12 @@ export const es = {
     bogota: {
       fallbackArea: "En Chapinero",
       outside: "Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba.",
+      about: {
+        title: "Bogotá merece la mejor app para moverse.",
+        intro: "Paradero es gratis, abierta y de todos. La ponemos a disposición de la Alcaldía de Bogotá y de TransMilenio para que la adopten, la mantengan y la hagan suya.",
+        live: "Si TransMilenio deja de publicar, lo ves en pantalla y usamos el horario publicado.",
+        data: "De los datos abiertos de TransMilenio: la posición de cada bus cada 20 segundos, los horarios y las novedades del servicio. Croma los organiza para que cualquiera pueda construir sobre ellos.",
+      },
       onboarding: {
         eyebrow: "Un bien público para Bogotá",
         body: "Cuándo llega tu bus, desde el paradero de la esquina hasta el portal. TransMilenio, SITP y alimentadores en un solo lugar.",
@@ -121,6 +127,12 @@ export const es = {
     barranquilla: {
       fallbackArea: "En el Centro",
       outside: "Parece que no estás en Barranquilla. Te mostramos el Centro; busca cualquier otro paradero arriba.",
+      about: {
+        title: "Barranquilla merece la mejor app para moverse.",
+        intro: "Paradero es gratis, abierta y de todos. Croma la hizo para Bogotá; esta versión la trae a Barranquilla con los datos que Transmetro ha publicado.",
+        live: "Transmetro todavía no publica dónde van sus buses, así que cada hora sale del horario publicado, y siempre te lo decimos.",
+        data: "Del horario que Transmetro publicó y de su lista de paraderos de 2020 en datos.gov.co, con las calles y los lugares de OpenStreetMap. Todo se calcula en tu teléfono.",
+      },
       onboarding: {
         eyebrow: "Un bien público para Barranquilla",
         body: "Cuándo pasa tu bus y cómo llegar a donde vas, desde el paradero de la esquina hasta el portal. Transmetro y alimentadores en un solo lugar.",
@@ -256,18 +268,15 @@ export const es = {
   about: {
     publicGoods: "Bienes Públicos Digitales",
     cromaHint: "Abre la página de Croma",
-    title: "Bogotá merece la mejor app para moverse.",
-    intro: "Paradero es gratis, abierta y de todos. La ponemos a disposición de la Alcaldía de Bogotá y de TransMilenio para que la adopten, la mantengan y la hagan suya.",
     promisesTitle: "Lo que te prometemos",
     promises: {
       account: { title: "Sin cuenta", body: "Abres la app y ya. No pedimos correo, teléfono ni cédula." },
       ads: { title: "Sin publicidad, nunca", body: "Moverte por tu ciudad no debería venir con anuncios." },
       location: { title: "Tu ubicación no se guarda", body: "Solo la usamos con la app abierta, redondeada a una cuadra." },
-      live: { title: "Te decimos qué es en vivo", body: "Si TransMilenio deja de publicar, lo ves en pantalla y usamos el horario publicado." },
+      live: { title: "Te decimos qué es en vivo" },
       code: { title: "Código abierto", body: "Cualquiera puede revisarlo, mejorarlo o llevárselo. Licencia MIT." },
     },
     dataTitle: "De dónde salen los datos",
-    data: "De los datos abiertos de TransMilenio: la posición de cada bus cada 20 segundos, los horarios y las novedades del servicio. Croma los organiza para que cualquiera pueda construir sobre ellos.",
     helpTitle: "Hazla mejor con nosotros",
     help: "Si una ruta no aparece, una hora está mal o se te ocurre algo que te haría la vida más fácil, cuéntanos. No necesitas cuenta.",
     report: "Reportar un problema o una idea",

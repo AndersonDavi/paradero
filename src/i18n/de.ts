@@ -103,6 +103,12 @@ export const de: Messages = {
     bogota: {
       fallbackArea: "In Chapinero",
       outside: "Du scheinst nicht in Bogotá zu sein. Wir zeigen dir Chapinero; oben kannst du jede andere Haltestelle suchen.",
+      about: {
+        title: "Bogotá verdient die beste App, um unterwegs zu sein.",
+        intro: "Paradero ist kostenlos, offen und gehört allen. Wir stellen sie der Stadt Bogotá und TransMilenio zur Verfügung, damit sie sie übernehmen, pflegen und zu ihrer eigenen machen.",
+        live: "Wenn TransMilenio nichts mehr veröffentlicht, siehst du es auf dem Bildschirm und wir nutzen den Fahrplan.",
+        data: "Aus den offenen Daten von TransMilenio: die Position jedes Busses alle 20 Sekunden, Fahrpläne und Betriebshinweise. Croma ordnet sie, damit alle darauf aufbauen können.",
+      },
       onboarding: {
         eyebrow: "Ein Gemeingut für Bogotá",
         body: "Wann dein Bus kommt, von der Haltestelle an der Ecke bis zum Terminal. TransMilenio, SITP und Zubringer an einem Ort.",
@@ -113,6 +119,12 @@ export const de: Messages = {
     barranquilla: {
       fallbackArea: "In der Innenstadt",
       outside: "Du scheinst nicht in Barranquilla zu sein. Wir zeigen dir die Innenstadt; oben kannst du jede andere Haltestelle suchen.",
+      about: {
+        title: "Barranquilla verdient die beste App, um sich fortzubewegen.",
+        intro: "Paradero ist kostenlos, offen und gehört allen. Croma hat sie für Bogotá gebaut; diese Version bringt sie mit den von Transmetro veröffentlichten Daten nach Barranquilla.",
+        live: "Transmetro veröffentlicht noch nicht, wo seine Busse sind. Jede Zeit stammt also aus dem veröffentlichten Fahrplan, und das sagen wir immer.",
+        data: "Aus dem Fahrplan, den Transmetro veröffentlicht hat, und seiner Haltestellenliste von 2020 auf datos.gov.co, mit Straßen und Orten aus OpenStreetMap. Alles wird auf deinem Handy berechnet.",
+      },
       onboarding: {
         eyebrow: "Ein öffentliches Gut für Barranquilla",
         body: "Wann dein Bus kommt und wie du an dein Ziel kommst, von der Haltestelle an der Ecke bis zum Terminal. Transmetro und Zubringer an einem Ort.",
@@ -238,18 +250,15 @@ export const de: Messages = {
   about: {
     publicGoods: "Digitale Gemeingüter",
     cromaHint: "Öffnet die Website von Croma",
-    title: "Bogotá verdient die beste App, um unterwegs zu sein.",
-    intro: "Paradero ist kostenlos, offen und gehört allen. Wir stellen sie der Stadt Bogotá und TransMilenio zur Verfügung, damit sie sie übernehmen, pflegen und zu ihrer eigenen machen.",
     promisesTitle: "Was wir dir versprechen",
     promises: {
       account: { title: "Kein Konto", body: "App öffnen und los. Wir fragen nie nach E-Mail, Telefon oder Ausweis." },
       ads: { title: "Keine Werbung, niemals", body: "Unterwegs in deiner Stadt sollte keine Werbung mitfahren." },
       location: { title: "Dein Standort wird nicht gespeichert", body: "Nur bei geöffneter App genutzt, auf etwa einen Block gerundet." },
-      live: { title: "Wir sagen dir, was live ist", body: "Wenn TransMilenio nichts mehr veröffentlicht, siehst du es auf dem Bildschirm und wir nutzen den Fahrplan." },
+      live: { title: "Wir sagen dir, was live ist" },
       code: { title: "Open Source", body: "Jeder kann den Code prüfen, verbessern oder übernehmen. MIT-Lizenz." },
     },
     dataTitle: "Woher die Daten kommen",
-    data: "Aus den offenen Daten von TransMilenio: die Position jedes Busses alle 20 Sekunden, Fahrpläne und Betriebshinweise. Croma ordnet sie, damit alle darauf aufbauen können.",
     helpTitle: "Mach sie mit uns besser",
     help: "Wenn eine Linie fehlt, eine Zeit falsch ist oder du eine Idee hast, die deinen Alltag leichter macht, sag es uns. Kein Konto nötig.",
     report: "Problem oder Idee melden",

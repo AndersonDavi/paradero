@@ -103,6 +103,12 @@ export const en: Messages = {
     bogota: {
       fallbackArea: "In Chapinero",
       outside: "It looks like you are not in Bogotá. Here is Chapinero; search for any other stop above.",
+      about: {
+        title: "Bogotá deserves the best way to get around.",
+        intro: "Paradero is free, open and belongs to everyone. We offer it to the City of Bogotá and TransMilenio to adopt, maintain and make their own.",
+        live: "If TransMilenio stops publishing, you see it on screen and we use the published schedule.",
+        data: "From TransMilenio's open data: every bus position every 20 seconds, schedules and service notices. Croma organizes it so anyone can build on it.",
+      },
       onboarding: {
         eyebrow: "A public good for Bogotá",
         body: "When your bus arrives, from the stop on the corner to the portal. TransMilenio, SITP and feeders in one place.",
@@ -113,6 +119,12 @@ export const en: Messages = {
     barranquilla: {
       fallbackArea: "Downtown",
       outside: "It looks like you are not in Barranquilla. Here is downtown; search for any other stop above.",
+      about: {
+        title: "Barranquilla deserves the best app to get around.",
+        intro: "Paradero is free, open and everyone's. Croma built it for Bogotá; this version brings it to Barranquilla with the data Transmetro has published.",
+        live: "Transmetro does not publish where its buses are yet, so every time comes from the published schedule, and we always say so.",
+        data: "From the schedule Transmetro published and its 2020 list of stops on datos.gov.co, with streets and places from OpenStreetMap. Everything is worked out on your phone.",
+      },
       onboarding: {
         eyebrow: "A public good for Barranquilla",
         body: "When your bus comes and how to get where you're going, from the stop on the corner to the portal. Transmetro and feeders in one place.",
@@ -238,18 +250,15 @@ export const en: Messages = {
   about: {
     publicGoods: "Digital Public Goods",
     cromaHint: "Opens the Croma website",
-    title: "Bogotá deserves the best way to get around.",
-    intro: "Paradero is free, open and belongs to everyone. We offer it to the City of Bogotá and TransMilenio to adopt, maintain and make their own.",
     promisesTitle: "What we promise you",
     promises: {
       account: { title: "No account", body: "Open the app and go. We never ask for your email, phone or ID." },
       ads: { title: "No ads, ever", body: "Getting around your city shouldn't come with ads." },
       location: { title: "Your location is not stored", body: "We only use it while the app is open, rounded to about a block." },
-      live: { title: "We tell you what is live", body: "If TransMilenio stops publishing, you see it on screen and we use the published schedule." },
+      live: { title: "We tell you what is live" },
       code: { title: "Open source", body: "Anyone can review it, improve it or take it. MIT license." },
     },
     dataTitle: "Where the data comes from",
-    data: "From TransMilenio's open data: every bus position every 20 seconds, schedules and service notices. Croma organizes it so anyone can build on it.",
     helpTitle: "Make it better with us",
     help: "If a route is missing, a time is wrong or you have an idea that would make your day easier, tell us. No account needed.",
     report: "Report a problem or an idea",

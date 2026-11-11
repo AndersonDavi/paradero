@@ -1,4 +1,4 @@
-import type { Health, Nearby, Plan, RouteDetail, SearchResult, StopDetail, System } from "@/transit/types";
+import type { Health, Nearby, Plan, RouteDetail, SearchResult, Stop, StopDetail, System } from "@/transit/types";
 
 export type CityId = "bogota" | "barranquilla";
 
@@ -32,6 +32,8 @@ export interface TransitSource {
    * position is used exactly, so a city whose answers come from a server leaves this out.
    */
   plan?(from: Point, to: Point): Promise<Plan>;
+  /** Every stop in the city, for a city whose stops are on the phone: drawn faint around the ones a screen is about. */
+  everyStop?(): Promise<Omit<Stop, "distanceM">[]>;
 }
 
 export interface City {

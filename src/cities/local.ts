@@ -298,6 +298,10 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       return { stops, routes, places };
     },
 
+    async everyStop() {
+      return (await load()).stops;
+    },
+
     async plan(from, to) {
       const index = await load();
       const now = new Date();

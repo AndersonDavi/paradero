@@ -25,7 +25,7 @@ import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useLargeText } from "@/lib/accessibility";
-import { knownStop, useRoute, useStop } from "@/lib/api";
+import { knownStop, useEveryStop, useRoute, useStop } from "@/lib/api";
 import { spokenCode } from "@/lib/format";
 import { useLocation } from "@/lib/location";
 import { toggleStop, useIsSaved } from "@/lib/saved";
@@ -50,6 +50,12 @@ export default function StopScreen() {
   const { data, isLoading, isError, refetch } = useStop(id);
   const [early] = useState(() => knownStop(id));
   const stop = data?.stop ?? early;
+  // This stop stands out; the others stay on the map, faint, to see what is around and open them.
+  const every = useEveryStop().data;
+  const mapStops = useMemo(
+    () => (stop ? [{ ...stop, tone: "focus" as const }, ...(every ?? []).filter((s) => s.id !== stop.id).map((s) => ({ ...s, tone: "faint" as const }))] : []),
+    [stop, every],
+  );
   const saved = useIsSaved("stop", id);
   const [only, setOnly] = useState<string | null>(null);
 
@@ -106,7 +112,8 @@ export default function StopScreen() {
               ref={map}
               center={{ lat: stop.lat, lon: stop.lon }}
               zoom={15.5}
-              stops={[stop]}
+              stops={mapStops}
+              onStopPress={(id) => id !== stop.id && router.push({ pathname: "/stop/[id]", params: { id } })}
               path={way?.line}
               approach={way?.approach}
               system={followed?.system}
