@@ -96,8 +96,26 @@ export const zh: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "查皮内罗", outside: "你似乎不在波哥大。我们为你显示查皮内罗；可以在上方搜索其他站点。" },
-    barranquilla: { fallbackArea: "市中心", outside: "你似乎不在巴兰基亚。我们为你显示市中心；可以在上方搜索其他站点。" },
+    bogota: {
+      fallbackArea: "查皮内罗",
+      outside: "你似乎不在波哥大。我们为你显示查皮内罗；可以在上方搜索其他站点。",
+      onboarding: {
+        eyebrow: "为波哥大打造的公共产品",
+        body: "从街角的站点到总站，随时知道公交何时到。TransMilenio、SITP 和接驳线，一处查看。",
+        note: { eyebrow: "来自 Croma 的一封信", title: "Paradero 属于波哥大。", body: "我们在 Croma 把它做成一项数字公共产品：免费、开源、没有广告，基于 TransMilenio 的开放数据。", body2: "我们把它提供给波哥大市政府和 TransMilenio，让他们接手并成为自己的应用。在那之前，我们和你一起照顾它。", sign: "Croma 团队" },
+        preview: { name: "C.C. Lourdes", meta: "站点 · 58 米 · 步行 1 分钟", eta: "4 分钟", label: "示例：C.C. Lourdes，下一班车 4 分钟后到站" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "市中心",
+      outside: "你似乎不在巴兰基亚。我们为你显示市中心；可以在上方搜索其他站点。",
+      onboarding: {
+        eyebrow: "为巴兰基亚打造的公共产品",
+        body: "你的公交什么时候来、怎么去目的地，从街角站点到总站。Transmetro 和接驳线路尽在一处。",
+        note: { eyebrow: "写在前面", title: "Paradero 来到巴兰基亚。", body: "Croma 为波哥大打造了它，作为数字公共产品：免费、开源、无广告。这个版本用 Transmetro 公布的时刻表把它带到巴兰基亚。", body2: "Transmetro 目前还没有公布车辆位置，所以每个时间都来自时刻表，我们也会一直标明。有实时数据后，会显示在这里。", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "车站 · 58 米 · 步行 1 分钟", eta: "4 分钟", label: "示例：Joaquín Barrios Polo，下一班车 4 分钟后到" },
+      },
+    },
   },
 
   common: { retry: "重试", station: "车站", stop: "站点", accessible: "无障碍", done: "完成", close: "关闭", clear: "清除" },
@@ -165,6 +183,50 @@ export const zh: Messages = {
     nothingBody: "试试只输入线路号（例如 B10），或站点名称的一部分。",
     routes: "线路",
     stops: "车站和站点",
+    places: "地点",
+    placeholderPlaces: "线路、站点或目的地",
+    placesHint: "也可以输入你要去的地方，比如商场、医院或街区，我们告诉你怎么去。",
+    placeHint: "显示从你所在位置怎么去",
+  },
+
+  placeKinds: { mall: "购物", health: "医疗", education: "学校或大学", park: "公园或运动", neighbourhood: "街区", transit: "客运站", other: "地点" },
+
+  trip: {
+    title: "怎么去",
+    fromHere: "从你所在位置",
+    options: "方案",
+    steps: "分步路线",
+    duration: (hours, minutes) => (hours ? `${hours} 小时 ${minutes} 分钟` : `${minutes} 分钟`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `${time} 出发`,
+    walked: (meters) => `步行 ${meters} 米`,
+    onFoot: "步行",
+    walk: (meters, minutes) => `步行 ${meters} 米，${minutes} 分钟`,
+    walkTo: (name) => `到 ${name}`,
+    walkToEnd: "到目的地",
+    ride: (code, toward) => `乘坐 ${code}，开往 ${toward}`,
+    rideAt: (time, stops) => `${time} 到站 · ${stops} 站`,
+    getOff: (name, time) => `${time} 在 ${name} 下车`,
+    arrive: (name) => `到达 ${name}`,
+    choose: "在地图上分步显示这个方案",
+    chosen: "已选方案",
+    needLocation: {
+      title: "需要知道你在哪里",
+      body: "行程根据公布的时刻表在你的手机上计算，你的位置不会离开手机。",
+      action: "使用我的位置",
+    },
+    outside: (city) => `要规划行程，你需要在 ${city}。`,
+    none: {
+      title: "没有找到路线",
+      body: (operator) => `这个时间没有 ${operator} 的公交能把你送到附近，或者该地点离线路较远。`,
+    },
+    failed: { title: "无法规划行程", body: "请稍后再试。" },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}。${leave} 出发，${arrive} 到达。${routes}。步行 ${meters} 米。`,
+      duration: (hours, minutes) => [hours ? `${hours} 小时` : "", minutes ? `${minutes} 分钟` : ""].filter(Boolean).join(" "),
+      onFoot: "全程步行",
+      routes: (codes) => `乘坐 ${codes.join("，再换乘 ")}`,
+    },
   },
 
   about: {
@@ -265,19 +327,12 @@ export const zh: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "来自 Croma 的一封信",
-      title: "Paradero 属于波哥大。",
-      body: "我们在 Croma 把它做成一项数字公共产品：免费、开源、没有广告，基于 TransMilenio 的开放数据。",
-      body2: "我们把它提供给波哥大市政府和 TransMilenio，让他们接手并成为自己的应用。在那之前，我们和你一起照顾它。",
-      sign: "Croma 团队",
       rail: "数字公共产品",
       next: "继续",
     },
     byCroma: "Croma 出品的公共产品",
     by: "出品",
-    eyebrow: "为波哥大打造的公共产品",
     title: "公交何时到，不用再猜。",
-    body: "从街角的站点到总站，随时知道公交何时到。TransMilenio、SITP 和接驳线，一处查看。",
     start: "开始",
     promise: "免费 · 无需账号 · 无广告",
     locationEyebrow: "你的位置",
@@ -290,7 +345,6 @@ export const zh: Messages = {
     asking: "请稍候…",
     allow: "允许使用位置",
     skip: "暂不",
-    preview: { name: "C.C. Lourdes", meta: "站点 · 58 米 · 步行 1 分钟", eta: "4 分钟", label: "示例：C.C. Lourdes，下一班车 4 分钟后到站" },
   },
 
   notFound: {

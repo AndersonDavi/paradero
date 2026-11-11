@@ -108,8 +108,26 @@ export const es = {
 
   /** What depends on the city the rider is in. Place names are written the way each language says them. */
   places: {
-    bogota: { fallbackArea: "En Chapinero", outside: "Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba." },
-    barranquilla: { fallbackArea: "En el Centro", outside: "Parece que no estás en Barranquilla. Te mostramos el Centro; busca cualquier otro paradero arriba." },
+    bogota: {
+      fallbackArea: "En Chapinero",
+      outside: "Parece que no estás en Bogotá. Te mostramos Chapinero; busca cualquier otro paradero arriba.",
+      onboarding: {
+        eyebrow: "Un bien público para Bogotá",
+        body: "Cuándo llega tu bus, desde el paradero de la esquina hasta el portal. TransMilenio, SITP y alimentadores en un solo lugar.",
+        note: { eyebrow: "Una nota de Croma", title: "Paradero es de Bogotá.", body: "Lo hicimos en Croma como un bien público digital: gratis, de código abierto y sin anuncios, construido sobre los datos abiertos de TransMilenio.", body2: "Lo ponemos a disposición de la Alcaldía y de TransMilenio para que lo adopten y lo hagan suyo. Mientras tanto, lo cuidamos contigo.", sign: "El equipo de Croma" },
+        preview: { name: "C.C. Lourdes", meta: "Paradero · 58 m · 1 min a pie", eta: "4 min", label: "Ejemplo: C.C. Lourdes, el próximo bus llega en 4 minutos" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "En el Centro",
+      outside: "Parece que no estás en Barranquilla. Te mostramos el Centro; busca cualquier otro paradero arriba.",
+      onboarding: {
+        eyebrow: "Un bien público para Barranquilla",
+        body: "Cuándo pasa tu bus y cómo llegar a donde vas, desde el paradero de la esquina hasta el portal. Transmetro y alimentadores en un solo lugar.",
+        note: { eyebrow: "Una nota", title: "Paradero llega a Barranquilla.", body: "Croma lo hizo para Bogotá como un bien público digital: gratis, de código abierto y sin anuncios. Esta versión lo trae a Barranquilla con el horario publicado de Transmetro.", body2: "Transmetro todavía no publica dónde van sus buses, así que cada hora sale del horario, y siempre lo decimos. Cuando haya datos en vivo, aparecerán aquí.", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "Estación · 58 m · 1 min a pie", eta: "4 min", label: "Ejemplo: Joaquín Barrios Polo, el próximo bus pasa en 4 minutos" },
+      },
+    },
   },
 
   common: { retry: "Reintentar", station: "Estación", stop: "Paradero", accessible: "Accesible", done: "Listo", close: "Cerrar", clear: "Borrar" },
@@ -177,6 +195,60 @@ export const es = {
     nothingBody: "Prueba solo el código de la ruta, como B10, o una parte del nombre del paradero.",
     routes: "Rutas",
     stops: "Estaciones y paraderos",
+    places: "Lugares",
+    placeholderPlaces: "Ruta, paradero o a dónde vas",
+    placesHint: "También puedes escribir a dónde vas, como un centro comercial, un hospital o un barrio, y te decimos cómo llegar.",
+    placeHint: "Muestra cómo llegar desde donde estás",
+  },
+
+  placeKinds: {
+    mall: "Comercio",
+    health: "Salud",
+    education: "Colegio o universidad",
+    park: "Parque o deporte",
+    neighbourhood: "Barrio",
+    transit: "Terminal",
+    other: "Lugar",
+  },
+
+  trip: {
+    title: "Cómo llegar",
+    fromHere: "Desde donde estás",
+    options: "Opciones",
+    steps: "Paso a paso",
+    duration: (hours: number, minutes: number) => (hours ? `${hours} h ${minutes} min` : `${minutes} min`),
+    span: (leave: string, arrive: string) => `${leave} → ${arrive}`,
+    leave: (time: string) => `Sal a las ${time}`,
+    walked: (meters: number) => `${meters} m a pie`,
+    onFoot: "A pie",
+    walk: (meters: number, minutes: number) => `Camina ${meters} m, ${minutes} min`,
+    walkTo: (name: string) => `hasta ${name}`,
+    walkToEnd: "hasta tu destino",
+    ride: (code: string, toward: string) => `Toma la ${code} hacia ${toward}`,
+    rideAt: (time: string, stops: number) => `Pasa a las ${time} · ${stops} ${stops === 1 ? "parada" : "paradas"}`,
+    getOff: (name: string, time: string) => `Bájate en ${name} a las ${time}`,
+    arrive: (name: string) => `Llegas a ${name}`,
+    choose: "Muestra esta opción en el mapa y paso a paso",
+    chosen: "Opción elegida",
+    needLocation: {
+      title: "Necesitamos saber dónde estás",
+      body: "El viaje se calcula en tu teléfono con el horario publicado. Tu ubicación no sale de él.",
+      action: "Usar mi ubicación",
+    },
+    outside: (city: string) => `Para planear un viaje tienes que estar en ${city}.`,
+    none: {
+      title: "No encontramos cómo llegar",
+      body: (operator: string) => `A esta hora no hay un bus de ${operator} que te deje cerca, o el lugar queda lejos de sus rutas.`,
+    },
+    failed: { title: "No pudimos planear el viaje", body: "Intenta de nuevo en un momento." },
+    speech: {
+      option: (duration: string, leave: string, arrive: string, routes: string, meters: number) =>
+        `${duration}. Sal a las ${leave}, llegas a las ${arrive}. ${routes}. ${meters} metros a pie.`,
+      duration: (hours: number, minutes: number) =>
+        [hours ? `${hours} ${hours === 1 ? "hora" : "horas"}` : "", minutes ? `${minutes} ${minutes === 1 ? "minuto" : "minutos"}` : ""].filter(Boolean).join(" y "),
+      onFoot: "A pie todo el camino",
+      routes: (codes: string[]) => `En ${codes.join(", luego ")}`,
+    },
   },
 
   about: {
@@ -278,19 +350,12 @@ export const es = {
 
   onboarding: {
     note: {
-      eyebrow: "Una nota de Croma",
-      title: "Paradero es de Bogotá.",
-      body: "Lo hicimos en Croma como un bien público digital: gratis, de código abierto y sin anuncios, construido sobre los datos abiertos de TransMilenio.",
-      body2: "Lo ponemos a disposición de la Alcaldía y de TransMilenio para que lo adopten y lo hagan suyo. Mientras tanto, lo cuidamos contigo.",
-      sign: "El equipo de Croma",
       rail: "Bienes Públicos Digitales",
       next: "Continuar",
     },
     byCroma: "Un bien público de Croma",
     by: "por",
-    eyebrow: "Un bien público para Bogotá",
     title: "Tu bus, sin adivinar.",
-    body: "Cuándo llega tu bus, desde el paradero de la esquina hasta el portal. TransMilenio, SITP y alimentadores en un solo lugar.",
     start: "Empezar",
     promise: "Gratis · Sin cuenta · Sin anuncios",
     locationEyebrow: "Tu ubicación",
@@ -303,7 +368,6 @@ export const es = {
     asking: "Un momento…",
     allow: "Permitir ubicación",
     skip: "Ahora no",
-    preview: { name: "C.C. Lourdes", meta: "Paradero · 58 m · 1 min a pie", eta: "4 min", label: "Ejemplo: C.C. Lourdes, el próximo bus llega en 4 minutos" },
   },
 
   notFound: {

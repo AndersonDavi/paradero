@@ -109,9 +109,52 @@ export interface Nearby {
   stops: Stop[];
 }
 
+export type PlaceKind = "mall" | "health" | "education" | "park" | "neighbourhood" | "transit" | "other";
+
+/** Somewhere a rider wants to go that is not a stop: a mall, a hospital, a neighbourhood. Its name is never translated. */
+export interface Place {
+  id: string;
+  name: string;
+  kind: PlaceKind;
+  lat: number;
+  lon: number;
+  /** The neighbourhood it is in, to tell apart two places with the same name. */
+  area: string | null;
+  distanceM: number | null;
+}
+
 export interface SearchResult {
   stops: Stop[];
   routes: RouteRef[];
+  /** Only from cities that keep a list of places; absent elsewhere. */
+  places?: Place[];
+}
+
+export interface PlanStop {
+  id: string;
+  name: string;
+  lat: number;
+  lon: number;
+}
+
+/** One stretch of a trip: on foot, or on one bus from one stop to another. Times are ISO. */
+export type Leg =
+  | { kind: "walk"; meters: number; minutes: number; from: PlanStop | null; to: PlanStop | null; path: [number, number][] }
+  | { kind: "ride"; route: RouteRef; from: PlanStop; to: PlanStop; departs: string; arrives: string; stops: number; path: [number, number][] };
+
+export interface Journey {
+  departs: string;
+  arrives: string;
+  minutes: number;
+  walkM: number;
+  rides: number;
+  legs: Leg[];
+}
+
+/** Ways to get from where the rider is to a place, the soonest arrival first. Empty when nothing gets there today. */
+export interface Plan {
+  feed: Feed;
+  journeys: Journey[];
 }
 
 export interface Health {

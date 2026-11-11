@@ -22,7 +22,7 @@ import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { useAccessibility } from "@/lib/accessibility";
-import { prefetchStop, useHealth, useNearby } from "@/lib/api";
+import { canPlan, prefetchStop, useHealth, useNearby } from "@/lib/api";
 import { greeting } from "@/lib/format";
 import { useLocation } from "@/lib/location";
 import { useSaved, type SavedStop } from "@/lib/saved";
@@ -117,7 +117,7 @@ export default function Home() {
             style={[styles.where, { backgroundColor: p.surface }]}>
             <Icon name={icons.search} color={p.text} size="md" weight="bold" />
             <Text variant="body" tone="muted">
-              {t.home.searchPlaceholder}
+              {canPlan ? t.search.placeholderPlaces : t.home.searchPlaceholder}
             </Text>
           </PressableScale>
 

@@ -13,6 +13,7 @@ export const bogota: City = {
   center: { lat: 4.6486, lon: -74.0628 },
   area: { west: -74.3, south: 4.4, east: -73.95, north: 4.85 },
   bounds: { west: -74.45, south: 4.3, east: -73.85, north: 4.95 },
+  examples: ["K635", "B10", "Portal Norte", "Calle 72", "H710", "TransMiCable"],
   card: true,
   source: httpSource,
 };

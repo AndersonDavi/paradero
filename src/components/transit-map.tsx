@@ -9,7 +9,7 @@ import { systems, usePalette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
 import { Text } from "./text";
-import { MAP_CREDIT, type MapHandle, type TransitMapProps } from "./transit-map.types";
+import { MAP_CREDIT, tripData, WALK_DASH, type MapHandle, type TransitMapProps, type TripLeg } from "./transit-map.types";
 
 const STYLES = {
   light: "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json",
@@ -41,7 +41,7 @@ const points = <T extends { lat: number; lon: number }>(items: T[], props: (item
 });
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, system = "other", showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system = "other", showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
   ref,
 ) {
   const p = usePalette();
@@ -69,6 +69,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
 
         {path && path.length > 1 && <RouteLine path={path} quiet={!!approach} />}
         {approach && approach.length > 1 && <Approach key={focusBusId ?? "none"} path={approach} still={reduceMotion} />}
+        {legs && legs.length > 0 && <Trip legs={legs} />}
 
         <GeoJSONSource
           id="stops"
@@ -128,6 +129,21 @@ function RouteLine({ path, quiet }: { path: [number, number][]; quiet: boolean }
       )}
       <Layer id="path-casing" type="line" beforeId={UNDER} layout={ROUND} paint={{ "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": quiet ? 0 : 0.9 }} />
       <Layer id="path-line" type="line" beforeId={UNDER} layout={ROUND} paint={{ "line-color": p.ink, "line-width": LINE_WIDTH, "line-opacity": quiet ? 0.16 : 1 }} />
+    </GeoJSONSource>
+  );
+}
+
+const WALK_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 5];
+
+/** A trip: the buses as solid lines along their routes, the walks between them as dots. */
+function Trip({ legs }: { legs: TripLeg[] }) {
+  const p = usePalette();
+  const data = useMemo(() => tripData(legs), [legs]);
+  return (
+    <GeoJSONSource id="trip" data={data}>
+      <Layer id="trip-casing" type="line" beforeId={UNDER} filter={["==", ["get", "kind"], "ride"]} layout={ROUND} paint={{ "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": 0.9 }} />
+      <Layer id="trip-ride" type="line" beforeId={UNDER} filter={["==", ["get", "kind"], "ride"]} layout={ROUND} paint={{ "line-color": p.ink, "line-width": LINE_WIDTH }} />
+      <Layer id="trip-walk" type="line" beforeId={UNDER} filter={["==", ["get", "kind"], "walk"]} layout={ROUND} paint={{ "line-color": p.ink, "line-width": WALK_WIDTH, "line-dasharray": WALK_DASH }} />
     </GeoJSONSource>
   );
 }

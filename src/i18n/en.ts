@@ -100,8 +100,26 @@ export const en: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "In Chapinero", outside: "It looks like you are not in Bogotá. Here is Chapinero; search for any other stop above." },
-    barranquilla: { fallbackArea: "Downtown", outside: "It looks like you are not in Barranquilla. Here is downtown; search for any other stop above." },
+    bogota: {
+      fallbackArea: "In Chapinero",
+      outside: "It looks like you are not in Bogotá. Here is Chapinero; search for any other stop above.",
+      onboarding: {
+        eyebrow: "A public good for Bogotá",
+        body: "When your bus arrives, from the stop on the corner to the portal. TransMilenio, SITP and feeders in one place.",
+        note: { eyebrow: "A note from Croma", title: "Paradero belongs to Bogotá.", body: "We built it at Croma as a digital public good: free, open source and ad-free, made from TransMilenio's open data.", body2: "We offer it to the City of Bogotá and TransMilenio to adopt and make their own. Until then, we look after it with you.", sign: "The Croma team" },
+        preview: { name: "C.C. Lourdes", meta: "Stop · 58 m · 1 min walk", eta: "4 min", label: "Example: C.C. Lourdes, the next bus arrives in 4 minutes" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "Downtown",
+      outside: "It looks like you are not in Barranquilla. Here is downtown; search for any other stop above.",
+      onboarding: {
+        eyebrow: "A public good for Barranquilla",
+        body: "When your bus comes and how to get where you're going, from the stop on the corner to the portal. Transmetro and feeders in one place.",
+        note: { eyebrow: "A note", title: "Paradero comes to Barranquilla.", body: "Croma built it for Bogotá as a digital public good: free, open source and ad-free. This version brings it to Barranquilla with Transmetro's published schedule.", body2: "Transmetro does not publish where its buses are yet, so every time comes from the schedule, and we always say so. When there is live data, it will show here.", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "Station · 58 m · 1 min walk", eta: "4 min", label: "Example: Joaquín Barrios Polo, the next bus comes in 4 minutes" },
+      },
+    },
   },
 
   common: { retry: "Try again", station: "Station", stop: "Stop", accessible: "Accessible", done: "Done", close: "Close", clear: "Clear" },
@@ -169,6 +187,51 @@ export const en: Messages = {
     nothingBody: "Try just the route code, like B10, or part of the stop name.",
     routes: "Routes",
     stops: "Stations and stops",
+    places: "Places",
+    placeholderPlaces: "Route, stop or where you're going",
+    placesHint: "You can also type where you're going, like a mall, a hospital or a neighbourhood, and we'll tell you how to get there.",
+    placeHint: "Shows how to get there from where you are",
+  },
+
+  placeKinds: { mall: "Shopping", health: "Health", education: "School or university", park: "Park or sports", neighbourhood: "Neighbourhood", transit: "Terminal", other: "Place" },
+
+  trip: {
+    title: "How to get there",
+    fromHere: "From where you are",
+    options: "Options",
+    steps: "Step by step",
+    duration: (hours, minutes) => (hours ? `${hours} h ${minutes} min` : `${minutes} min`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `Leave at ${time}`,
+    walked: (meters) => `${meters} m on foot`,
+    onFoot: "On foot",
+    walk: (meters, minutes) => `Walk ${meters} m, ${minutes} min`,
+    walkTo: (name) => `to ${name}`,
+    walkToEnd: "to where you're going",
+    ride: (code, toward) => `Take the ${code} toward ${toward}`,
+    rideAt: (time, stops) => `Comes at ${time} · ${stops} ${stops === 1 ? "stop" : "stops"}`,
+    getOff: (name, time) => `Get off at ${name} at ${time}`,
+    arrive: (name) => `You reach ${name}`,
+    choose: "Shows this option on the map, step by step",
+    chosen: "Chosen option",
+    needLocation: {
+      title: "We need to know where you are",
+      body: "The trip is worked out on your phone from the published schedule. Your location never leaves it.",
+      action: "Use my location",
+    },
+    outside: (city) => `To plan a trip you need to be in ${city}.`,
+    none: {
+      title: "We found no way there",
+      body: (operator) => `No ${operator} bus leaves you nearby at this hour, or the place is far from its routes.`,
+    },
+    failed: { title: "We couldn't plan the trip", body: "Try again in a moment." },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}. Leave at ${leave}, arrive at ${arrive}. ${routes}. ${meters} metres on foot.`,
+      duration: (hours, minutes) =>
+        [hours ? `${hours} ${hours === 1 ? "hour" : "hours"}` : "", minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : ""].filter(Boolean).join(" and "),
+      onFoot: "On foot all the way",
+      routes: (codes) => `On ${codes.join(", then ")}`,
+    },
   },
 
   about: {
@@ -270,19 +333,12 @@ export const en: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "A note from Croma",
-      title: "Paradero belongs to Bogotá.",
-      body: "We built it at Croma as a digital public good: free, open source and ad-free, made from TransMilenio's open data.",
-      body2: "We offer it to the City of Bogotá and TransMilenio to adopt and make their own. Until then, we look after it with you.",
-      sign: "The Croma team",
       rail: "Digital Public Goods",
       next: "Continue",
     },
     byCroma: "A public good by Croma",
     by: "by",
-    eyebrow: "A public good for Bogotá",
     title: "Your bus, no guessing.",
-    body: "When your bus arrives, from the stop on the corner to the portal. TransMilenio, SITP and feeders in one place.",
     start: "Get started",
     promise: "Free · No account · No ads",
     locationEyebrow: "Your location",
@@ -295,7 +351,6 @@ export const en: Messages = {
     asking: "One moment…",
     allow: "Allow location",
     skip: "Not now",
-    preview: { name: "C.C. Lourdes", meta: "Stop · 58 m · 1 min walk", eta: "4 min", label: "Example: C.C. Lourdes, the next bus arrives in 4 minutes" },
   },
 
   notFound: {

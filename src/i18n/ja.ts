@@ -96,8 +96,26 @@ export const ja: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "チャピネロ周辺", outside: "ボゴタにいないようです。チャピネロを表示しています。上の検索でほかの停留所を探せます。" },
-    barranquilla: { fallbackArea: "セントロ周辺", outside: "バランキージャにいないようです。セントロを表示しています。上の検索でほかの停留所を探せます。" },
+    bogota: {
+      fallbackArea: "チャピネロ周辺",
+      outside: "ボゴタにいないようです。チャピネロを表示しています。上の検索でほかの停留所を探せます。",
+      onboarding: {
+        eyebrow: "ボゴタのための公共財",
+        body: "角の停留所からターミナルまで、バスがいつ来るかがわかります。TransMilenio、SITP、フィーダー線をひとつに。",
+        note: { eyebrow: "Cromaからのメッセージ", title: "Paraderoはボゴタのものです。", body: "Cromaはこのアプリをデジタル公共財として作りました。無料、オープンソース、広告なし。TransMilenioのオープンデータをもとにしています。", body2: "ボゴタ市とTransMilenioが引き継ぎ、自分たちのものにできるよう提供しています。それまでは、みなさんと一緒に育てていきます。", sign: "Cromaチーム" },
+        preview: { name: "C.C. Lourdes", meta: "停留所 · 58 m · 徒歩1分", eta: "4分", label: "例：C.C. Lourdes、次のバスは4分後に到着" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "セントロ周辺",
+      outside: "バランキージャにいないようです。セントロを表示しています。上の検索でほかの停留所を探せます。",
+      onboarding: {
+        eyebrow: "バランキージャのための公共財",
+        body: "バスがいつ来るか、目的地への行き方まで。角の停留所からターミナルまで、Transmetroとフィーダー線をひとつに。",
+        note: { eyebrow: "ひとこと", title: "Paraderoがバランキージャに。", body: "Cromaはボゴタのために、無料・オープンソース・広告なしのデジタル公共財としてこのアプリを作りました。このバージョンはTransmetroの公開時刻表でバランキージャに対応しています。", body2: "Transmetroはまだバスの位置を公開していないため、時刻はすべて時刻表にもとづき、そのことを常に表示します。リアルタイムのデータが公開されたら、ここに表示されます。", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "駅 · 58 m · 徒歩1分", eta: "4分", label: "例：Joaquín Barrios Polo、次のバスは4分後に来ます" },
+      },
+    },
   },
 
   common: { retry: "再試行", station: "駅", stop: "停留所", accessible: "バリアフリー", done: "完了", close: "閉じる", clear: "消去" },
@@ -165,6 +183,50 @@ export const ja: Messages = {
     nothingBody: "B10のような路線番号だけ、または停留所名の一部で試してください。",
     routes: "路線",
     stops: "駅と停留所",
+    places: "場所",
+    placeholderPlaces: "路線、停留所、行き先",
+    placesHint: "ショッピングモールや病院、地区など行き先を入力すると、行き方をお伝えします。",
+    placeHint: "現在地からの行き方を表示します",
+  },
+
+  placeKinds: { mall: "買い物", health: "医療", education: "学校・大学", park: "公園・スポーツ", neighbourhood: "地区", transit: "ターミナル", other: "場所" },
+
+  trip: {
+    title: "行き方",
+    fromHere: "現在地から",
+    options: "候補",
+    steps: "ルートの詳細",
+    duration: (hours, minutes) => (hours ? `${hours}時間${minutes}分` : `${minutes}分`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `${time}に出発`,
+    walked: (meters) => `徒歩${meters}m`,
+    onFoot: "徒歩",
+    walk: (meters, minutes) => `${meters}m歩く、${minutes}分`,
+    walkTo: (name) => `${name}まで`,
+    walkToEnd: "目的地まで",
+    ride: (code, toward) => `${code}（${toward}行き）に乗る`,
+    rideAt: (time, stops) => `${time}発 · ${stops}停留所`,
+    getOff: (name, time) => `${time}に${name}で降りる`,
+    arrive: (name) => `${name}に到着`,
+    choose: "この候補を地図とルートの詳細で表示します",
+    chosen: "選択中の候補",
+    needLocation: {
+      title: "現在地が必要です",
+      body: "ルートは公開時刻表をもとにスマートフォン上で計算します。現在地が外部に送られることはありません。",
+      action: "現在地を使う",
+    },
+    outside: (city) => `ルートを調べるには${city}にいる必要があります。`,
+    none: {
+      title: "行き方が見つかりません",
+      body: (operator) => `この時間帯は近くまで行く${operator}のバスがないか、目的地が路線から離れています。`,
+    },
+    failed: { title: "ルートを調べられませんでした", body: "少し待ってからもう一度お試しください。" },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}。${leave}に出発、${arrive}に到着。${routes}。徒歩${meters}メートル。`,
+      duration: (hours, minutes) => [hours ? `${hours}時間` : "", minutes ? `${minutes}分` : ""].filter(Boolean).join(""),
+      onFoot: "全行程徒歩",
+      routes: (codes) => `${codes.join("、乗り換えて")}に乗車`,
+    },
   },
 
   about: {
@@ -266,19 +328,12 @@ export const ja: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "Cromaからのメッセージ",
-      title: "Paraderoはボゴタのものです。",
-      body: "Cromaはこのアプリをデジタル公共財として作りました。無料、オープンソース、広告なし。TransMilenioのオープンデータをもとにしています。",
-      body2: "ボゴタ市とTransMilenioが引き継ぎ、自分たちのものにできるよう提供しています。それまでは、みなさんと一緒に育てていきます。",
-      sign: "Cromaチーム",
       rail: "デジタル公共財",
       next: "続ける",
     },
     byCroma: "Cromaによる公共財",
     by: "by",
-    eyebrow: "ボゴタのための公共財",
     title: "バスの到着、もう迷わない。",
-    body: "角の停留所からターミナルまで、バスがいつ来るかがわかります。TransMilenio、SITP、フィーダー線をひとつに。",
     start: "はじめる",
     promise: "無料 · アカウント不要 · 広告なし",
     locationEyebrow: "位置情報",
@@ -291,7 +346,6 @@ export const ja: Messages = {
     asking: "少々お待ちください…",
     allow: "位置情報を許可",
     skip: "あとで",
-    preview: { name: "C.C. Lourdes", meta: "停留所 · 58 m · 徒歩1分", eta: "4分", label: "例：C.C. Lourdes、次のバスは4分後に到着" },
   },
 
   notFound: {

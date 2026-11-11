@@ -44,11 +44,13 @@ export function useNearby(point: { lat: number; lon: number } | null) {
   });
 }
 
-export function useSearch(query: string) {
+export function useSearch(query: string, near?: { lat: number; lon: number } | null) {
   const q = query.trim();
+  // Rounded to a block, like nearby: enough to list the closest places first.
+  const at = near ? { lat: Math.round(near.lat * 1000) / 1000, lon: Math.round(near.lon * 1000) / 1000 } : null;
   return useQuery({
-    queryKey: ["search", city.id, q.toLowerCase()],
-    queryFn: () => source.search(q),
+    queryKey: ["search", city.id, q.toLowerCase(), at?.lat, at?.lon],
+    queryFn: () => source.search(q, at),
     enabled: q.length >= 2,
     placeholderData: keepPreviousData,
     staleTime: 30 * 60_000,
@@ -82,6 +84,24 @@ export function useStop(id: string | undefined) {
 
 export function useRoute(id: string | undefined) {
   return useQuery({ ...routeQuery(id ?? ""), enabled: !!id, refetchInterval: LIVE });
+}
+
+/** Whether this city can plan a trip on the phone. */
+export const canPlan = typeof source.plan === "function";
+
+/**
+ * Ways from where the rider is to a place. Worked out on the phone from the timetable, so the exact position is
+ * used and never sent anywhere. Worked out again every minute, as the next bus changes.
+ */
+export function usePlan(from: { lat: number; lon: number } | null, to: { lat: number; lon: number } | null) {
+  return useQuery({
+    queryKey: ["plan", city.id, from?.lat, from?.lon, to?.lat, to?.lon],
+    queryFn: () => source.plan!(from!, to!),
+    enabled: canPlan && !!from && !!to,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
 }
 
 export async function sendReport(input: ReportInput): Promise<ReportResult> {

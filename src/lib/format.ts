@@ -88,6 +88,15 @@ export function feedText(feed: Feed): string {
   return feed.live ? `${t().feed.live} · ${since(feed.asOf)}` : t().feed.noLiveSince(since(feed.asOf));
 }
 
+/** How long a trip takes: "44 min", "1 h 4 min". */
+export function durationText(minutes: number): string {
+  return t().trip.duration(Math.floor(minutes / 60), minutes % 60);
+}
+
+export function spokenDuration(minutes: number): string {
+  return t().trip.speech.duration(Math.floor(minutes / 60), minutes % 60);
+}
+
 export function distanceText(m: number | null): string {
   if (m == null) return "";
   const walk = Math.max(1, Math.round(m / 75));

@@ -4,7 +4,7 @@
  * (src/cities/local.ts). Trips that run the same stops with the same times between them become one
  * pattern with a list of departures, which keeps a whole city's timetable to a few hundred kilobytes.
  *
- *   node scripts/gtfs-to-city.mjs <city> <folder with the GTFS .txt files> public/cities/<city>.json [osm lines]
+ *   node scripts/gtfs-to-city.mjs <city> <folder with the GTFS .txt files> public/cities/<city>.json [osm lines] [osm places]
  *
  * Platforms that belong to a station are folded into the station, as riders name them. When the GTFS has no
  * shapes, pass the route lines from scripts/osm-route-lines.mjs: each pattern is then drawn along the streets
@@ -28,7 +28,7 @@ const CITIES = {
   },
 };
 
-const [cityId, folder, out, osmFile] = process.argv.slice(2);
+const [cityId, folder, out, osmFile, placesFile] = process.argv.slice(2);
 const city = CITIES[cityId];
 if (!city || !folder || !out) {
   console.error(`Usage: node scripts/gtfs-to-city.mjs <${Object.keys(CITIES).join("|")}> <gtfs folder> <out.json>`);
@@ -360,8 +360,31 @@ const data = {
     pathOf(p),
   ]),
   paths,
+  places: places(),
 };
+
+/**
+ * Places a rider can ask how to get to, from scripts/osm-places.mjs: name, lat, lon, kind, and the neighbourhood
+ * it is in (an index into the same list, or -1), so two supermarkets with the same name can be told apart.
+ */
+function places() {
+  if (!placesFile) return undefined;
+  const list = JSON.parse(readFileSync(placesFile, "utf8"));
+  const areas = list.map((p, i) => ({ p, i })).filter(({ p }) => p[3] === "neighbourhood");
+  const metres = (a, b) => Math.hypot((a[1] - b[1]) * 110_540, (a[2] - b[2]) * 111_320 * Math.cos((a[1] * Math.PI) / 180));
+  return list.map((p) => {
+    let area = -1;
+    let best = 1200;
+    if (p[3] !== "neighbourhood") {
+      for (const { p: n, i } of areas) {
+        const d = metres(p, n);
+        if (d < best) [best, area] = [d, i];
+      }
+    }
+    return [p[0], p[1], p[2], p[3], area];
+  });
+}
 
 const json = JSON.stringify(data);
 writeFileSync(out, json);
-console.log(`${cityId}: ${stops.length} stops, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);
+console.log(`${cityId}: ${stops.length} stops, ${data.places?.length ?? 0} places, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);

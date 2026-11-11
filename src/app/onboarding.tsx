@@ -7,6 +7,7 @@ import Animated, { useAnimatedStyle, withTiming } from "react-native-reanimated"
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
+import { city } from "@/cities";
 import { Button } from "@/components/button";
 import { CromaSymbol, CromaWordmark } from "@/components/croma-mark";
 import { Dot } from "@/components/dot";
@@ -39,6 +40,8 @@ const REASONS = [
 export default function Onboarding() {
   const p = usePalette();
   const t = useT();
+  // What names the city, its operator and its note; the rest of the welcome is the same everywhere.
+  const here = t.places[city.id].onboarding;
   const large = useLargeText();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
@@ -51,7 +54,7 @@ export default function Onboarding() {
   const next = () => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setStep(1);
-    announce(`${t.onboarding.note.eyebrow}. ${t.onboarding.note.title}`);
+    announce(`${here.note.eyebrow}. ${here.note.title}`);
   };
 
   const back = () => {
@@ -93,7 +96,7 @@ export default function Onboarding() {
       {photoStep && (
         <Animated.View key={`photo-${step}`} entering={motion.appear()} exiting={motion.leave} style={[styles.photo, { height: height * (step === 0 ? 0.68 : 0.52) }]}>
           <Image source={PHOTOS[step]} style={StyleSheet.absoluteFill} contentFit="cover" transition={0} accessibilityIgnoresInvertColors />
-          <Svg style={StyleSheet.absoluteFill} preserveAspectRatio="none">
+          <Svg style={StyleSheet.absoluteFill} width="100%" height="100%" preserveAspectRatio="none">
             <Defs>
               <LinearGradient id="top" x1="0" y1="0" x2="0" y2="1">
                 <Stop offset="0" stopColor={photo.scrim} stopOpacity="0.38" />
@@ -134,22 +137,22 @@ export default function Onboarding() {
       </View>
 
       {step === 2 && !large && (
-        <Animated.View entering={motion.enter(250)} accessible accessibilityLabel={t.onboarding.preview.label} style={[styles.preview, { top: height * 0.25 }]}>
+        <Animated.View entering={motion.enter(250)} accessible accessibilityLabel={here.preview.label} style={[styles.preview, { top: height * 0.25 }]}>
           <Glass style={styles.previewGlass}>
             <View style={styles.previewRow}>
               <Tile tier="sm" tone="ink">
                 <StopSignGlyph size={size.glyph.sm} color={p.onInk} cut={p.ink} />
               </Tile>
               <View style={styles.grow}>
-                <Text variant="headline">{t.onboarding.preview.name}</Text>
+                <Text variant="headline">{here.preview.name}</Text>
                 <Text variant="caption" tone="muted">
-                  {t.onboarding.preview.meta}
+                  {here.preview.meta}
                 </Text>
               </View>
               <View style={styles.previewEta}>
                 <Dot color={signal.live} pulse />
                 <Text variant="headline" tabular>
-                  {t.onboarding.preview.eta}
+                  {here.preview.eta}
                 </Text>
               </View>
             </View>
@@ -171,11 +174,11 @@ export default function Onboarding() {
         {step === 0 ? (
           <Animated.View key="welcome" entering={motion.enter()} exiting={motion.leave} style={styles.copy} onLayout={measureCopy}>
             <Text variant="eyebrow" tone="faint">
-              {t.onboarding.eyebrow}
+              {here.eyebrow}
             </Text>
             <Text variant="poster">{t.onboarding.title}</Text>
             <Text variant="body" tone="muted">
-              {t.onboarding.body}
+              {here.body}
             </Text>
             <View style={styles.actions}>
               <Button label={t.onboarding.start} onPress={next} />
@@ -186,12 +189,12 @@ export default function Onboarding() {
           </Animated.View>
         ) : step === 1 ? (
           <Animated.View key="note" entering={motion.enter()} exiting={motion.leave} style={styles.note} onLayout={measureCopy}>
-            <CromaSymbol size={size.tile.xl} color={p.text} />
+            {here.note.sign ? <CromaSymbol size={size.tile.xl} color={p.text} /> : <ParaderoMark size={size.tile.xl} color={p.text} ring={p.fillStrong} />}
             <View style={styles.copy}>
               <Text variant="eyebrow" tone="faint">
-                {t.onboarding.note.eyebrow}
+                {here.note.eyebrow}
               </Text>
-              <Text variant="poster">{t.onboarding.note.title}</Text>
+              <Text variant="poster">{here.note.title}</Text>
             </View>
             <View
               style={[
@@ -202,16 +205,18 @@ export default function Onboarding() {
                   boxShadow: p.shadowSoft,
                 },
               ]}>
-              <Text variant="body">{t.onboarding.note.body}</Text>
+              <Text variant="body">{here.note.body}</Text>
               <Text variant="body" tone="muted">
-                {t.onboarding.note.body2}
+                {here.note.body2}
               </Text>
-              <View style={[styles.signature, { borderTopColor: p.separator }]}>
-                <CromaWordmark height={size.icon.xs} color={p.text} />
-                <Text variant="chrome" tone="muted">
-                  {t.onboarding.note.sign}
-                </Text>
-              </View>
+              {here.note.sign && (
+                <View style={[styles.signature, { borderTopColor: p.separator }]}>
+                  <CromaWordmark height={size.icon.xs} color={p.text} />
+                  <Text variant="chrome" tone="muted">
+                    {here.note.sign}
+                  </Text>
+                </View>
+              )}
             </View>
             <Text variant="chrome" tone="faint" style={styles.center}>
               {`+ ${t.onboarding.note.rail} +`}

@@ -100,8 +100,26 @@ export const fr: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "À Chapinero", outside: "Vous ne semblez pas être à Bogotá. Voici Chapinero ; cherchez n’importe quel autre arrêt ci-dessus." },
-    barranquilla: { fallbackArea: "Au centre-ville", outside: "Vous ne semblez pas être à Barranquilla. Voici le centre-ville ; cherchez n’importe quel autre arrêt ci-dessus." },
+    bogota: {
+      fallbackArea: "À Chapinero",
+      outside: "Vous ne semblez pas être à Bogotá. Voici Chapinero ; cherchez n’importe quel autre arrêt ci-dessus.",
+      onboarding: {
+        eyebrow: "Un bien public pour Bogotá",
+        body: "Quand votre bus arrive, de l’arrêt du coin jusqu’au terminus. TransMilenio, SITP et lignes de rabattement au même endroit.",
+        note: { eyebrow: "Un mot de Croma", title: "Paradero appartient à Bogotá.", body: "Nous l’avons créé chez Croma comme un bien public numérique : gratuit, open source et sans publicité, à partir des données ouvertes de TransMilenio.", body2: "Nous le proposons à la Mairie de Bogotá et à TransMilenio pour qu’ils l’adoptent et se l’approprient. En attendant, nous en prenons soin avec vous.", sign: "L’équipe Croma" },
+        preview: { name: "C.C. Lourdes", meta: "Arrêt · 58 m · 1 min à pied", eta: "4 min", label: "Exemple : C.C. Lourdes, le prochain bus arrive dans 4 minutes" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "Au centre-ville",
+      outside: "Vous ne semblez pas être à Barranquilla. Voici le centre-ville ; cherchez n’importe quel autre arrêt ci-dessus.",
+      onboarding: {
+        eyebrow: "Un bien public pour Barranquilla",
+        body: "Quand passe votre bus et comment aller où vous allez, de l'arrêt du coin jusqu'au terminus. Transmetro et lignes de rabattement au même endroit.",
+        note: { eyebrow: "Un mot", title: "Paradero arrive à Barranquilla.", body: "Croma l'a créé pour Bogotá comme un bien public numérique : gratuit, open source et sans publicité. Cette version l'apporte à Barranquilla avec l'horaire publié de Transmetro.", body2: "Transmetro ne publie pas encore la position de ses bus : chaque heure vient donc de l'horaire, et nous le disons toujours. Quand il y aura des données en direct, elles apparaîtront ici.", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "Station · 58 m · 1 min à pied", eta: "4 min", label: "Exemple : Joaquín Barrios Polo, le prochain bus passe dans 4 minutes" },
+      },
+    },
   },
 
   common: { retry: "Réessayer", station: "Station", stop: "Arrêt", accessible: "Accessible", done: "Terminé", close: "Fermer", clear: "Effacer" },
@@ -169,6 +187,51 @@ export const fr: Messages = {
     nothingBody: "Essayez seulement le code de la ligne, comme B10, ou une partie du nom de l’arrêt.",
     routes: "Lignes",
     stops: "Stations et arrêts",
+    places: "Lieux",
+    placeholderPlaces: "Ligne, arrêt ou destination",
+    placesHint: "Vous pouvez aussi écrire où vous allez, comme un centre commercial, un hôpital ou un quartier, et nous vous disons comment y aller.",
+    placeHint: "Montre comment y aller depuis où vous êtes",
+  },
+
+  placeKinds: { mall: "Commerce", health: "Santé", education: "École ou université", park: "Parc ou sport", neighbourhood: "Quartier", transit: "Terminal", other: "Lieu" },
+
+  trip: {
+    title: "Comment y aller",
+    fromHere: "Depuis où vous êtes",
+    options: "Options",
+    steps: "Étape par étape",
+    duration: (hours, minutes) => (hours ? `${hours} h ${minutes} min` : `${minutes} min`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `Partez à ${time}`,
+    walked: (meters) => `${meters} m à pied`,
+    onFoot: "À pied",
+    walk: (meters, minutes) => `Marchez ${meters} m, ${minutes} min`,
+    walkTo: (name) => `jusqu'à ${name}`,
+    walkToEnd: "jusqu'à votre destination",
+    ride: (code, toward) => `Prenez la ${code} vers ${toward}`,
+    rideAt: (time, stops) => `Passe à ${time} · ${stops} ${stops === 1 ? "arrêt" : "arrêts"}`,
+    getOff: (name, time) => `Descendez à ${name} à ${time}`,
+    arrive: (name) => `Vous arrivez à ${name}`,
+    choose: "Montre cette option sur la carte, étape par étape",
+    chosen: "Option choisie",
+    needLocation: {
+      title: "Nous devons savoir où vous êtes",
+      body: "Le trajet est calculé sur votre téléphone avec l'horaire publié. Votre position n'en sort pas.",
+      action: "Utiliser ma position",
+    },
+    outside: (city) => `Pour planifier un trajet, vous devez être à ${city}.`,
+    none: {
+      title: "Aucun trajet trouvé",
+      body: (operator) => `À cette heure, aucun bus ${operator} ne vous dépose près de là, ou le lieu est loin de ses lignes.`,
+    },
+    failed: { title: "Impossible de planifier le trajet", body: "Réessayez dans un instant." },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}. Partez à ${leave}, arrivée à ${arrive}. ${routes}. ${meters} mètres à pied.`,
+      duration: (hours, minutes) =>
+        [hours ? `${hours} ${hours === 1 ? "heure" : "heures"}` : "", minutes ? `${minutes} ${minutes === 1 ? "minute" : "minutes"}` : ""].filter(Boolean).join(" et "),
+      onFoot: "À pied tout le trajet",
+      routes: (codes) => `Avec la ${codes.join(", puis la ")}`,
+    },
   },
 
   about: {
@@ -270,19 +333,12 @@ export const fr: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "Un mot de Croma",
-      title: "Paradero appartient à Bogotá.",
-      body: "Nous l’avons créé chez Croma comme un bien public numérique : gratuit, open source et sans publicité, à partir des données ouvertes de TransMilenio.",
-      body2: "Nous le proposons à la Mairie de Bogotá et à TransMilenio pour qu’ils l’adoptent et se l’approprient. En attendant, nous en prenons soin avec vous.",
-      sign: "L’équipe Croma",
       rail: "Biens publics numériques",
       next: "Continuer",
     },
     byCroma: "Un bien public de Croma",
     by: "par",
-    eyebrow: "Un bien public pour Bogotá",
     title: "Votre bus, sans deviner.",
-    body: "Quand votre bus arrive, de l’arrêt du coin jusqu’au terminus. TransMilenio, SITP et lignes de rabattement au même endroit.",
     start: "Commencer",
     promise: "Gratuit · Sans compte · Sans pub",
     locationEyebrow: "Votre position",
@@ -295,7 +351,6 @@ export const fr: Messages = {
     asking: "Un instant…",
     allow: "Autoriser la localisation",
     skip: "Pas maintenant",
-    preview: { name: "C.C. Lourdes", meta: "Arrêt · 58 m · 1 min à pied", eta: "4 min", label: "Exemple : C.C. Lourdes, le prochain bus arrive dans 4 minutes" },
   },
 
   notFound: {

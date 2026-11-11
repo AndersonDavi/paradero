@@ -1,4 +1,4 @@
-import type { Health, Nearby, RouteDetail, SearchResult, StopDetail, System } from "@/transit/types";
+import type { Health, Nearby, Plan, RouteDetail, SearchResult, StopDetail, System } from "@/transit/types";
 
 export type CityId = "bogota" | "barranquilla";
 
@@ -16,16 +16,22 @@ export interface Box {
 }
 
 /**
- * Where a city's buses, stops and routes come from. The screens only ever ask these five things, so a city can
+ * Where a city's buses, stops and routes come from. The screens only ever ask these things, so a city can
  * answer from Paradero's API on the server or from data kept on the phone, and the screens stay the same.
  */
 export interface TransitSource {
   health(): Promise<Health>;
   /** The point is already rounded to a block (3 decimals), so it can leave the phone. */
   nearby(point: Point): Promise<Nearby>;
-  search(query: string): Promise<SearchResult>;
+  /** `near` is rounded to a block too; a city that knows places lists the closest ones first. */
+  search(query: string, near?: Point | null): Promise<SearchResult>;
   stop(id: string): Promise<StopDetail>;
   route(id: string): Promise<RouteDetail>;
+  /**
+   * Ways to get from one point to another by bus, for a city whose timetable is on the phone. The rider's
+   * position is used exactly, so a city whose answers come from a server leaves this out.
+   */
+  plan?(from: Point, to: Point): Promise<Plan>;
 }
 
 export interface City {
@@ -43,6 +49,8 @@ export interface City {
   area: Box;
   /** The map never pans past this box. */
   bounds: Box;
+  /** What the search screen offers to try before the rider types: routes, stations and places riders know. */
+  examples: string[];
   /** The city's fare card can be read over NFC, as TuLlave in Bogotá. */
   card: boolean;
   source: TransitSource;

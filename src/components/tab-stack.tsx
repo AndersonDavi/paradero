@@ -22,6 +22,7 @@ export function TabStack({ root, title }: { root: string; title?: string }) {
       <Stack.Screen name={root} options={title ? { title } : { headerShown: false, title: "Paradero" }} />
       <Stack.Screen name="stop/[id]" options={DETAIL} />
       <Stack.Screen name="route/[id]" options={DETAIL} />
+      <Stack.Screen name="trip" options={DETAIL} />
     </Stack>
   );
 }

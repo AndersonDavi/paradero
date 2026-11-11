@@ -15,7 +15,7 @@ import { systems, usePalette, type Palette } from "@/theme/colors";
 import { space } from "@/theme/tokens";
 
 import { Text } from "./text";
-import { MAP_CREDIT, type MapHandle, type TransitMapProps } from "./transit-map.types";
+import { MAP_CREDIT, tripData, WALK_DASH, type MapHandle, type TransitMapProps } from "./transit-map.types";
 
 /**
  * The same map as the app, drawn in the browser with MapLibre GL JS. It reads the same props and draws the
@@ -92,13 +92,14 @@ interface Scene {
   data: Record<SourceId, Collection>;
 }
 
-type SourceId = "path" | "approach" | "stops" | "buses" | "user";
-const SOURCES: SourceId[] = ["path", "approach", "stops", "buses", "user"];
+type SourceId = "path" | "approach" | "trip" | "stops" | "buses" | "user";
+const SOURCES: SourceId[] = ["path", "approach", "trip", "stops", "buses", "user"];
 
 type ZoomWidth = ["interpolate", ["linear"], ["zoom"], number, number, number, number];
 const LINE_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 1.25, 16, 3];
 const CASING_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 6];
 const GLOW_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 6, 16, 14];
+const WALK_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 5];
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
 
 const FILL_MS = 1_600;
@@ -122,6 +123,10 @@ function layers({ p, quiet, showCodes, lit }: Scene): LayerSpecification[] {
     { id: "approach-glow", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.ink, "line-width": GLOW_WIDTH, "line-opacity": glow, "line-blur": 5 } },
     { id: "approach-casing", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": 0.9 } },
     { id: "approach-line", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.ink, "line-width": LINE_WIDTH, "line-gradient": fill(p, lit) } },
+    // A trip: the buses as solid lines along their routes, the walks between them as dots.
+    { id: "trip-casing", type: "line", source: "trip", filter: ["==", ["get", "kind"], "ride"], layout: ROUND, paint: { "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": 0.9 } },
+    { id: "trip-ride", type: "line", source: "trip", filter: ["==", ["get", "kind"], "ride"], layout: ROUND, paint: { "line-color": p.ink, "line-width": LINE_WIDTH } },
+    { id: "trip-walk", type: "line", source: "trip", filter: ["==", ["get", "kind"], "walk"], layout: ROUND, paint: { "line-color": p.ink, "line-width": WALK_WIDTH, "line-dasharray": WALK_DASH } },
     {
       id: "stops-dot",
       type: "circle",
@@ -248,7 +253,7 @@ function useFill(still: boolean, restartOn: string): number | null {
 }
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, showUser = true, showCodes = false, focusBusId = null, padding, onStopPress },
   ref,
 ) {
   const p = usePalette();
@@ -264,6 +269,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const pathData = useMemo(() => line(path), [path]);
   const hasApproach = !!approach && approach.length > 1;
   const approachData = useMemo(() => line(approach), [approach]);
+  const tripLines = useMemo<Collection>(() => (legs?.length ? tripData(legs) : EMPTY), [legs]);
 
   const fixes = useMemo(() => buses.map((b) => ({ id: b.id, lat: b.lat, lon: b.lon, reportedAt: b.reportedAt, code: b.code, system: b.system, onItsWay: b.id === focusBusId })), [buses, focusBusId]);
   const moving = useMovingBuses(fixes, path, still);
@@ -289,7 +295,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const colours = [p.dark, p.ink, p.background, p.faint, p.text].join("|");
 
   // The map lives outside React; it reads the latest scene and handlers from here whenever it needs them.
-  const scene: Scene = { p, quiet: hasApproach, showCodes, lit, data: { path: pathData, approach: approachData, stops: stopData, buses: busData, user: userData } };
+  const scene: Scene = { p, quiet: hasApproach, showCodes, lit, data: { path: pathData, approach: approachData, trip: tripLines, stops: stopData, buses: busData, user: userData } };
   const inset = padding ?? NO_INSET;
   const latest = useRef({ scene, onStopPress, inset });
   useLayoutEffect(() => {
@@ -381,6 +387,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   useEffect(() => setData(mapRef.current, "stops", stopData), [stopData]);
   useEffect(() => setData(mapRef.current, "path", pathData), [pathData]);
   useEffect(() => setData(mapRef.current, "approach", approachData), [approachData]);
+  useEffect(() => setData(mapRef.current, "trip", tripLines), [tripLines]);
   useEffect(() => setData(mapRef.current, "buses", busData), [busData]);
   useEffect(() => setData(mapRef.current, "user", userData), [userData]);
   useEffect(() => {

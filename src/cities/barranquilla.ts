@@ -17,6 +17,7 @@ export const barranquilla: City = {
   center: { lat: 10.9869, lon: -74.7835 },
   area: { west: -74.92, south: 10.84, east: -74.72, north: 11.06 },
   bounds: { west: -75.0, south: 10.78, east: -74.65, north: 11.12 },
+  examples: ["S1", "R10", "A3-4", "Portal de Soledad", "C. C. Viva", "Universidad del Norte"],
   card: false,
   source: localSource(timetable),
 };

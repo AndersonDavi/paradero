@@ -100,8 +100,26 @@ export const pt: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "Em Chapinero", outside: "Parece que você não está em Bogotá. Mostramos Chapinero; busque qualquer outro ponto acima." },
-    barranquilla: { fallbackArea: "No Centro", outside: "Parece que você não está em Barranquilla. Mostramos o Centro; busque qualquer outro ponto acima." },
+    bogota: {
+      fallbackArea: "Em Chapinero",
+      outside: "Parece que você não está em Bogotá. Mostramos Chapinero; busque qualquer outro ponto acima.",
+      onboarding: {
+        eyebrow: "Um bem público para Bogotá",
+        body: "Quando seu ônibus chega, do ponto da esquina até o terminal. TransMilenio, SITP e alimentadores em um só lugar.",
+        note: { eyebrow: "Uma nota da Croma", title: "O Paradero é de Bogotá.", body: "Nós o criamos na Croma como um bem público digital: gratuito, de código aberto e sem anúncios, feito com os dados abertos da TransMilenio.", body2: "Nós o oferecemos à Prefeitura de Bogotá e à TransMilenio para que o adotem e o tornem seu. Enquanto isso, cuidamos dele com você.", sign: "A equipe da Croma" },
+        preview: { name: "C.C. Lourdes", meta: "Ponto · 58 m · 1 min a pé", eta: "4 min", label: "Exemplo: C.C. Lourdes, o próximo ônibus chega em 4 minutos" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "No Centro",
+      outside: "Parece que você não está em Barranquilla. Mostramos o Centro; busque qualquer outro ponto acima.",
+      onboarding: {
+        eyebrow: "Um bem público para Barranquilla",
+        body: "Quando passa o seu ônibus e como chegar aonde você vai, do ponto da esquina até o terminal. Transmetro e alimentadores em um só lugar.",
+        note: { eyebrow: "Uma nota", title: "O Paradero chega a Barranquilla.", body: "A Croma o fez para Bogotá como um bem público digital: gratuito, de código aberto e sem anúncios. Esta versão o leva a Barranquilla com o horário publicado do Transmetro.", body2: "O Transmetro ainda não publica onde estão seus ônibus, então cada horário vem da tabela, e sempre dizemos isso. Quando houver dados ao vivo, eles aparecerão aqui.", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "Estação · 58 m · 1 min a pé", eta: "4 min", label: "Exemplo: Joaquín Barrios Polo, o próximo ônibus passa em 4 minutos" },
+      },
+    },
   },
 
   common: { retry: "Tentar de novo", station: "Estação", stop: "Ponto", accessible: "Acessível", done: "Pronto", close: "Fechar", clear: "Limpar" },
@@ -169,6 +187,51 @@ export const pt: Messages = {
     nothingBody: "Tente só o código da linha, como B10, ou parte do nome do ponto.",
     routes: "Linhas",
     stops: "Estações e pontos",
+    places: "Lugares",
+    placeholderPlaces: "Linha, ponto ou para onde você vai",
+    placesHint: "Você também pode escrever para onde vai, como um shopping, um hospital ou um bairro, e dizemos como chegar.",
+    placeHint: "Mostra como chegar de onde você está",
+  },
+
+  placeKinds: { mall: "Comércio", health: "Saúde", education: "Escola ou universidade", park: "Parque ou esporte", neighbourhood: "Bairro", transit: "Terminal", other: "Lugar" },
+
+  trip: {
+    title: "Como chegar",
+    fromHere: "De onde você está",
+    options: "Opções",
+    steps: "Passo a passo",
+    duration: (hours, minutes) => (hours ? `${hours} h ${minutes} min` : `${minutes} min`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `Saia às ${time}`,
+    walked: (meters) => `${meters} m a pé`,
+    onFoot: "A pé",
+    walk: (meters, minutes) => `Caminhe ${meters} m, ${minutes} min`,
+    walkTo: (name) => `até ${name}`,
+    walkToEnd: "até o seu destino",
+    ride: (code, toward) => `Pegue a ${code} sentido ${toward}`,
+    rideAt: (time, stops) => `Passa às ${time} · ${stops} ${stops === 1 ? "parada" : "paradas"}`,
+    getOff: (name, time) => `Desça em ${name} às ${time}`,
+    arrive: (name) => `Você chega a ${name}`,
+    choose: "Mostra esta opção no mapa, passo a passo",
+    chosen: "Opção escolhida",
+    needLocation: {
+      title: "Precisamos saber onde você está",
+      body: "A viagem é calculada no seu celular com o horário publicado. Sua localização não sai dele.",
+      action: "Usar minha localização",
+    },
+    outside: (city) => `Para planejar uma viagem você precisa estar em ${city}.`,
+    none: {
+      title: "Não encontramos como chegar",
+      body: (operator) => `A esta hora nenhum ônibus da ${operator} deixa você perto, ou o lugar fica longe das linhas.`,
+    },
+    failed: { title: "Não conseguimos planejar a viagem", body: "Tente de novo em um momento." },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}. Saia às ${leave}, chegue às ${arrive}. ${routes}. ${meters} metros a pé.`,
+      duration: (hours, minutes) =>
+        [hours ? `${hours} ${hours === 1 ? "hora" : "horas"}` : "", minutes ? `${minutes} ${minutes === 1 ? "minuto" : "minutos"}` : ""].filter(Boolean).join(" e "),
+      onFoot: "A pé o caminho todo",
+      routes: (codes) => `Na ${codes.join(", depois na ")}`,
+    },
   },
 
   about: {
@@ -270,19 +333,12 @@ export const pt: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "Uma nota da Croma",
-      title: "O Paradero é de Bogotá.",
-      body: "Nós o criamos na Croma como um bem público digital: gratuito, de código aberto e sem anúncios, feito com os dados abertos da TransMilenio.",
-      body2: "Nós o oferecemos à Prefeitura de Bogotá e à TransMilenio para que o adotem e o tornem seu. Enquanto isso, cuidamos dele com você.",
-      sign: "A equipe da Croma",
       rail: "Bens Públicos Digitais",
       next: "Continuar",
     },
     byCroma: "Um bem público da Croma",
     by: "por",
-    eyebrow: "Um bem público para Bogotá",
     title: "Seu ônibus, sem adivinhar.",
-    body: "Quando seu ônibus chega, do ponto da esquina até o terminal. TransMilenio, SITP e alimentadores em um só lugar.",
     start: "Começar",
     promise: "Grátis · Sem conta · Sem anúncios",
     locationEyebrow: "Sua localização",
@@ -295,7 +351,6 @@ export const pt: Messages = {
     asking: "Um momento…",
     allow: "Permitir localização",
     skip: "Agora não",
-    preview: { name: "C.C. Lourdes", meta: "Ponto · 58 m · 1 min a pé", eta: "4 min", label: "Exemplo: C.C. Lourdes, o próximo ônibus chega em 4 minutos" },
   },
 
   notFound: {

@@ -1,6 +1,7 @@
 import { ApiError } from "@/lib/http";
-import type { Arrival, Feed, Nearby, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
+import type { Arrival, Feed, Nearby, Place, PlaceKind, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
 
+import { metres, plan } from "./planner";
 import type { Point, TransitSource } from "./types";
 
 /**
@@ -27,6 +28,8 @@ export interface CityData {
   patterns: [number, number[], number[], Partial<Record<Day, number[]>>, number?][];
   /** Route lines along the streets, as encoded polylines. */
   paths?: string[];
+  /** Places from OpenStreetMap: name, lat, lon, kind, and the neighbourhood it is in (an index here, or -1). */
+  places?: [string, number, number, PlaceKind, number][];
 }
 
 interface Pattern {
@@ -49,6 +52,9 @@ interface Index {
   patterns: Pattern[];
   /** For each stop: the patterns that call there and where in the pattern. */
   calls: { pattern: number; at: number }[][];
+  places: (Omit<Place, "distanceM"> & { words: string; core: string })[];
+  /** Each pattern's trips for one day, today's and then tomorrow's, kept for the day they were worked out for. */
+  trips: { day: string; list: number[][] } | null;
 }
 
 const NEARBY_M = 700;
@@ -64,13 +70,15 @@ const plain = (text: string) =>
     .toLowerCase()
     .trim();
 
-function metres(a: Point, b: Point): number {
-  const rad = Math.PI / 180;
-  const dLat = (b.lat - a.lat) * rad;
-  const dLon = (b.lon - a.lon) * rad;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dLon / 2) ** 2;
-  return 2 * 6_371_000 * Math.asin(Math.sqrt(h));
-}
+/** Letters and digits only, so "cc viva" finds "C. C. Viva". */
+const compact = (text: string) => plain(text).replace(/[^\p{L}\p{N}]+/gu, "");
+
+/** What a place is called without the word that says what kind it is: "C. C. Viva" is "Viva". */
+const GENERIC = /^(c\.?\s*c\.?|centro comercial|barrio|urbanizacion|hospital|clinica|colegio|universidad|parque|estadio|supermercado|iglesia|parroquia)\s+/;
+const core = (name: string) => compact(plain(name).replace(GENERIC, ""));
+
+/** Among places that match as well, the kinds people most often go to first. */
+const KIND_ORDER: Record<PlaceKind, number> = { mall: 0, transit: 1, education: 2, park: 3, neighbourhood: 4, health: 5, other: 6 };
 
 /** The city's clock: which timetable runs today and how many minutes of it have gone by. */
 function cityClock(now: Date): { day: Day; tomorrow: Day; minute: number } {
@@ -129,6 +137,9 @@ function build(data: CityData): Index {
     return { id, name, kind: station ? ("station" as const) : ("stop" as const), lat, lon, accessible: accessible === 1, routes: serving };
   });
 
+  const raw = data.places ?? [];
+  const places = raw.map(([name, lat, lon, kind, area], i) => ({ id: `place-${i}`, name, lat, lon, kind, area: raw[area]?.[0] ?? null, words: compact(name), core: core(name) }));
+
   // The timetable's own date: shown as "last updated", so a rider can tell how old it is.
   const asOf = data.validUntil ? `${data.validUntil}T00:00:00-05:00` : new Date(0).toISOString();
   return {
@@ -140,7 +151,20 @@ function build(data: CityData): Index {
     routeById: new Map(routes.map((r, i) => [r.id, i])),
     patterns,
     calls,
+    places,
+    trips: null,
   };
+}
+
+/** Each pattern's trips from its first stop: today's, then tomorrow's, so a trip late at night can still be planned. */
+function tripsFor(index: Index, now: Date): number[][] {
+  const { day, tomorrow } = cityClock(now);
+  const key = `${day}:${tomorrow}`;
+  if (index.trips?.day !== key) {
+    const list = index.patterns.map((p) => [...(p.departures[day] ?? []), ...(p.departures[tomorrow] ?? []).map((m) => m + 24 * 60)].sort((a, b) => a - b));
+    index.trips = { day: key, list };
+  }
+  return index.trips.list;
 }
 
 function arrivalsAt(index: Index, stop: number, now: Date): Arrival[] {
@@ -205,9 +229,11 @@ export function localSource(read: () => Promise<CityData>): TransitSource {
       return { stops };
     },
 
-    async search(query) {
+    async search(query, near) {
       const index = await load();
       const q = plain(query);
+      const words = compact(query);
+      const far = (p: Point) => (near ? Math.round(metres(near, p)) : null);
       // A route's code first, then its name; exact codes ahead of codes that only start the same.
       const routes = index.routes
         .map((r) => ({ r, rank: plain(r.code) === q ? 0 : plain(r.code).startsWith(q) ? 1 : plain(r.name).includes(q) ? 2 : 9 }))
@@ -219,8 +245,37 @@ export function localSource(read: () => Promise<CityData>): TransitSource {
         .filter((s) => plain(s.name).includes(q))
         .sort((a, b) => Number(b.kind === "station") - Number(a.kind === "station") || a.name.localeCompare(b.name, "es"))
         .slice(0, SEARCH_MAX)
-        .map((s) => ({ ...s, distanceM: null }));
-      return { stops, routes };
+        .map((s) => ({ ...s, distanceM: far(s) }));
+      // The place called just what was typed first ("viva" is C. C. Viva), then names that start with it, then
+      // names with a word that does; among those, the kinds people go to most, then the closest.
+      const places: Place[] = words.length < 2 ? [] : index.places
+        .map((p) => ({
+          p,
+          rank: p.core === words || p.words === words ? 0 : p.words.startsWith(words) || p.core.startsWith(words) ? 1 : plain(p.name).split(/\s+/).some((w) => compact(w).startsWith(words)) ? 2 : p.words.includes(words) ? 3 : 9,
+        }))
+        .filter((x) => x.rank < 9)
+        .map(({ p, rank }) => ({ rank, place: { id: p.id, name: p.name, kind: p.kind, lat: p.lat, lon: p.lon, area: p.area, distanceM: far(p) } }))
+        .sort(
+          (a, b) =>
+            a.rank - b.rank ||
+            (near ? (a.place.distanceM ?? 0) - (b.place.distanceM ?? 0) : KIND_ORDER[a.place.kind] - KIND_ORDER[b.place.kind]) ||
+            a.place.name.localeCompare(b.place.name, "es"),
+        )
+        .slice(0, SEARCH_MAX)
+        .map((x) => x.place);
+      return { stops, routes, places };
+    },
+
+    async plan(from, to) {
+      const index = await load();
+      const now = new Date();
+      const clock = cityClock(now);
+      const startOfMinute = Math.floor(now.getTime() / 60_000) * 60_000;
+      const journeys = plan(index, tripsFor(index, now), from, to, {
+        minute: clock.minute,
+        at: (minute) => new Date(startOfMinute + (minute - clock.minute) * 60_000).toISOString(),
+      });
+      return { feed: index.feed, journeys };
     },
 
     async stop(id): Promise<StopDetail> {

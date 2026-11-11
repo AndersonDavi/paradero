@@ -100,8 +100,26 @@ export const de: Messages = {
   },
 
   places: {
-    bogota: { fallbackArea: "In Chapinero", outside: "Du scheinst nicht in Bogotá zu sein. Wir zeigen dir Chapinero; oben kannst du jede andere Haltestelle suchen." },
-    barranquilla: { fallbackArea: "In der Innenstadt", outside: "Du scheinst nicht in Barranquilla zu sein. Wir zeigen dir die Innenstadt; oben kannst du jede andere Haltestelle suchen." },
+    bogota: {
+      fallbackArea: "In Chapinero",
+      outside: "Du scheinst nicht in Bogotá zu sein. Wir zeigen dir Chapinero; oben kannst du jede andere Haltestelle suchen.",
+      onboarding: {
+        eyebrow: "Ein Gemeingut für Bogotá",
+        body: "Wann dein Bus kommt, von der Haltestelle an der Ecke bis zum Terminal. TransMilenio, SITP und Zubringer an einem Ort.",
+        note: { eyebrow: "Eine Notiz von Croma", title: "Paradero gehört Bogotá.", body: "Wir haben es bei Croma als digitales Gemeingut gebaut: kostenlos, Open Source und werbefrei, aus den offenen Daten von TransMilenio.", body2: "Wir bieten es der Stadt Bogotá und TransMilenio an, damit sie es übernehmen und zu ihrem machen. Bis dahin kümmern wir uns gemeinsam mit dir darum.", sign: "Das Croma-Team" },
+        preview: { name: "C.C. Lourdes", meta: "Haltestelle · 58 m · 1 Min. zu Fuß", eta: "4 Min.", label: "Beispiel: C.C. Lourdes, der nächste Bus kommt in 4 Minuten" },
+      },
+    },
+    barranquilla: {
+      fallbackArea: "In der Innenstadt",
+      outside: "Du scheinst nicht in Barranquilla zu sein. Wir zeigen dir die Innenstadt; oben kannst du jede andere Haltestelle suchen.",
+      onboarding: {
+        eyebrow: "Ein öffentliches Gut für Barranquilla",
+        body: "Wann dein Bus kommt und wie du an dein Ziel kommst, von der Haltestelle an der Ecke bis zum Terminal. Transmetro und Zubringer an einem Ort.",
+        note: { eyebrow: "Eine Notiz", title: "Paradero kommt nach Barranquilla.", body: "Croma hat es für Bogotá als digitales öffentliches Gut gebaut: kostenlos, quelloffen und ohne Werbung. Diese Version bringt es mit dem veröffentlichten Fahrplan von Transmetro nach Barranquilla.", body2: "Transmetro veröffentlicht noch nicht, wo seine Busse sind. Jede Zeit stammt also aus dem Fahrplan, und das sagen wir immer. Sobald es Live-Daten gibt, erscheinen sie hier.", sign: null },
+        preview: { name: "Joaquín Barrios Polo", meta: "Station · 58 m · 1 Min. zu Fuß", eta: "4 Min.", label: "Beispiel: Joaquín Barrios Polo, der nächste Bus kommt in 4 Minuten" },
+      },
+    },
   },
 
   common: { retry: "Erneut versuchen", station: "Station", stop: "Haltestelle", accessible: "Barrierefrei", done: "Fertig", close: "Schließen", clear: "Löschen" },
@@ -169,6 +187,51 @@ export const de: Messages = {
     nothingBody: "Versuche nur den Liniencode, etwa B10, oder einen Teil des Haltestellennamens.",
     routes: "Linien",
     stops: "Stationen und Haltestellen",
+    places: "Orte",
+    placeholderPlaces: "Linie, Haltestelle oder Ziel",
+    placesHint: "Du kannst auch eingeben, wohin du willst, etwa ein Einkaufszentrum, ein Krankenhaus oder ein Viertel, und wir zeigen dir den Weg.",
+    placeHint: "Zeigt den Weg von deinem Standort",
+  },
+
+  placeKinds: { mall: "Einkaufen", health: "Gesundheit", education: "Schule oder Universität", park: "Park oder Sport", neighbourhood: "Viertel", transit: "Terminal", other: "Ort" },
+
+  trip: {
+    title: "Wie komme ich hin",
+    fromHere: "Von deinem Standort",
+    options: "Möglichkeiten",
+    steps: "Schritt für Schritt",
+    duration: (hours, minutes) => (hours ? `${hours} Std. ${minutes} Min.` : `${minutes} Min.`),
+    span: (leave, arrive) => `${leave} → ${arrive}`,
+    leave: (time) => `Los um ${time}`,
+    walked: (meters) => `${meters} m zu Fuß`,
+    onFoot: "Zu Fuß",
+    walk: (meters, minutes) => `${meters} m gehen, ${minutes} Min.`,
+    walkTo: (name) => `bis ${name}`,
+    walkToEnd: "bis zu deinem Ziel",
+    ride: (code, toward) => `Nimm die ${code} Richtung ${toward}`,
+    rideAt: (time, stops) => `Kommt um ${time} · ${stops} ${stops === 1 ? "Haltestelle" : "Haltestellen"}`,
+    getOff: (name, time) => `Steig um ${time} an ${name} aus`,
+    arrive: (name) => `Du erreichst ${name}`,
+    choose: "Zeigt diese Möglichkeit auf der Karte, Schritt für Schritt",
+    chosen: "Gewählte Möglichkeit",
+    needLocation: {
+      title: "Wir müssen wissen, wo du bist",
+      body: "Die Fahrt wird auf deinem Handy aus dem veröffentlichten Fahrplan berechnet. Dein Standort verlässt es nicht.",
+      action: "Meinen Standort verwenden",
+    },
+    outside: (city) => `Um eine Fahrt zu planen, musst du in ${city} sein.`,
+    none: {
+      title: "Kein Weg gefunden",
+      body: (operator) => `Um diese Zeit bringt dich kein ${operator}-Bus in die Nähe, oder der Ort liegt weit von seinen Linien.`,
+    },
+    failed: { title: "Wir konnten die Fahrt nicht planen", body: "Versuch es gleich noch einmal." },
+    speech: {
+      option: (duration, leave, arrive, routes, meters) => `${duration}. Los um ${leave}, Ankunft um ${arrive}. ${routes}. ${meters} Meter zu Fuß.`,
+      duration: (hours, minutes) =>
+        [hours ? `${hours} ${hours === 1 ? "Stunde" : "Stunden"}` : "", minutes ? `${minutes} ${minutes === 1 ? "Minute" : "Minuten"}` : ""].filter(Boolean).join(" und "),
+      onFoot: "Den ganzen Weg zu Fuß",
+      routes: (codes) => `Mit ${codes.join(", dann ")}`,
+    },
   },
 
   about: {
@@ -270,19 +333,12 @@ export const de: Messages = {
 
   onboarding: {
     note: {
-      eyebrow: "Eine Notiz von Croma",
-      title: "Paradero gehört Bogotá.",
-      body: "Wir haben es bei Croma als digitales Gemeingut gebaut: kostenlos, Open Source und werbefrei, aus den offenen Daten von TransMilenio.",
-      body2: "Wir bieten es der Stadt Bogotá und TransMilenio an, damit sie es übernehmen und zu ihrem machen. Bis dahin kümmern wir uns gemeinsam mit dir darum.",
-      sign: "Das Croma-Team",
       rail: "Digitale Gemeingüter",
       next: "Weiter",
     },
     byCroma: "Ein Gemeingut von Croma",
     by: "von",
-    eyebrow: "Ein Gemeingut für Bogotá",
     title: "Dein Bus, ohne Raten.",
-    body: "Wann dein Bus kommt, von der Haltestelle an der Ecke bis zum Terminal. TransMilenio, SITP und Zubringer an einem Ort.",
     start: "Los geht’s",
     promise: "Kostenlos · Kein Konto · Keine Werbung",
     locationEyebrow: "Dein Standort",
@@ -295,7 +351,6 @@ export const de: Messages = {
     asking: "Einen Moment…",
     allow: "Standort erlauben",
     skip: "Jetzt nicht",
-    preview: { name: "C.C. Lourdes", meta: "Haltestelle · 58 m · 1 Min. zu Fuß", eta: "4 Min.", label: "Beispiel: C.C. Lourdes, der nächste Bus kommt in 4 Minuten" },
   },
 
   notFound: {
