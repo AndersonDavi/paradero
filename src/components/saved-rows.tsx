@@ -5,7 +5,7 @@ import { StyleSheet, View } from "react-native";
 
 import { useT } from "@/i18n";
 import { useLargeText } from "@/lib/accessibility";
-import { usePlan } from "@/lib/api";
+import { useTrip } from "@/lib/api";
 import { useClock } from "@/lib/appearance";
 import { clock } from "@/lib/format";
 import { useLocation } from "@/lib/location";
@@ -19,12 +19,18 @@ import { Tile } from "./tile";
 
 type Point = { name: string; lat: number; lon: number };
 
-/** Opens How to get there, from one of the rider's places or from where they are. */
-export function openTrip(to: Point, from: Point | null = null) {
+/** Opens How to get there, from one of the rider's places or from where they are, with any stops after the first. */
+export function openTrip(to: Point, from: Point | null = null, then: SavedTrip["then"] = []) {
   void Haptics.selectionAsync();
   router.push({
     pathname: "/trip",
-    params: { name: to.name, lat: String(to.lat), lon: String(to.lon), ...(from ? { fromName: from.name, fromLat: String(from.lat), fromLon: String(from.lon) } : {}) },
+    params: {
+      name: to.name,
+      lat: String(to.lat),
+      lon: String(to.lon),
+      ...(from ? { fromName: from.name, fromLat: String(from.lat), fromLon: String(from.lon) } : {}),
+      ...(then?.length ? { then: JSON.stringify(then) } : {}),
+    },
   });
 }
 
@@ -76,12 +82,15 @@ export function SavedTripRow({ trip }: { trip: SavedTrip }) {
   useClock();
   const { state } = useLocation();
   const from = trip.from ?? (state.status === "ready" ? { lat: state.lat, lon: state.lon } : null);
-  const { data } = usePlan(from, trip.to);
-  const next = data?.journeys.find((j) => j.rides > 0) ?? data?.journeys[0];
-  const title = t.trip.pair(trip.from?.name ?? t.trip.here, trip.to.name);
-  const detail = next ? t.trip.next(clock(next.departs), clock(next.arrives)) : data ? t.trip.noneToday : null;
+  const later = trip.then ?? [];
+  const { data } = useTrip(from, [{ ...trip.to, stay: 0 }, ...later], 0);
+  const next = data?.first[0];
+  // When to leave for the first bus, and when the last stop is reached.
+  const end = data && later.length ? data.then[data.then.length - 1] : next;
+  const title = [trip.from?.name ?? t.trip.here, trip.to.name, ...later.map((s) => s.name)].reduce((a, b) => t.trip.pair(a, b));
+  const detail = next && end ? t.trip.next(clock(next.departs), clock(end.arrives)) : data ? t.trip.noneToday : null;
   return (
-    <PressableScale accessibilityRole="button" accessibilityLabel={[title, detail].filter(Boolean).join(". ")} onPress={() => openTrip(trip.to, trip.from)} style={styles.row}>
+    <PressableScale accessibilityRole="button" accessibilityLabel={[title, detail].filter(Boolean).join(". ")} onPress={() => openTrip(trip.to, trip.from, trip.then)} style={styles.row}>
       <Tile>
         <Icon name={icons.directions} color={p.text} size="md" />
       </Tile>

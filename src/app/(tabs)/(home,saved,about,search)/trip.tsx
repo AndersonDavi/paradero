@@ -1,12 +1,13 @@
 import * as Haptics from "expo-haptics";
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { PressableScale } from "pressto";
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 
 import { toast } from "sonner-native";
 
 import { city } from "@/cities";
+import { Button } from "@/components/button";
 import { Chip } from "@/components/chip";
 import { DetailScreen } from "@/components/detail-screen";
 import { FeedStatus } from "@/components/feed-status";
@@ -20,7 +21,8 @@ import { TransitMap } from "@/components/transit-map";
 import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
-import { usePlan } from "@/lib/api";
+import { useTrip } from "@/lib/api";
+import { pickStop } from "@/lib/pick-stop";
 import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
 import { useLocation } from "@/lib/location";
@@ -29,15 +31,46 @@ import { photo, systems, usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
 import type { Journey, Leg } from "@/transit/types";
 
-/** The place itself, drawn on the map among the stops. */
+/** The places themselves, drawn on the map among the bus stops. */
 const DESTINATION = "destination";
+
+/** How long a rider can say they stay at a stop before going on, in minutes. */
+const STAYS = [0, 15, 30, 60];
+
+interface Later {
+  name: string;
+  lat: number;
+  lon: number;
+  /** Minutes at the stop before this one. */
+  stay: number;
+}
+
+/** The stops after the first, as the screen keeps them in its address: a small JSON list. */
+function parseLater(text: string | undefined): Later[] {
+  if (!text) return [];
+  try {
+    const list = JSON.parse(text) as Later[];
+    return Array.isArray(list) ? list.filter((x) => Number.isFinite(x.lat) && Number.isFinite(x.lon)).map((x) => ({ ...x, stay: Number(x.stay) || 0 })) : [];
+  } catch {
+    return [];
+  }
+}
 
 /**
  * How to get to a place, from where the rider is or from one of their places: a few ways to choose from, and the
  * chosen one step by step. The place can be kept as home, work or a saved place, and the trip itself saved.
  */
 export default function TripScreen() {
-  const { name, lat, lon, fromName, fromLat, fromLon } = useLocalSearchParams<{ name?: string; lat?: string; lon?: string; fromName?: string; fromLat?: string; fromLon?: string }>();
+  const { name, lat, lon, fromName, fromLat, fromLon, then } = useLocalSearchParams<{
+    name?: string;
+    lat?: string;
+    lon?: string;
+    fromName?: string;
+    fromLat?: string;
+    fromLon?: string;
+    then?: string;
+  }>();
+  const p = usePalette();
   const t = useT();
   // Times follow the rider's 12 or 24 hour clock; this redraws them when it changes.
   useClock();
@@ -53,21 +86,27 @@ export default function TripScreen() {
     return fromLat && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : null;
   }, [fromLat, fromLon]);
   const from = start ?? (here.status === "ready" ? { lat: here.lat, lon: here.lon } : null);
+  // Every stop in order: the first is the place the screen opened for, the rest were added.
+  const later = useMemo(() => parseLater(then), [then]);
+  const stops = useMemo(() => (to ? [{ name: name ?? "", ...to, stay: 0 }, ...later] : []), [to, name, later]);
+  const final = stops[stops.length - 1];
   const saved = useSaved();
   const places = placesInOrder(saved);
   const destination = to ? places.find((p) => p.id === placeId(to)) : undefined;
   const trip = to ? { from: start ? { name: fromName ?? "", ...start } : null, to: { name: name ?? "", ...to } } : null;
-  const tripSaved = useIsSaved("trip", trip ? tripId(trip.from, trip.to) : undefined);
-  const { data, isLoading, isError, refetch } = usePlan(from, to);
+  const tripSaved = useIsSaved("trip", trip ? tripId(trip.from, trip.to, later) : undefined);
   const [chosen, setChosen] = useState(0);
-  const journeys = data?.journeys ?? [];
+  const { data, isLoading, isError, refetch } = useTrip(from, stops, chosen);
+  const journeys = data?.first ?? [];
   const journey: Journey | undefined = journeys[Math.min(chosen, journeys.length - 1)];
+  // The way to the first stop the rider chose, then the soonest way on from each stop to the next.
+  const chain = useMemo(() => [journey, ...(data?.then ?? [])].filter((j): j is Journey => !!j), [journey, data]);
   const map = useRef<MapHandle>(null);
 
-  const path = useMemo(() => journey?.legs.flatMap((l) => l.path) ?? [], [journey]);
-  const legs = useMemo(() => journey?.legs.map((l) => ({ kind: l.kind, path: l.path })) ?? [], [journey]);
+  const path = useMemo(() => chain.flatMap((j) => j.legs.flatMap((l) => l.path)), [chain]);
+  const legs = useMemo(() => chain.flatMap((j) => j.legs.map((l) => ({ kind: l.kind, path: l.path }))), [chain]);
   // The plan is worked out again every minute; the map only moves when the way itself changes.
-  const way = journey?.legs.map((l) => (l.kind === "ride" ? `${l.route.id}:${l.from.id}:${l.to.id}` : "walk")).join("|") ?? "";
+  const way = chain.flatMap((j) => j.legs.map((l) => (l.kind === "ride" ? `${l.route.id}:${l.from.id}:${l.to.id}` : "walk"))).join("|");
   const latest = useRef(path);
   useEffect(() => {
     latest.current = path;
@@ -84,10 +123,10 @@ export default function TripScreen() {
     announce(count ? `${t.trip.options}: ${count}` : t.trip.none.title);
   }, [data, count, t]);
 
-  const stops = useMemo(() => {
+  const mapStops = useMemo(() => {
     // Where the rider gets on and off, drawn large; the stops the bus passes between, small, to count them.
-    const list =
-      journey?.legs.flatMap((l) =>
+    const list = chain.flatMap((j) =>
+      j.legs.flatMap((l) =>
         l.kind === "ride"
           ? [
               { ...l.from, system: l.route.system, kind: "station" as const, tone: "focus" as const },
@@ -95,11 +134,31 @@ export default function TripScreen() {
               { ...l.to, system: l.route.system, kind: "station" as const, tone: "focus" as const },
             ]
           : [],
-      ) ?? [];
+      ),
+    );
     const unique = [...new Map(list.map((s) => [s.id, s])).values()];
-    return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const, system: "other" as const, tone: "focus" as const }] : unique;
-  }, [journey, to, name]);
+    const places = stops.map((s, i) => ({ id: `${DESTINATION}-${i}`, name: s.name, lat: s.lat, lon: s.lon, kind: "station" as const, system: "other" as const, tone: "focus" as const }));
+    return [...unique, ...places];
+  }, [chain, stops]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
+
+  // The stops after the first live in the screen's address, so they survive going back and forth. This screen's own
+  // navigation sets them, so a stop chosen on the screen above lands here and not there.
+  const navigation = useNavigation();
+  const setParams = (params: Record<string, string | undefined>) => navigation.setParams(params as never);
+  const setLater = (list: Later[]) => setParams({ then: list.length ? JSON.stringify(list) : undefined });
+  const addStop = () => pickStop((stop) => setLater([...later, { ...stop, stay: 0 }]));
+  const removeStop = (i: number) => {
+    void Haptics.selectionAsync();
+    if (i > 0) return setLater(later.filter((_, k) => k !== i - 1));
+    const [next, ...rest] = later;
+    if (next) setParams({ name: next.name, lat: String(next.lat), lon: String(next.lon), then: rest.length ? JSON.stringify(rest) : undefined });
+  };
+  /** Minutes the rider stays at stop i before going on to the next one. */
+  const setStay = (i: number, minutes: number) => {
+    void Haptics.selectionAsync();
+    setLater(later.map((s, k) => (k === i ? { ...s, stay: minutes } : s)));
+  };
 
   const keep = (label: SavedPlace["label"]) => {
     if (!to) return;
@@ -111,7 +170,7 @@ export default function TripScreen() {
 
   const saveTrip = () => {
     if (!trip) return;
-    const added = toggleTrip(trip.from, trip.to);
+    const added = toggleTrip(trip.from, trip.to, later);
     void Haptics.notificationAsync(added ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning);
     if (added) toast.success(t.trip.savedTrip.title, { description: t.trip.savedTrip.body });
     else toast(t.trip.removedTrip);
@@ -120,7 +179,7 @@ export default function TripScreen() {
 
   const leaveFrom = (place: SavedPlace | null) => {
     void Haptics.selectionAsync();
-    router.setParams(place ? { fromName: place.name, fromLat: String(place.lat), fromLon: String(place.lon) } : { fromName: undefined, fromLat: undefined, fromLon: undefined });
+    setParams(place ? { fromName: place.name, fromLat: String(place.lat), fromLon: String(place.lon) } : { fromName: undefined, fromLat: undefined, fromLon: undefined });
   };
   const origins = places.filter((p) => p.id !== destination?.id);
   const placeName = (p: SavedPlace) => (p.label === "home" ? t.saved.home : p.label === "work" ? t.saved.work : p.name);
@@ -141,9 +200,9 @@ export default function TripScreen() {
             zoom={14}
             legs={legs}
             system={system}
-            stops={stops}
+            stops={mapStops}
             padding={layout.mapInset}
-            onStopPress={(id) => id !== DESTINATION && router.push({ pathname: "/stop/[id]", params: { id } })}
+            onStopPress={(id) => !id.startsWith(DESTINATION) && router.push({ pathname: "/stop/[id]", params: { id } })}
           />
         }>
         <View style={styles.header}>
@@ -151,14 +210,46 @@ export default function TripScreen() {
             {t.trip.title}
           </Text>
           <Text variant="heading" accessibilityRole="header">
-            {name}
+            {final?.name ?? name}
           </Text>
           <Text variant="callout" tone="muted">
-            {start ? t.trip.fromPlace(fromName ?? "") : t.trip.fromHere}
+            {[start ? t.trip.fromPlace(fromName ?? "") : t.trip.fromHere, later.length ? t.trip.withStops(later.length) : null].filter(Boolean).join("  ·  ")}
           </Text>
         </View>
 
-        {to && (
+        {to && stops.length > 1 && (
+          <View style={styles.list}>
+            <Text variant="title" accessibilityRole="header">
+              {t.trip.stops}
+            </Text>
+            {stops.map((s, i) => (
+              <View key={`${i}-${s.lat},${s.lon}`} style={styles.stop}>
+                <View style={styles.stopRow}>
+                  <Text variant="headline" tabular style={styles.stopNumber}>
+                    {i + 1}
+                  </Text>
+                  <Text variant="headline" style={styles.stopName}>
+                    {s.name}
+                  </Text>
+                  <Pressable accessibilityRole="button" accessibilityLabel={t.trip.removeStop(s.name)} onPress={() => removeStop(i)} hitSlop={space[3]}>
+                    <Icon name={icons.close} color={p.faint} size="sm" />
+                  </Pressable>
+                </View>
+                {i < stops.length - 1 && (
+                  <View accessibilityRole="radiogroup" accessibilityLabel={s.name} style={styles.chips}>
+                    {STAYS.map((m) => (
+                      <Chip key={m} radio label={t.trip.stayFor(m)} accessibilityLabel={`${t.trip.stayFor(m)}, ${s.name}`} selected={later[i].stay === m} onPress={() => setStay(i, m)} />
+                    ))}
+                  </View>
+                )}
+              </View>
+            ))}
+          </View>
+        )}
+
+        {to && <Button variant="secondary" height="md" label={t.trip.addStop} onPress={addStop} />}
+
+        {to && stops.length === 1 && (
           <View style={styles.chips}>
             <Chip label={t.trip.asHome} selected={destination?.label === "home"} onPress={() => keep("home")} />
             <Chip label={t.trip.asWork} selected={destination?.label === "work"} onPress={() => keep("work")} />
@@ -199,7 +290,22 @@ export default function TripScreen() {
                 <Option key={i} journey={j} selected={j === journey} onPress={() => pick(i)} />
               ))}
             </View>
-            {journey && <Steps journey={journey} name={name ?? ""} />}
+            {journey && <Steps journey={journey} name={name ?? ""} stay={later[0]?.stay} />}
+            {later.map((s, i) => {
+              const leg = data.then[i];
+              return leg ? (
+                <Steps key={`${i}-${s.lat},${s.lon}`} journey={leg} name={s.name} stay={later[i + 1]?.stay} title={t.trip.thenTo(s.name)} />
+              ) : (
+                <View key={`${i}-${s.lat},${s.lon}`} style={styles.list}>
+                  <Text variant="title" accessibilityRole="header">
+                    {t.trip.thenTo(s.name)}
+                  </Text>
+                  <Text variant="callout" tone="muted">
+                    {t.trip.noLeg}
+                  </Text>
+                </View>
+              );
+            })}
           </>
         )}
       </DetailScreen>
@@ -257,7 +363,7 @@ interface Step {
   leg?: Extract<Leg, { kind: "ride" }>;
 }
 
-function Steps({ journey, name }: { journey: Journey; name: string }) {
+function Steps({ journey, name, stay, title }: { journey: Journey; name: string; stay?: number; title?: string }) {
   const p = usePalette();
   const t = useT();
   const large = useLargeText();
@@ -270,12 +376,12 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
       { key: `o${i}`, icon: "off", title: t.trip.getOff(l.to.name, clock(l.arrives)) },
     ];
   });
-  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: clock(journey.arrives) });
+  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: [clock(journey.arrives), stay ? t.trip.stayThere(stay) : null].filter(Boolean).join("  ·  ") });
 
   return (
     <View>
       <Text variant="title" accessibilityRole="header" style={styles.heading}>
-        {t.trip.steps}
+        {title ?? t.trip.steps}
       </Text>
       {steps.map((s, i) => {
         if (s.icon === "pass") {
@@ -341,6 +447,10 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
 const styles = StyleSheet.create({
   header: { gap: space[2] },
   chips: { flexDirection: "row", flexWrap: "wrap", gap: space[2] },
+  stop: { gap: space[2] },
+  stopRow: { flexDirection: "row", alignItems: "center", gap: space[3] },
+  stopNumber: { minWidth: size.icon.md },
+  stopName: { flex: 1 },
   from: { gap: space[2] },
   list: { gap: space[3] },
   option: { padding: space[4], borderRadius: radius.lg, borderCurve: "continuous", gap: space[2] },

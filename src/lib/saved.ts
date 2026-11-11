@@ -38,6 +38,8 @@ export interface SavedTrip {
   id: string;
   from: { name: string; lat: number; lon: number } | null;
   to: { name: string; lat: number; lon: number };
+  /** Stops after `to`, in order, each with the minutes spent at the stop before it. */
+  then?: { name: string; lat: number; lon: number; stay: number }[];
 }
 
 export type Saved = SavedStop | SavedRoute | SavedPlace | SavedTrip;
@@ -45,7 +47,8 @@ export type Saved = SavedStop | SavedRoute | SavedPlace | SavedTrip;
 /** One id per point, so the same place saved twice is one place. */
 const at = (p: { lat: number; lon: number }) => `${p.lat.toFixed(5)},${p.lon.toFixed(5)}`;
 export const placeId = at;
-export const tripId = (from: { lat: number; lon: number } | null, to: { lat: number; lon: number }) => `${from ? at(from) : "here"}>${at(to)}`;
+export const tripId = (from: { lat: number; lon: number } | null, to: { lat: number; lon: number }, then: { lat: number; lon: number; stay: number }[] = []) =>
+  [`${from ? at(from) : "here"}>${at(to)}`, ...then.map((s) => `${at(s)}+${s.stay}`)].join(">");
 
 const KEY = "saved.v1";
 const listeners = new Set<() => void>();
@@ -120,13 +123,13 @@ export function setPlace(place: { name: string; lat: number; lon: number }, labe
   return true;
 }
 
-export function toggleTrip(from: SavedTrip["from"], to: SavedTrip["to"]): boolean {
-  const id = tripId(from, to);
+export function toggleTrip(from: SavedTrip["from"], to: SavedTrip["to"], then: NonNullable<SavedTrip["then"]> = []): boolean {
+  const id = tripId(from, to, then);
   if (snapshot.some((s) => s.type === "trip" && s.id === id)) {
     write(snapshot.filter((s) => !(s.type === "trip" && s.id === id)));
     return false;
   }
-  write([...snapshot, { type: "trip", id, from, to }]);
+  write([...snapshot, { type: "trip", id, from, to, ...(then.length ? { then } : {}) }]);
   return true;
 }
 

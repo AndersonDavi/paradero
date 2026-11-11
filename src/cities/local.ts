@@ -384,9 +384,10 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       return (await load()).stops;
     },
 
-    async plan(from, to) {
+    async plan(from, to, at) {
       const index = await load();
-      const now = new Date();
+      // Planned for now, or for a later time: the next leg of a trip with stops leaves when the last one arrives.
+      const now = at ? new Date(at) : new Date();
       const clock = cityClock(now);
       const startOfMinute = Math.floor(now.getTime() / 60_000) * 60_000;
       const map = await streets();

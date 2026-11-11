@@ -217,6 +217,16 @@ export const zh: Messages = {
 
   trip: {
     title: "怎么去",
+    stops: "途经点",
+    addStop: "添加途经点",
+    addStopTitle: "你想在哪里停留？",
+    addStopHint: "搜索地点、地址或站点",
+    removeStop: (name) => `移除 ${name}`,
+    stayFor: (minutes) => (minutes ? `停留 ${minutes} 分钟` : "只是路过"),
+    withStops: (n) => `途经 ${n} 处`,
+    thenTo: (name) => `然后前往 ${name}`,
+    stayThere: (minutes) => `停留 ${minutes} 分钟`,
+    noLeg: "这个时间从这里找不到继续前往的方式。",
     save: "保存这个行程",
     unsave: "从你的行程中移除",
     savedTrip: { title: "行程已保存", body: "在“已保存”中可以找到，并显示你该出发的时间。" },

@@ -63,8 +63,9 @@ export default function RootLayout() {
               <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Paradero" }} />
               <Stack.Screen name="report" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
               <Stack.Screen name="card" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
+              <Stack.Screen name="add-stop" options={{ presentation: "formSheet", sheetAllowedDetents: [0.92], sheetGrabberVisible: true, headerShown: false }} />
+              <Stack.Screen name="ajustes" options={{ title: t.settings.title, headerTransparent: process.env.EXPO_OS === "ios" }} />
             </Stack.Protected>
-            <Stack.Screen name="ajustes" options={{ title: t.settings.title, headerTransparent: process.env.EXPO_OS === "ios" }} />
             <Stack.Screen name="privacidad" options={{ title: t.privacy.screen, headerTransparent: process.env.EXPO_OS === "ios" }} />
             <Stack.Protected guard={!onboarded}>
               <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />

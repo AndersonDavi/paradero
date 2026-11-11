@@ -31,7 +31,7 @@ export interface TransitSource {
    * Ways to get from one point to another by bus, for a city whose timetable is on the phone. The rider's
    * position is used exactly, so a city whose answers come from a server leaves this out.
    */
-  plan?(from: Point, to: Point): Promise<Plan>;
+  plan?(from: Point, to: Point, at?: string): Promise<Plan>;
   /** Every stop in the city, for a city whose stops are on the phone: drawn faint around the ones a screen is about. */
   everyStop?(): Promise<Omit<Stop, "distanceM">[]>;
 }

@@ -238,6 +238,16 @@ export const es = {
 
   trip: {
     title: "Cómo llegar",
+    stops: "Paradas",
+    addStop: "Agregar parada",
+    addStopTitle: "¿Dónde quieres parar?",
+    addStopHint: "Busca un lugar, una dirección o un paradero",
+    removeStop: (name: string) => `Quitar ${name}`,
+    stayFor: (minutes: number) => (minutes ? `Me quedo ${minutes} min` : "Solo paso"),
+    withStops: (n: number) => (n === 1 ? "con 1 parada" : `con ${n} paradas`),
+    thenTo: (name: string) => `Luego, hasta ${name}`,
+    stayThere: (minutes: number) => `Te quedas ${minutes} min`,
+    noLeg: "No encontramos cómo seguir desde aquí a esa hora.",
     save: "Guardar este viaje",
     unsave: "Quitar de tus viajes",
     savedTrip: { title: "Viaje guardado", body: "Lo encuentras en Guardados, con la hora a la que debes salir." },

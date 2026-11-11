@@ -3,7 +3,7 @@ import { AppState, Platform } from "react-native";
 
 import { city } from "@/cities";
 import type { ReportInput, ReportResult } from "@/transit/report";
-import type { Nearby, SearchResult, Stop } from "@/transit/types";
+import type { Journey, Nearby, SearchResult, Stop } from "@/transit/types";
 
 import { ApiError } from "./http";
 
@@ -109,6 +109,45 @@ export function usePlan(from: { lat: number; lon: number } | null, to: { lat: nu
     queryKey: ["plan", city.id, from?.lat, from?.lon, to?.lat, to?.lon],
     queryFn: () => source().plan!(from!, to!),
     enabled: canPlan() && !!from && !!to,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
+    refetchInterval: 60_000,
+  });
+}
+
+export interface TripStop {
+  lat: number;
+  lon: number;
+  /** Minutes the rider stays at the stop before this one, before setting off again. */
+  stay: number;
+}
+
+/**
+ * A trip with stops, worked out leg by leg on the phone: the ways to the first stop, and from there, the soonest
+ * way on to each next one, leaving when the rider arrives plus the time they stay. `chosen` is the way to the
+ * first stop the rider picked, which sets when every later leg leaves.
+ */
+export function useTrip(from: { lat: number; lon: number } | null, stops: TripStop[], chosen: number) {
+  return useQuery({
+    queryKey: ["trip", city.id, from?.lat, from?.lon, stops.map((s) => `${s.lat},${s.lon},${s.stay}`).join("|"), chosen],
+    queryFn: async () => {
+      const plan = source().plan!;
+      const first = await plan(from!, stops[0]);
+      const then: (Journey | null)[] = [];
+      let arrives = first.journeys[Math.min(chosen, first.journeys.length - 1)]?.arrives ?? null;
+      for (let i = 1; i < stops.length; i++) {
+        if (!arrives) {
+          then.push(null);
+          continue;
+        }
+        const leave = new Date(Date.parse(arrives) + stops[i].stay * 60_000).toISOString();
+        const leg = (await plan(stops[i - 1], stops[i], leave)).journeys[0] ?? null;
+        then.push(leg);
+        arrives = leg?.arrives ?? null;
+      }
+      return { feed: first.feed, first: first.journeys, then };
+    },
+    enabled: canPlan() && !!from && stops.length > 0,
     placeholderData: keepPreviousData,
     staleTime: 30_000,
     refetchInterval: 60_000,

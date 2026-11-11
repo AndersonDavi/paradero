@@ -221,6 +221,16 @@ export const en: Messages = {
 
   trip: {
     title: "How to get there",
+    stops: "Stops",
+    addStop: "Add a stop",
+    addStopTitle: "Where do you want to stop?",
+    addStopHint: "Search a place, an address or a bus stop",
+    removeStop: (name) => `Remove ${name}`,
+    stayFor: (minutes) => (minutes ? `I stay ${minutes} min` : "Just passing"),
+    withStops: (n) => (n === 1 ? "with 1 stop" : `with ${n} stops`),
+    thenTo: (name) => `Then, to ${name}`,
+    stayThere: (minutes) => `You stay ${minutes} min`,
+    noLeg: "We found no way on from here at that time.",
     save: "Save this trip",
     unsave: "Remove from your trips",
     savedTrip: { title: "Trip saved", body: "Find it in Saved, with the time you need to leave." },

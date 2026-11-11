@@ -221,6 +221,16 @@ export const fr: Messages = {
 
   trip: {
     title: "Comment y aller",
+    stops: "Étapes",
+    addStop: "Ajouter une étape",
+    addStopTitle: "Où voulez-vous vous arrêter ?",
+    addStopHint: "Cherchez un lieu, une adresse ou un arrêt",
+    removeStop: (name) => `Retirer ${name}`,
+    stayFor: (minutes) => (minutes ? `Je reste ${minutes} min` : "Je ne fais que passer"),
+    withStops: (n) => (n === 1 ? "avec 1 étape" : `avec ${n} étapes`),
+    thenTo: (name) => `Ensuite, jusqu'à ${name}`,
+    stayThere: (minutes) => `Vous restez ${minutes} min`,
+    noLeg: "Aucun trajet trouvé pour continuer d'ici à cette heure.",
     save: "Enregistrer ce trajet",
     unsave: "Retirer de vos trajets",
     savedTrip: { title: "Trajet enregistré", body: "Retrouvez-le dans Enregistrés, avec l'heure à laquelle partir." },

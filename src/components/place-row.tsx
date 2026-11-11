@@ -25,8 +25,8 @@ const KIND_ICON: Record<PlaceKind, (typeof icons)[keyof typeof icons]> = {
   address: icons.address,
 };
 
-/** A place a rider can go to. Tapping it shows how to get there from where they are. */
-export function PlaceRow({ place }: { place: Place }) {
+/** A place a rider can go to. Tapping it shows how to get there from where they are, unless the screen says otherwise. */
+export function PlaceRow({ place, onPress }: { place: Place; onPress?: () => void }) {
   const p = usePalette();
   const t = useT();
   const large = useLargeText();
@@ -40,7 +40,8 @@ export function PlaceRow({ place }: { place: Place }) {
       accessibilityHint={t.search.placeHint}
       onPress={() => {
         void Haptics.selectionAsync();
-        router.push({ pathname: "/trip", params: { name: place.name, lat: String(place.lat), lon: String(place.lon) } });
+        if (onPress) onPress();
+        else router.push({ pathname: "/trip", params: { name: place.name, lat: String(place.lat), lon: String(place.lon) } });
       }}
       style={styles.row}>
       <Tile>

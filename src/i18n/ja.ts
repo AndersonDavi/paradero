@@ -217,6 +217,16 @@ export const ja: Messages = {
 
   trip: {
     title: "行き方",
+    stops: "立ち寄り先",
+    addStop: "立ち寄り先を追加",
+    addStopTitle: "どこに立ち寄りますか？",
+    addStopHint: "場所、住所、停留所を検索",
+    removeStop: (name) => `${name}を削除`,
+    stayFor: (minutes) => (minutes ? `${minutes}分滞在` : "通過のみ"),
+    withStops: (n) => `立ち寄り${n}か所`,
+    thenTo: (name) => `次に${name}へ`,
+    stayThere: (minutes) => `${minutes}分滞在`,
+    noLeg: "この時間にここから先へ行く方法が見つかりません。",
     save: "このルートを保存",
     unsave: "ルートから削除",
     savedTrip: { title: "ルートを保存しました", body: "「保存済み」に、出発すべき時刻と一緒に表示されます。" },

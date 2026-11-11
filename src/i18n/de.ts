@@ -221,6 +221,16 @@ export const de: Messages = {
 
   trip: {
     title: "Wie komme ich hin",
+    stops: "Zwischenstopps",
+    addStop: "Zwischenstopp hinzufügen",
+    addStopTitle: "Wo willst du anhalten?",
+    addStopHint: "Suche einen Ort, eine Adresse oder eine Haltestelle",
+    removeStop: (name) => `${name} entfernen`,
+    stayFor: (minutes) => (minutes ? `Ich bleibe ${minutes} Min.` : "Nur durch"),
+    withStops: (n) => (n === 1 ? "mit 1 Zwischenstopp" : `mit ${n} Zwischenstopps`),
+    thenTo: (name) => `Dann bis ${name}`,
+    stayThere: (minutes) => `Du bleibst ${minutes} Min.`,
+    noLeg: "Von hier gibt es um diese Zeit keine Weiterfahrt.",
     save: "Diese Fahrt speichern",
     unsave: "Aus deinen Fahrten entfernen",
     savedTrip: { title: "Fahrt gespeichert", body: "Du findest sie unter Gespeichert, mit der Zeit, zu der du losmusst." },
