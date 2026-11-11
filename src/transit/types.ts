@@ -140,7 +140,18 @@ export interface PlanStop {
 /** One stretch of a trip: on foot, or on one bus from one stop to another. Times are ISO. */
 export type Leg =
   | { kind: "walk"; meters: number; minutes: number; from: PlanStop | null; to: PlanStop | null; path: [number, number][] }
-  | { kind: "ride"; route: RouteRef; from: PlanStop; to: PlanStop; departs: string; arrives: string; stops: number; path: [number, number][] };
+  | {
+      kind: "ride";
+      route: RouteRef;
+      from: PlanStop;
+      to: PlanStop;
+      departs: string;
+      arrives: string;
+      stops: number;
+      /** The stops the bus calls at between the two, in order: a rider counts them to know when to get off. */
+      via?: PlanStop[];
+      path: [number, number][];
+    };
 
 export interface Journey {
   departs: string;

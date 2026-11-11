@@ -67,8 +67,18 @@ export default function TripScreen() {
   }, [data, count, t]);
 
   const stops = useMemo(() => {
-    const list = journey?.legs.flatMap((l) => (l.kind === "ride" ? [l.from, l.to].map((s) => ({ ...s, system: l.route.system })) : [])) ?? [];
-    const unique = [...new Map(list.map((s) => [s.id, { ...s, kind: "stop" as const }])).values()];
+    // Where the rider gets on and off, drawn large; the stops the bus passes between, small, to count them.
+    const list =
+      journey?.legs.flatMap((l) =>
+        l.kind === "ride"
+          ? [
+              { ...l.from, system: l.route.system, kind: "station" as const },
+              ...(l.via ?? []).map((s) => ({ ...s, system: l.route.system, kind: "stop" as const })),
+              { ...l.to, system: l.route.system, kind: "station" as const },
+            ]
+          : [],
+      ) ?? [];
+    const unique = [...new Map(list.map((s) => [s.id, s])).values()];
     return to ? [...unique, { id: DESTINATION, name: name ?? "", lat: to.lat, lon: to.lon, kind: "station" as const, system: "other" as const }] : unique;
   }, [journey, to, name]);
   const system = journey?.legs.find((l) => l.kind === "ride")?.route.system ?? "other";
@@ -174,7 +184,7 @@ function Option({ journey, selected, onPress }: { journey: Journey; selected: bo
 
 interface Step {
   key: string;
-  icon: "walk" | "ride" | "off" | "end";
+  icon: "walk" | "ride" | "pass" | "off" | "end";
   title: string;
   detail?: string;
   leg?: Extract<Leg, { kind: "ride" }>;
@@ -188,6 +198,8 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
     if (l.kind === "walk") return [{ key: `w${i}`, icon: "walk", title: t.trip.walk(l.meters, l.minutes), detail: l.to ? t.trip.walkTo(l.to.name) : t.trip.walkToEnd }];
     return [
       { key: `r${i}`, icon: "ride", title: t.trip.ride(l.route.code, l.route.name), detail: `${l.from.name}  ·  ${t.trip.rideAt(clock(l.departs), l.stops)}`, leg: l },
+      // Every stop on the way, so the rider can count them and get off at the right one.
+      ...(l.via ?? []).map((s, k): Step => ({ key: `p${i}-${k}`, icon: "pass", title: s.name })),
       { key: `o${i}`, icon: "off", title: t.trip.getOff(l.to.name, clock(l.arrives)) },
     ];
   });
@@ -199,6 +211,20 @@ function Steps({ journey, name }: { journey: Journey; name: string }) {
         {t.trip.steps}
       </Text>
       {steps.map((s, i) => {
+        if (s.icon === "pass") {
+          return (
+            <View key={s.key} accessible accessibilityLabel={s.title} style={styles.pass}>
+              <View style={styles.rail}>
+                <View style={[styles.line, { backgroundColor: p.ink }]} />
+                <View style={[styles.passDot, { borderColor: p.ink, backgroundColor: p.background }]} />
+                <View style={[styles.line, { backgroundColor: p.ink }]} />
+              </View>
+              <Text variant="caption" tone="muted" numberOfLines={large ? undefined : 1} style={styles.passName}>
+                {s.title}
+              </Text>
+            </View>
+          );
+        }
         const body = (
           <>
             <View style={styles.rail}>
@@ -256,4 +282,7 @@ const styles = StyleSheet.create({
   line: { width: size.line.rule, flex: 1 },
   mark: { minWidth: size.tile.sm, minHeight: size.tile.sm, borderRadius: radius.md, alignItems: "center", justifyContent: "center", paddingHorizontal: space[1] },
   stepBody: { flex: 1, gap: space[0.5], paddingVertical: space[3] },
+  pass: { flexDirection: "row", gap: space[3], minHeight: size.control.sm - space[2] },
+  passDot: { width: size.dot.md, height: size.dot.md, borderRadius: radius.pill, borderWidth: size.line.rule },
+  passName: { flex: 1, alignSelf: "center" },
 });

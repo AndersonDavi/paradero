@@ -5,7 +5,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { Asset } from "expo-asset";
 import type { ExpressionSpecification, GeoJSONSource, LayerSpecification, Map as MapLibreMap, Point } from "maplibre-gl";
 import { forwardRef, useEffect, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { mapBounds } from "@/cities";
 import { useAccessibility } from "@/lib/accessibility";
@@ -402,36 +402,53 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   // Screens frame the route as soon as they open, often before MapLibre has loaded; the last such ask waits for the map.
   const pending = useRef<((map: MapLibreMap) => void) | null>(null);
 
+  // What the screen last asked to frame, framed again when the map changes size (the sheet over it moved).
+  const framed = useRef<[number, number][] | null>(null);
+  const height = useRef(0);
+  const frame = (map: MapLibreMap, coords: [number, number][], duration: number) => {
+    const lons = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
+    map.fitBounds(
+      [
+        [Math.min(...lons), Math.min(...lats)],
+        [Math.max(...lons), Math.max(...lats)],
+      ],
+      { padding: roomy(map, padding ? FIT_MARGIN : FIT_UNDER_SHEET), duration, essential: true },
+    );
+  };
+  const resized = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    const map = mapRef.current;
+    if (map && height.current && Math.abs(h - height.current) > 1) {
+      map.resize();
+      if (framed.current) frame(map, framed.current, glide);
+    }
+    height.current = h;
+  };
+
   useImperativeHandle(ref, () => {
     const camera = (go: (map: MapLibreMap, duration: number) => void) => {
       if (mapRef.current) go(mapRef.current, glide);
       else pending.current = (map) => go(map, 0);
     };
     return {
-      flyTo: (lat, lon, z = 16) =>
+      flyTo: (lat, lon, z = 16) => {
+        framed.current = null;
         camera((map, duration) => {
           if (duration === 0) map.jumpTo({ center: [lon, lat], zoom: z });
           else map.flyTo({ center: [lon, lat], zoom: z, duration, essential: true });
-        }),
+        });
+      },
       fit: (coords) => {
         if (coords.length < 2) return;
-        const lons = coords.map((c) => c[0]);
-        const lats = coords.map((c) => c[1]);
-        camera((map, duration) =>
-          map.fitBounds(
-            [
-              [Math.min(...lons), Math.min(...lats)],
-              [Math.max(...lons), Math.max(...lats)],
-            ],
-            { padding: roomy(map, padding ? FIT_MARGIN : FIT_UNDER_SHEET), duration, essential: true },
-          ),
-        );
+        framed.current = coords;
+        camera((map, duration) => frame(map, coords, duration));
       },
     };
   });
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={resized}>
       <div ref={container} style={canvas} />
       <View pointerEvents="none" style={[styles.credit, { left: inset.left + space[3], bottom: inset.bottom + space[2] }]}>
         <Text variant="micro" tone="faint">

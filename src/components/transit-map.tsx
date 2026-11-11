@@ -1,6 +1,6 @@
 import { Camera, GeoJSONSource, Images, Layer, Map, UserLocation, type CameraRef } from "@maplibre/maplibre-react-native";
 import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type LayoutChangeEvent } from "react-native";
 
 import { mapBounds } from "@/cities";
 import { useAccessibility } from "@/lib/accessibility";
@@ -48,22 +48,46 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const { reduceMotion } = useAccessibility();
   const glide = reduceMotion ? 0 : 700;
   const camera = useRef<CameraRef>(null);
+  // What the screen last asked to frame, framed again when the map changes size (the sheet over it moved).
+  const framed = useRef<[number, number][] | null>(null);
+  const height = useRef(0);
+
+  const frame = (coords: [number, number][], duration: number) => {
+    const lons = coords.map((c) => c[0]);
+    const lats = coords.map((c) => c[1]);
+    camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ? FIT_MARGIN : FIT_UNDER_SHEET, duration });
+  };
 
   useImperativeHandle(ref, () => ({
-    flyTo: (lat, lon, z = 16) => camera.current?.flyTo({ center: [lon, lat], zoom: z, duration: glide }),
+    flyTo: (lat, lon, z = 16) => {
+      framed.current = null;
+      camera.current?.flyTo({ center: [lon, lat], zoom: z, duration: glide });
+    },
     fit: (coords) => {
       if (coords.length < 2) return;
-      const lons = coords.map((c) => c[0]);
-      const lats = coords.map((c) => c[1]);
-      camera.current?.fitBounds([Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)], { padding: padding ? FIT_MARGIN : FIT_UNDER_SHEET, duration: glide });
+      framed.current = coords;
+      frame(coords, glide);
     },
   }));
+
+  // The native map takes a moment to take its new size after the view's; framing before that frames the old one.
+  const settle = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => clearTimeout(settle.current ?? undefined), []);
+  const resized = (e: LayoutChangeEvent) => {
+    const h = e.nativeEvent.layout.height;
+    if (height.current && Math.abs(h - height.current) > 1 && framed.current) {
+      const coords = framed.current;
+      clearTimeout(settle.current ?? undefined);
+      settle.current = setTimeout(() => frame(coords, glide), RESIZE_SETTLE_MS);
+    }
+    height.current = h;
+  };
 
   const stopData = useMemo(() => points(stops, (s) => ({ id: s.id, name: s.name, station: s.kind === "station", color: stopColor(s, system) })), [stops, system]);
   const ink = p.ink;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={resized}>
       <Map style={StyleSheet.absoluteFill} mapStyle={p.dark ? STYLES.dark : STYLES.light} logo={false} attribution={false} compass={false} touchPitch={false} contentInset={padding}>
         <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={mapBounds()} />
 
@@ -110,6 +134,7 @@ type ZoomWidth = ["interpolate", ["linear"], ["zoom"], number, number, number, n
 const LINE_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 1.25, 16, 3];
 const CASING_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 6];
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
+const RESIZE_SETTLE_MS = 300;
 /** The line is drawn under the stops, and so under the buses: a bus rides on its line. */
 const UNDER = "stops-dot";
 

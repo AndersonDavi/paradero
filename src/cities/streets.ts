@@ -26,16 +26,25 @@ export interface Address {
 export interface Streets {
   /** Metres walked from `from` to every vertex within `limit`, and how each was reached, for paths. */
   walkFrom(from: Point, limit: number): Walk;
-  /** The vertex a point would walk onto, and how far it is. */
-  snap(point: Point): { vertex: number; meters: number } | null;
+  /**
+   * The corners a point can walk onto, and how far each is in a straight line, the closest first. A place in the
+   * middle of a block (a mall, a park) can be reached from any of its sides, not only its nearest corner.
+   */
+  near(point: Point, radius?: number): Corner[];
+  /** The shortest way a walk reaches a point through any of its corners, or null when it does not. */
+  reach(walk: Walk, corners: Corner[]): Corner | null;
   /** A walk's line from its start to the vertex, as lon/lat, ending at `end` when given. */
   line(walk: Walk, vertex: number, end?: Point): [number, number][];
-  /** The point an address names, or null when its streets are not on the map. */
   /**
    * The places an address can be, nearest `near` first. Streets repeat their numbers (Barranquilla and Soledad
    * both have a Calle 30), so one address can name two corners far apart; each is offered.
    */
   addresses(query: string, near?: Point | null): Address[];
+}
+
+export interface Corner {
+  vertex: number;
+  meters: number;
 }
 
 export interface Walk {
@@ -76,6 +85,8 @@ const metres = (aLat: number, aLon: number, bLat: number, bLon: number) => Math.
 
 /** How far a point may be from the nearest street and still walk onto it. */
 const SNAP_M = 400;
+/** A place's corners: every street corner this close may be the way in. */
+const AROUND_M = 150;
 /** The grid that finds the nearest vertex: cells of about 220 m. */
 const CELL = 0.002;
 
@@ -217,30 +228,44 @@ export function buildStreets(data: StreetsData): Streets {
     else grid.set(key, [v]);
   }
 
-  function snap(point: Point) {
+  function near(point: Point, radius = AROUND_M): Corner[] {
     const ci = Math.floor(point.lat / CELL);
     const cj = Math.floor(point.lon / CELL);
-    let best = -1;
-    let bestM = SNAP_M;
+    const found: Corner[] = [];
     for (let di = -2; di <= 2; di++) {
       for (let dj = -2; dj <= 2; dj++) {
         for (const v of grid.get(`${ci + di}:${cj + dj}`) ?? []) {
           const d = metres(point.lat, point.lon, lat[v], lon[v]);
-          if (d < bestM) [best, bestM] = [v, d];
+          if (d < SNAP_M) found.push({ vertex: v, meters: d });
         }
       }
     }
-    return best >= 0 ? { vertex: best, meters: bestM } : null;
+    found.sort((a, b) => a.meters - b.meters);
+    // Every corner within reach, and always the closest one, however far.
+    return found.filter((c, i) => i === 0 || c.meters <= radius);
+  }
+
+  function reach(walk: Walk, corners: Corner[]): Corner | null {
+    let best: Corner | null = null;
+    for (const c of corners) {
+      const total = walk.dist[c.vertex] + c.meters;
+      if (total < Infinity && (!best || total < best.meters)) best = { vertex: c.vertex, meters: total };
+    }
+    return best;
   }
 
   function walkFrom(from: Point, limit: number): Walk {
     const dist = new Float64Array(n).fill(Infinity);
     const via = new Int32Array(n).fill(-1);
-    const at = snap(from);
-    if (!at) return { start: from, origin: -1, snapM: 0, dist, via };
-    dist[at.vertex] = at.meters;
+    const corners = near(from);
+    if (!corners.length) return { start: from, origin: -1, snapM: 0, dist, via };
     const queue = new Queue();
-    queue.push(at.vertex, at.meters);
+    // The walk can leave by any corner around it, each as far as it is in a straight line.
+    for (const c of corners) {
+      dist[c.vertex] = c.meters;
+      queue.push(c.vertex, c.meters);
+    }
+    const at = corners[0];
     while (queue.size) {
       const [v, d] = queue.pop();
       if (d > dist[v]) continue;
@@ -407,5 +432,5 @@ export function buildStreets(data: StreetsData): Streets {
     return { lat: lat[v], lon: lon[v] };
   }
 
-  return { walkFrom, snap, line, addresses };
+  return { walkFrom, near, reach, line, addresses };
 }
