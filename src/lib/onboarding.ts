@@ -1,4 +1,4 @@
-import Storage from "expo-sqlite/kv-store";
+import Storage from "@/lib/storage";
 import { useSyncExternalStore } from "react";
 
 const KEY = "onboarded.v1";

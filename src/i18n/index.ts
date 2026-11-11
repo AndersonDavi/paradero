@@ -1,5 +1,5 @@
 import { getLocales } from "expo-localization";
-import Storage from "expo-sqlite/kv-store";
+import Storage from "@/lib/storage";
 import { useSyncExternalStore } from "react";
 
 import { de } from "./de";
