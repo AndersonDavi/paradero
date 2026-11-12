@@ -35,7 +35,8 @@ async function get<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-const LIVE = 20_000;
+/** How often an open stop or route asks for fresh positions. The server keeps them for only a few seconds, so a new report shows up within moments. */
+const LIVE = 5_000;
 
 export function useHealth() {
   return useQuery({ queryKey: ["health"], queryFn: () => get<Health>("/api/health"), refetchInterval: 60_000 });
@@ -64,8 +65,8 @@ export function useSearch(query: string) {
   });
 }
 
-const stopQuery = (id: string) => ({ queryKey: ["stop", id], queryFn: () => get<StopDetail>(`/api/stops/${id}`), staleTime: 15_000 });
-const routeQuery = (id: string) => ({ queryKey: ["route", id], queryFn: () => get<RouteDetail>(`/api/routes/${id}`), staleTime: 15_000 });
+const stopQuery = (id: string) => ({ queryKey: ["stop", id], queryFn: () => get<StopDetail>(`/api/stops/${id}`), staleTime: LIVE });
+const routeQuery = (id: string) => ({ queryKey: ["route", id], queryFn: () => get<RouteDetail>(`/api/routes/${id}`), staleTime: LIVE });
 
 export function prefetchStop(id: string) {
   void queryClient.prefetchQuery(stopQuery(id));
