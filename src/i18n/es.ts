@@ -53,6 +53,8 @@ export const es = {
   feed: {
     live: "En vivo",
     scheduled: "Horario programado",
+    estimated: "Horario aproximado",
+    estimatedSince: (operator: string, day: string) => `Sin datos en vivo. El primer y el último bus son los del horario de ${operator} vigente desde el ${day}. Las horas entre ellos son un cálculo de cada cuánto pasa.`,
     updated: (since: string) => `Actualizado ${since}`,
     notPublishing: (operator: string) => `${operator} no está publicando posiciones`,
     noLive: "sin datos en vivo",
@@ -131,7 +133,7 @@ export const es = {
         title: "Barranquilla merece la mejor app para moverse.",
         intro: "Paradero es gratis, abierta y de todos. Croma la hizo para Bogotá; esta versión la trae a Barranquilla con los datos que Transmetro ha publicado.",
         live: "Transmetro todavía no publica dónde van sus buses, así que cada hora sale del horario publicado, y siempre te lo decimos.",
-        data: "Del horario que Transmetro publicó y de su lista de paraderos de 2020 en datos.gov.co, con las calles y los lugares de OpenStreetMap. Todo se calcula en tu teléfono.",
+        data: "De las rutas y horarios que Transmetro publica, de los recorridos de los buses urbanos del Área Metropolitana y de los barrios del POT, con las calles y los lugares de OpenStreetMap. Todo se calcula en tu teléfono.",
       },
       onboarding: {
         eyebrow: "Un bien público para Barranquilla",
@@ -171,6 +173,8 @@ export const es = {
   },
 
   route: {
+    cityBus: (company: string) => `Bus urbano de ${company}. Para donde le hagas la seña a lo largo de su recorrido. El Área Metropolitana publica el recorrido, pero no horarios ni paraderos.`,
+    fare: (amount: string, holiday: string) => `Pasaje ${amount} · domingos y festivos ${holiday}`,
     failed: { title: "No pudimos cargar esta ruta", body: "Revisa tu conexión e intenta de nuevo." },
     first: "Primer bus",
     last: "Último bus",
@@ -238,6 +242,25 @@ export const es = {
   },
 
   trip: {
+    theft: (areas: string[]) =>
+      `${areas.length === 1 ? `${areas[0]} es uno de los barrios` : `${areas.slice(0, -1).join(", ")} y ${areas[areas.length - 1]} están entre los barrios`} con más atracos a personas, sobre todo entre semana de 10 a 11 a. m. y de 7 a 8 p. m. Ten el celular guardado al esperar y al bajarte.`,
+    theftSource: (source: string) => `Datos: ${source}.`,
+    modes: "Qué buses mostrar",
+    modeAll: "Todos",
+    modeUrban: "Bus urbano",
+    urbanTitle: "Buses urbanos",
+    urbanNote: "No tienen horario ni paraderos fijos: le haces la seña donde pase. El tiempo no cuenta la espera.",
+    about: (duration: string) => `Unos ${duration}`,
+    noTimetable: "Sin horario",
+    hail: (code: string, company: string) => `Párale al ${code} de ${company}`,
+    hailOn: (street: string) => `En la ${street}`,
+    hailOnRoute: "Donde pase por su recorrido",
+    askStop: (street: string) => `Pide la parada en la ${street}`,
+    askStopNear: "Pide la parada cerca de tu destino",
+    noWait: "Sin contar la espera del bus",
+    nightTip: "De noche, espera el bus donde haya luz y más gente, y ten el celular guardado mientras esperas.",
+    fare: (amount: string) => `Pasaje ${amount}`,
+    fareFrom: (amount: string) => `Pasaje desde ${amount}`,
     title: "Cómo llegar",
     stops: "Paradas",
     addStop: "Agregar parada",
@@ -320,6 +343,13 @@ export const es = {
       code: { title: "Código abierto", body: "Cualquiera puede revisarlo, mejorarlo o llevárselo. Licencia MIT." },
     },
     dataTitle: "De dónde salen los datos",
+    credits: {
+      title: "Fuentes y licencias",
+      gives: { routes: "Rutas, paraderos y horarios oficiales", timetable: "Frecuencias del horario de 2016", stops: "Paraderos de 2020", cityBuses: "Recorridos de los buses urbanos", barrios: "Límites de los barrios (POT)", streets: "Mapa, calles, lugares y barrios fuera del distrito", theft: "Hurtos a personas por barrio, 2024–2026", fares: "Tarifas de 2026" },
+      license: (name: string) => `Licencia ${name}`,
+      public: "Información pública",
+      hint: "Abre la fuente",
+    },
     helpTitle: "Hazla mejor con nosotros",
     help: "Si una ruta no aparece, una hora está mal o se te ocurre algo que te haría la vida más fácil, cuéntanos. No necesitas cuenta.",
     report: "Reportar un problema o una idea",

@@ -23,6 +23,7 @@ import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
 import { useClock } from "@/lib/appearance";
 import { wallClock } from "@/lib/format";
 import { useEveryStop, useRoute } from "@/lib/api";
+import { fareOf, money } from "@/lib/fares";
 import { toggleRoute, useIsSaved } from "@/lib/saved";
 import { usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -73,6 +74,10 @@ export default function RouteScreen() {
   // A route with no timetable has no hours to show: the screen says so once instead of "does not run" every day.
   const untimed = data?.route.tripsPerWeek === 0;
   const special = !!data && !!city.specialRoutes?.includes(data.route.code);
+  // A city bus stops wherever it is hailed: no stops to list and no timetable, only its line.
+  const cityBus = data?.route.id.startsWith("amb-") ?? false;
+  // What a ride costs, when the city has a confirmed fare for this kind of route.
+  const fare = data ? fareOf(data.route.system) : null;
   const buses = data?.feed.live ? data.buses.map((b) => ({ ...b, system: data.route.system })) : [];
 
   return (
@@ -146,6 +151,12 @@ export default function RouteScreen() {
               </View>
             )}
 
+            {fare && (
+              <Text variant="callout" tone="muted">
+                {t.route.fare(money(fare.amount), money(fare.holiday))}
+              </Text>
+            )}
+
             {/* One word on the times, not two: a route with no timetable or a special one says so itself; any other
                 route without live buses has the feed's notice, which already says the times come from the timetable. */}
             {!untimed && !special && <FeedStatus feed={data.feed} />}
@@ -154,13 +165,15 @@ export default function RouteScreen() {
               <View style={[styles.note, { backgroundColor: p.surface }]}>
                 <BusGlyph size={size.glyph.lg} color={p.text} cut={p.surface} />
                 <Text variant="callout" tone="muted" style={{ flex: 1 }}>
-                  {special ? t.route.special(city.operator) : untimed ? t.route.noTimetable(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
+                  {cityBus ? t.route.cityBus(data.route.name) : special ? t.route.special(city.operator) : untimed ? t.route.noTimetable(city.operator) : buses.length === 0 ? t.route.noneNow(hours) : t.route.onRoadNow(buses.length)}
                 </Text>
               </View>
             )}
 
             <AlertCard alerts={data.alerts} />
 
+            {/* A city bus has no stops to list: it stops wherever it is hailed. */}
+            {data.stops.length > 0 && (
             <View>
               <Text variant="title" style={styles.heading}>
                 {t.route.stops(data.stops.length)}
@@ -186,6 +199,7 @@ export default function RouteScreen() {
                 );
               })}
             </View>
+            )}
           </>
         )}
         {data && (

@@ -1,6 +1,7 @@
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
+import { PressableScale } from "pressto";
 import { ScrollView, StyleSheet, View } from "react-native";
 
 import { Button } from "@/components/button";
@@ -31,7 +32,8 @@ export default function About() {
   const health = useHealth();
   const t = useT();
   // The words that name a city, its operator and its data; the promises and the rest are the same everywhere.
-  const here = t.places[useCity().id].about;
+  const city = useCity();
+  const here = t.places[city.id].about;
 
   return (
     <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.content}>
@@ -87,6 +89,32 @@ export default function About() {
         <FeedStatus feed={health.data?.feed} />
       </View>
 
+      {city.credits?.length ? (
+        <View style={styles.section}>
+          <Text variant="eyebrow" tone="faint" accessibilityRole="header">
+            {t.about.credits.title}
+          </Text>
+          <View>
+            {city.credits.map((credit, i) => (
+              <PressableScale
+                key={credit.gives}
+                accessibilityRole="link"
+                accessibilityHint={t.about.credits.hint}
+                onPress={() => void WebBrowser.openBrowserAsync(credit.url)}
+                style={[styles.credit, { borderTopColor: p.separator, borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth }]}>
+                <View style={styles.promiseText}>
+                  <Text variant="callout">{t.about.credits.gives[credit.gives]}</Text>
+                  <Text variant="caption" tone="muted">
+                    {credit.name} · {credit.license ? t.about.credits.license(credit.license) : t.about.credits.public}
+                  </Text>
+                </View>
+                <Icon name={icons.chevron} color={p.faint} size="xs" />
+              </PressableScale>
+            ))}
+          </View>
+        </View>
+      ) : null}
+
       <View style={styles.section}>
         <Text variant="eyebrow" tone="faint" accessibilityRole="header">
           {t.about.helpTitle}
@@ -133,5 +161,6 @@ const styles = StyleSheet.create({
   section: { gap: space[3] },
   promise: { flexDirection: "row", gap: space[4], paddingVertical: space[4], alignItems: "flex-start" },
   promiseText: { flex: 1, gap: space[0.5] },
+  credit: { flexDirection: "row", gap: space[3], paddingVertical: space[3], alignItems: "center" },
   footer: { flexDirection: "row", justifyContent: "space-between", gap: space[2] },
 });

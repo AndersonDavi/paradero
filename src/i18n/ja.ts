@@ -42,6 +42,8 @@ export const ja: Messages = {
   feed: {
     live: "リアルタイム",
     scheduled: "時刻表",
+    estimated: "おおよその時刻",
+    estimatedSince: (operator, day) => `リアルタイム情報はありません。始発と終発は${day}から有効な${operator}の時刻表によるものです。その間の時刻は運行間隔から計算しています。`,
     updated: (since) => `${since}に更新`,
     notPublishing: (operator) => `${operator}がバスの位置情報を公開していません`,
     noLive: "リアルタイム情報なし",
@@ -119,7 +121,7 @@ export const ja: Messages = {
         title: "バランキージャにも最高の移動アプリを。",
         intro: "Paraderoは無料でオープン、みんなのものです。Cromaがボゴタのために作り、このバージョンはTransmetroが公開したデータでバランキージャに対応しています。",
         live: "Transmetroはまだバスの位置を公開していないため、時刻はすべて公開時刻表にもとづき、そのことを常に表示します。",
-        data: "Transmetroが公開した時刻表と、datos.gov.coにある2020年の停留所リスト、OpenStreetMapの道路と場所を使っています。計算はすべてスマートフォン上で行います。",
+        data: "Transmetroが公開する路線と時刻、Área Metropolitanaの市内バス路線、POTの地区境界、OpenStreetMapの道路と場所を使っています。計算はすべてスマートフォン上で行います。",
       },
       onboarding: {
         eyebrow: "バランキージャのための公共財",
@@ -159,6 +161,8 @@ export const ja: Messages = {
   },
 
   route: {
+    cityBus: (company) => `${company}の市内バス。路線沿いなら手を挙げればどこでも止まります。都市圏当局は路線を公開していますが、時刻表と停留所はありません。`,
+    fare: (amount, holiday) => `運賃 ${amount} · 日曜・祝日 ${holiday}`,
     failed: { title: "この路線を読み込めませんでした", body: "接続を確認して、もう一度お試しください。" },
     first: "始発",
     last: "終発",
@@ -217,6 +221,25 @@ export const ja: Messages = {
   placeKinds: { address: "住所", mall: "買い物", health: "医療", education: "学校・大学", park: "公園・スポーツ", neighbourhood: "地区", transit: "ターミナル", other: "場所" },
 
   trip: {
+    theft: (areas) =>
+      `${areas.join("、")}は路上強盗が特に多い地区で、とくに平日の午前10〜11時と午後7〜8時に多発しています。待つときと降りるときは携帯をしまっておきましょう。`,
+    theftSource: (source) => `データ：${source}。`,
+    modes: "表示するバス",
+    modeAll: "すべて",
+    modeUrban: "市内バス",
+    urbanTitle: "市内バス",
+    urbanNote: "時刻表も決まった停留所もありません。通る場所で手を挙げてください。時間に待ち時間は含みません。",
+    about: (duration) => `約${duration}`,
+    noTimetable: "時刻表なし",
+    hail: (code, company) => `${company}の${code}に手を挙げる`,
+    hailOn: (street) => `${street}で`,
+    hailOnRoute: "路線上の通る場所で",
+    askStop: (street) => `${street}で降りると伝える`,
+    askStopNear: "目的地の近くで降りると伝える",
+    noWait: "バスの待ち時間は含みません",
+    nightTip: "夜は明るく人の多い場所でバスを待ち、待っている間は携帯をしまっておきましょう。",
+    fare: (amount) => `運賃 ${amount}`,
+    fareFrom: (amount) => `運賃 ${amount}から`,
     title: "行き方",
     stops: "立ち寄り先",
     addStop: "立ち寄り先を追加",
@@ -297,6 +320,13 @@ export const ja: Messages = {
       code: { title: "オープンソース", body: "誰でも確認、改善、再利用できます。MITライセンス。" },
     },
     dataTitle: "データの出どころ",
+    credits: {
+      title: "出典とライセンス",
+      gives: { routes: "公式の路線・停留所・時刻", timetable: "2016年の時刻表による運行間隔", stops: "2020年の停留所", cityBuses: "市内バスの路線", barrios: "地区の境界（POT）", streets: "地図・道路・場所・区外の地区", theft: "地区別の対人窃盗（2024〜2026年）", fares: "2026年の運賃" },
+      license: (name: string) => `ライセンス ${name}`,
+      public: "公開情報",
+      hint: "出典を開きます",
+    },
     helpTitle: "一緒に良くしましょう",
     help: "路線が見つからない、時刻が違う、もっと便利になるアイデアがある。そんなときは教えてください。アカウントは不要です。",
     report: "問題やアイデアを報告",

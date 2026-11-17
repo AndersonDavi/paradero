@@ -23,7 +23,9 @@ import type { MapHandle } from "@/components/transit-map.types";
 import { useT } from "@/i18n";
 import { announce, useAccessibility, useLargeText } from "@/lib/accessibility";
 import { useTrip } from "@/lib/api";
+import { fareAt, money } from "@/lib/fares";
 import { pickStop } from "@/lib/pick-stop";
+import { theftAreas } from "@/lib/warnings";
 import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
 import { useLocation } from "@/lib/location";
@@ -34,6 +36,10 @@ import type { Journey, Leg } from "@/transit/types";
 
 /** The places themselves, drawn on the map among the bus stops. */
 const DESTINATION = "destination";
+
+/** From this hour to this one, a city bus is waited for in the dark: the steps say where to wait. */
+const NIGHT_FROM = 19;
+const NIGHT_UNTIL = 5;
 
 /** How long a rider can say they stay at a stop before going on, in minutes. */
 const STAYS = [0, 15, 30, 60];
@@ -97,10 +103,19 @@ export default function TripScreen() {
   const tripSaved = useIsSaved("trip", trip ? tripId(trip.from, trip.to, later) : undefined);
   const [chosen, setChosen] = useState(0);
   const { data, isLoading, isError, refetch } = useTrip(from, stops, chosen);
-  const journeys = data?.first ?? [];
-  const journey: Journey | undefined = journeys[Math.min(chosen, journeys.length - 1)];
+  // The operator's ways, or city buses, or both. City buses have no timetable, so they are offered apart, and only
+  // for a trip to one place: a stay at a stop needs a time to leave by.
+  const [mode, setMode] = useState<"all" | "operator" | "urban">("all");
+  const [urbanChosen, setUrbanChosen] = useState<number | null>(null);
+  const journeys = mode === "urban" ? [] : (data?.first ?? []);
+  const urbanAll = later.length ? [] : (data?.urban ?? []);
+  const urban = mode === "operator" ? [] : urbanAll;
+  const operatorJourney: Journey | undefined = journeys[Math.min(chosen, journeys.length - 1)];
+  const urbanPick = urbanChosen ?? (journeys.length ? null : 0);
+  const journey: Journey | undefined = urbanPick !== null && urban[urbanPick] ? urban[urbanPick] : operatorJourney;
+  const onCityBus = !!journey?.untimed;
   // The way to the first stop the rider chose, then the soonest way on from each stop to the next.
-  const chain = useMemo(() => [journey, ...(data?.then ?? [])].filter((j): j is Journey => !!j), [journey, data]);
+  const chain = useMemo(() => (onCityBus ? [journey] : [journey, ...(data?.then ?? [])]).filter((j): j is Journey => !!j), [journey, data, onCityBus]);
   const map = useRef<MapHandle>(null);
   // The stop the rider tapped in the list, drawn large on the map while the others shrink.
   const [spot, setSpot] = useState<number | null>(null);
@@ -119,7 +134,7 @@ export default function TripScreen() {
     return () => clearTimeout(timer);
   }, [way, reduceMotion]);
 
-  const count = journeys.length;
+  const count = journeys.length + urban.length;
   // The first stop no bus reaches from the one before: the trip is shown up to there.
   const short = useMemo(() => {
     const k = (data?.then ?? []).findIndex((leg, i) => !leg && (i === 0 ? !!journey : !!data?.then[i - 1]));
@@ -212,6 +227,16 @@ export default function TripScreen() {
   const pick = (i: number) => {
     void Haptics.selectionAsync();
     setChosen(i);
+    setUrbanChosen(null);
+  };
+  const pickUrban = (i: number) => {
+    void Haptics.selectionAsync();
+    setUrbanChosen(i);
+  };
+  const showMode = (next: typeof mode) => {
+    void Haptics.selectionAsync();
+    setMode(next);
+    setUrbanChosen(null);
   };
 
   return (
@@ -227,7 +252,7 @@ export default function TripScreen() {
             system={system}
             stops={mapStops}
             padding={layout.mapInset}
-            onStopPress={(id) => !id.startsWith(DESTINATION) && router.push({ pathname: "/stop/[id]", params: { id } })}
+            onStopPress={(id) => !id.startsWith(DESTINATION) && !id.startsWith("street-") && router.push({ pathname: "/stop/[id]", params: { id } })}
           />
         }>
         <View style={styles.header}>
@@ -303,6 +328,13 @@ export default function TripScreen() {
         {to && !start && here.status === "outside" && <Empty title={t.trip.outside(city.name)} body={t.trip.needLocation.body} />}
         {from && isLoading && <SkeletonList rows={3} kind="arrival" />}
         {from && isError && !data && <Empty title={t.trip.failed.title} body={t.trip.failed.body} action={t.common.retry} onAction={() => void refetch()} />}
+        {from && data && urbanAll.length > 0 && (data.first.length > 0 || mode !== "all") && (
+          <View accessibilityRole="radiogroup" accessibilityLabel={t.trip.modes} style={styles.chips}>
+            <Chip radio label={t.trip.modeAll} selected={mode === "all"} onPress={() => showMode("all")} />
+            <Chip radio label={city.operator} selected={mode === "operator"} onPress={() => showMode("operator")} />
+            <Chip radio label={t.trip.modeUrban} selected={mode === "urban"} onPress={() => showMode("urban")} />
+          </View>
+        )}
         {from && data && count === 0 && <Empty title={t.trip.none.title} body={t.trip.none.body(city.operator)} />}
 
         {from && data && count > 0 && (
@@ -324,8 +356,21 @@ export default function TripScreen() {
                 <Option key={i} journey={j} selected={j === journey} onPress={() => pick(i)} />
               ))}
             </View>
+            {urban.length > 0 && (
+              <View style={styles.list}>
+                <Text variant="title" accessibilityRole="header">
+                  {t.trip.urbanTitle}
+                </Text>
+                <Text variant="callout" tone="muted">
+                  {t.trip.urbanNote}
+                </Text>
+                {urban.map((j, i) => (
+                  <Option key={i} journey={j} selected={j === journey} onPress={() => pickUrban(i)} />
+                ))}
+              </View>
+            )}
             {journey && <Steps journey={journey} name={name ?? ""} />}
-            {later.map((s, i) => {
+            {!onCityBus && later.map((s, i) => {
               // Each stop on the way: how long the rider stays, then the soonest bus on once they are ready to go.
               const before = i === 0 ? journey : data.then[i - 1];
               const leg = data.then[i];
@@ -347,6 +392,11 @@ function Option({ journey, selected, onPress }: { journey: Journey; selected: bo
   const p = usePalette();
   const t = useT();
   const rides = journey.legs.filter((l): l is Extract<Leg, { kind: "ride" }> => l.kind === "ride");
+  // The fare when every bus on the way has a confirmed one: one bus is one fare; with more, at least that, since
+  // whether a transfer is paid again depends on where it is made.
+  const fares = rides.map((r) => fareAt(r.route.system, new Date(r.departs)));
+  const fare = rides.length && fares.every((f) => f !== null) ? Math.max(...(fares as number[])) : null;
+  const fareText = fare === null ? null : rides.length === 1 ? t.trip.fare(money(fare)) : t.trip.fareFrom(money(fare));
   const label = t.trip.speech.option(
     spokenDuration(journey.minutes),
     clock(journey.departs),
@@ -354,20 +404,21 @@ function Option({ journey, selected, onPress }: { journey: Journey; selected: bo
     rides.length ? t.trip.speech.routes(rides.map((r) => r.route.code)) : t.trip.speech.onFoot,
     journey.walkM,
   );
+  const spoken = journey.untimed ? `${t.trip.about(spokenDuration(journey.minutes))}. ${t.trip.noTimetable}. ${rides.map((r) => `${r.route.code}, ${r.route.name}`).join(". ")}` : label;
   return (
     <PressableScale
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      accessibilityLabel={selected ? `${t.trip.chosen}. ${label}` : label}
+      accessibilityLabel={[selected ? `${t.trip.chosen}. ${spoken}` : spoken, fareText].filter(Boolean).join(". ")}
       accessibilityHint={selected ? undefined : t.trip.choose}
       onPress={onPress}
       style={[styles.option, { borderColor: selected ? p.ink : p.separator, borderWidth: selected ? size.line.rule : size.line.hair }]}>
       <View style={styles.optionTop}>
         <Text variant="title" tabular>
-          {durationText(journey.minutes)}
+          {journey.untimed ? t.trip.about(durationText(journey.minutes)) : durationText(journey.minutes)}
         </Text>
         <Text variant="caption" tone="muted" tabular>
-          {t.trip.span(clock(journey.departs), clock(journey.arrives))}
+          {journey.untimed ? t.trip.noTimetable : t.trip.span(clock(journey.departs), clock(journey.arrives))}
         </Text>
       </View>
       <View style={styles.legs}>
@@ -379,7 +430,11 @@ function Option({ journey, selected, onPress }: { journey: Journey; selected: bo
         ))}
       </View>
       <Text variant="caption" tone="muted">
-        {rides.length ? `${t.trip.leave(clock(journey.departs))}  ·  ${t.trip.walked(journey.walkM)}` : t.trip.onFoot}
+        {journey.untimed
+          ? [rides.map((r) => r.route.name).join(", "), t.trip.walked(journey.walkM)].join("  ·  ")
+          : rides.length
+            ? [t.trip.leave(clock(journey.departs)), t.trip.walked(journey.walkM), fareText].filter(Boolean).join("  ·  ")
+            : t.trip.onFoot}
       </Text>
     </PressableScale>
   );
@@ -432,6 +487,12 @@ function Steps({ journey, name, title }: { journey: Journey; name: string; title
   const large = useLargeText();
   const steps: Step[] = journey.legs.flatMap((l, i): Step[] => {
     if (l.kind === "walk") return [{ key: `w${i}`, icon: "walk", title: t.trip.walk(l.meters, l.minutes), detail: l.to ? t.trip.walkTo(l.to.name) : t.trip.walkToEnd }];
+    if (l.hail) {
+      return [
+        { key: `r${i}`, icon: "ride", title: t.trip.hail(l.route.code, l.route.name), detail: l.from.name ? t.trip.hailOn(l.from.name) : t.trip.hailOnRoute, leg: l },
+        { key: `o${i}`, icon: "off", title: l.to.name ? t.trip.askStop(l.to.name) : t.trip.askStopNear },
+      ];
+    }
     return [
       { key: `r${i}`, icon: "ride", title: t.trip.ride(l.route.code, l.route.name), detail: `${l.from.name}  ·  ${t.trip.rideAt(clock(l.departs), l.stops)}`, leg: l },
       // Every stop on the way, so the rider can count them and get off at the right one.
@@ -439,13 +500,38 @@ function Steps({ journey, name, title }: { journey: Journey; name: string; title
       { key: `o${i}`, icon: "off", title: t.trip.getOff(l.to.name, clock(l.arrives)) },
     ];
   });
-  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: clock(journey.arrives) });
+  steps.push({ key: "end", icon: "end", title: t.trip.arrive(name), detail: journey.untimed ? t.trip.noWait : clock(journey.arrives) });
+  // Waiting on a street corner after dark: where there is light and people around.
+  const hour = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Bogota", hour: "numeric", hourCycle: "h23" }).format(new Date(journey.departs)));
+  const dark = hour >= NIGHT_FROM || hour < NIGHT_UNTIL;
+  const night = journey.untimed && dark;
+  // Getting on or off in a barrio with a lot of theft from persons: a word on it, with where the figures come from.
+  const theft = theftAreas(journey);
 
   return (
     <View>
       <Text variant="title" accessibilityRole="header" style={styles.heading}>
         {title ?? t.trip.steps}
       </Text>
+      {night && (
+        <View accessibilityRole="alert" style={[styles.notice, styles.heading, { backgroundColor: p.surface }]}>
+          <Dot color={signal.late} />
+          <Text variant="callout" style={styles.noticeText}>
+            {t.trip.nightTip}
+          </Text>
+        </View>
+      )}
+      {theft.length > 0 && city.theft && (
+        <View accessibilityRole="alert" style={[styles.notice, styles.heading, { backgroundColor: p.surface }]}>
+          <Dot color={signal.alert} />
+          <View style={styles.noticeText}>
+            <Text variant="callout">{t.trip.theft(theft)}</Text>
+            <Text variant="caption" tone="muted">
+              {t.trip.theftSource(city.theft.source)}
+            </Text>
+          </View>
+        </View>
+      )}
       {steps.map((s, i) => {
         if (s.icon === "pass") {
           return (

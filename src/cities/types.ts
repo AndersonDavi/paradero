@@ -36,6 +36,9 @@ export interface TransitSource {
   everyStop?(): Promise<Omit<Stop, "distanceM">[]>;
 }
 
+/** What a credited dataset gives the app, in the words the about screen uses for it. */
+export type CreditKind = "routes" | "timetable" | "stops" | "cityBuses" | "barrios" | "streets" | "theft" | "fares";
+
 export interface City {
   id: CityId;
   name: string;
@@ -55,6 +58,22 @@ export interface City {
   specialRoutes?: string[];
   /** What the search screen offers to try before the rider types: routes, stations and places riders know. */
   examples: string[];
+  /**
+   * What one ride costs, by kind of route, on ordinary days and on Sundays and holidays. Only confirmed fares are
+   * shown; the others are kept here until a source confirms them.
+   */
+  fares?: { systems: System[]; amount: number; holiday: number; since: string; confirmed: boolean; source: string }[];
+  /**
+   * Barrios with the most theft from persons, by the name the city's neighbourhoods go by, and where the figures come
+   * from: a trip that gets on, gets off or ends in one says so. Only from figures a rider could check; a barrio is
+   * never marked on hearsay.
+   */
+  theft?: { areas: string[]; source: string; url: string };
+  /**
+   * Every dataset the city's routes, maps and warnings are built from, with what it gives and its license, so the
+   * about screen can credit each one as its license asks.
+   */
+  credits?: { gives: CreditKind; name: string; license: string | null; url: string }[];
   /** The city's fare card can be read over NFC, as TuLlave in Bogotá. */
   card: boolean;
   source: TransitSource;

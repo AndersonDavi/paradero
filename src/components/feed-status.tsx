@@ -5,7 +5,7 @@ import { city } from "@/cities";
 import { useT } from "@/i18n";
 import { useClock } from "@/lib/appearance";
 import { useLargeText } from "@/lib/accessibility";
-import { since } from "@/lib/format";
+import { dayText, since } from "@/lib/format";
 import { signal, usePalette } from "@/theme/colors";
 import { radius, space } from "@/theme/tokens";
 import type { Feed } from "@/transit/types";
@@ -31,8 +31,8 @@ export function FeedStatus({ feed, floating = false, compact = false }: { feed: 
   useTick(5_000);
   if (!feed) return null;
 
-  const title = feed.live ? t.feed.live : t.feed.scheduled;
-  const detail = feed.live ? t.feed.updated(since(feed.asOf)) : t.feed.noLiveSince(since(feed.asOf));
+  const title = feed.live ? t.feed.live : feed.estimated ? t.feed.estimated : t.feed.scheduled;
+  const detail = feed.live ? t.feed.updated(since(feed.asOf)) : feed.estimated ? t.feed.estimatedSince(city.operator, dayText(feed.asOf)) : t.feed.noLiveSince(since(feed.asOf));
   const label = `${title}. ${feed.live ? detail : `${t.feed.notPublishing(city.operator)}. ${detail}`}`;
 
   if (floating) {

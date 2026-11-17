@@ -46,6 +46,8 @@ export const de: Messages = {
   feed: {
     live: "Live",
     scheduled: "Fahrplanzeiten",
+    estimated: "Ungefähre Zeiten",
+    estimatedSince: (operator, day) => `Keine Live-Daten. Erster und letzter Bus stammen aus dem Fahrplan von ${operator}, gültig seit ${day}. Die Zeiten dazwischen sind aus dem Takt berechnet.`,
     updated: (since) => `Aktualisiert ${since}`,
     notPublishing: (operator) => `${operator} veröffentlicht gerade keine Buspositionen`,
     noLive: "keine Live-Daten",
@@ -123,7 +125,7 @@ export const de: Messages = {
         title: "Barranquilla verdient die beste App, um sich fortzubewegen.",
         intro: "Paradero ist kostenlos, offen und gehört allen. Croma hat sie für Bogotá gebaut; diese Version bringt sie mit den von Transmetro veröffentlichten Daten nach Barranquilla.",
         live: "Transmetro veröffentlicht noch nicht, wo seine Busse sind. Jede Zeit stammt also aus dem veröffentlichten Fahrplan, und das sagen wir immer.",
-        data: "Aus dem Fahrplan, den Transmetro veröffentlicht hat, und seiner Haltestellenliste von 2020 auf datos.gov.co, mit Straßen und Orten aus OpenStreetMap. Alles wird auf deinem Handy berechnet.",
+        data: "Aus den Linien und Zeiten, die Transmetro veröffentlicht, den Stadtbuslinien der Área Metropolitana und den Barrios des POT, mit Straßen und Orten aus OpenStreetMap. Alles wird auf deinem Handy berechnet.",
       },
       onboarding: {
         eyebrow: "Ein öffentliches Gut für Barranquilla",
@@ -163,6 +165,8 @@ export const de: Messages = {
   },
 
   route: {
+    cityBus: (company) => `Stadtbus von ${company}. Er hält, wo du ihm entlang seiner Strecke winkst. Die Metropolbehörde veröffentlicht die Strecke, aber keinen Fahrplan und keine Haltestellen.`,
+    fare: (amount, holiday) => `Fahrpreis ${amount} · Sonn- und Feiertage ${holiday}`,
     failed: { title: "Diese Linie konnte nicht geladen werden", body: "Prüfe deine Verbindung und versuche es erneut." },
     first: "Erster Bus",
     last: "Letzter Bus",
@@ -221,6 +225,25 @@ export const de: Messages = {
   placeKinds: { address: "Adresse", mall: "Einkaufen", health: "Gesundheit", education: "Schule oder Universität", park: "Park oder Sport", neighbourhood: "Viertel", transit: "Terminal", other: "Ort" },
 
   trip: {
+    theft: (areas) =>
+      `${areas.length === 1 ? `${areas[0]} ist eines der Viertel` : `${areas.slice(0, -1).join(", ")} und ${areas[areas.length - 1]} gehören zu den Vierteln`} mit den meisten Straßenüberfällen, vor allem werktags von 10 bis 11 Uhr und von 19 bis 20 Uhr. Steck dein Handy beim Warten und Aussteigen weg.`,
+    theftSource: (source) => `Daten: ${source}.`,
+    modes: "Welche Busse zeigen",
+    modeAll: "Alle",
+    modeUrban: "Stadtbus",
+    urbanTitle: "Stadtbusse",
+    urbanNote: "Kein Fahrplan und keine festen Haltestellen: Wink ihm, wo er vorbeifährt. Die Zeit zählt das Warten nicht mit.",
+    about: (duration) => `Etwa ${duration}`,
+    noTimetable: "Kein Fahrplan",
+    hail: (code, company) => `Wink dem ${code} von ${company}`,
+    hailOn: (street) => `An der ${street}`,
+    hailOnRoute: "Wo er auf seiner Strecke vorbeikommt",
+    askStop: (street) => `Bitte um Halt an der ${street}`,
+    askStopNear: "Bitte um Halt nahe deinem Ziel",
+    noWait: "Ohne das Warten auf den Bus",
+    nightTip: "Warte nachts dort auf den Bus, wo es hell ist und mehr Leute sind, und steck dein Handy beim Warten weg.",
+    fare: (amount) => `Fahrpreis ${amount}`,
+    fareFrom: (amount) => `Fahrpreis ab ${amount}`,
     title: "Wie komme ich hin",
     stops: "Zwischenstopps",
     addStop: "Zwischenstopp hinzufügen",
@@ -302,6 +325,13 @@ export const de: Messages = {
       code: { title: "Open Source", body: "Jeder kann den Code prüfen, verbessern oder übernehmen. MIT-Lizenz." },
     },
     dataTitle: "Woher die Daten kommen",
+    credits: {
+      title: "Quellen und Lizenzen",
+      gives: { routes: "Offizielle Linien, Haltestellen und Zeiten", timetable: "Takte aus dem Fahrplan von 2016", stops: "Haltestellen von 2020", cityBuses: "Stadtbuslinien", barrios: "Grenzen der Barrios (POT)", streets: "Karte, Straßen, Orte und Barrios außerhalb des Distrikts", theft: "Raub an Personen nach Barrio, 2024–2026", fares: "Fahrpreise 2026" },
+      license: (name: string) => `Lizenz ${name}`,
+      public: "Öffentliche Information",
+      hint: "Öffnet die Quelle",
+    },
     helpTitle: "Mach sie mit uns besser",
     help: "Wenn eine Linie fehlt, eine Zeit falsch ist oder du eine Idee hast, die deinen Alltag leichter macht, sag es uns. Kein Konto nötig.",
     report: "Problem oder Idee melden",

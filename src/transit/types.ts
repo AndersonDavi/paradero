@@ -16,6 +16,8 @@ export type Basis = "predicted" | "estimated" | "scheduled";
 export interface Feed {
   asOf: string;
   live: boolean;
+  /** The first and last bus are the operator's; the times between them are worked out from how often it runs. */
+  estimated?: boolean;
 }
 
 export interface RouteRef {
@@ -142,6 +144,8 @@ export interface PlanStop {
   name: string;
   lat: number;
   lon: number;
+  /** The barrio it is in, from cities that know their neighbourhoods. */
+  area?: string | null;
 }
 
 /** One stretch of a trip: on foot, or on one bus from one stop to another. Times are ISO. */
@@ -158,6 +162,8 @@ export type Leg =
       /** The stops the bus calls at between the two, in order: a rider counts them to know when to get off. */
       via?: PlanStop[];
       path: [number, number][];
+      /** A city bus with no stops: the rider hails it on the street at `from` and asks to get off at `to`. */
+      hail?: boolean;
     };
 
 export interface Journey {
@@ -167,12 +173,18 @@ export interface Journey {
   walkM: number;
   rides: number;
   legs: Leg[];
+  /** No timetable: the times count the walks and the ride, not the wait for the bus. */
+  untimed?: boolean;
+  /** The barrio the place it goes to is in. */
+  endArea?: string | null;
 }
 
 /** Ways to get from where the rider is to a place, the soonest arrival first. Empty when nothing gets there today. */
 export interface Plan {
   feed: Feed;
   journeys: Journey[];
+  /** One city bus each, from cities that have them: no timetable, so apart from the timed ways. */
+  urban?: Journey[];
 }
 
 export interface Health {

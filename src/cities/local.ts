@@ -1,9 +1,10 @@
 import { ApiError } from "@/lib/http";
-import type { Arrival, Feed, Nearby, Place, PlaceKind, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
+import type { Arrival, Feed, Journey, Nearby, Place, PlaceKind, RouteDetail, RouteRef, SearchResult, Stop, StopDetail, System } from "@/transit/types";
 
 import { metres, plan } from "./planner";
 import { buildStreets, type Streets, type StreetsData } from "./streets";
 import type { Point, TransitSource } from "./types";
+import { urbanJourneys, urbanLine, type UrbanLine } from "./urban";
 
 /**
  * A city answered on the phone from its published timetable, made by scripts/gtfs-to-city.mjs. The timetable is
@@ -18,6 +19,10 @@ export interface CityData {
   city: string;
   source: { name: string; url: string; license: string };
   validUntil: string | null;
+  /** The operator's own routes and official hours, when the file was built from them. */
+  official?: { name: string; url: string; retrievedAt: string; hoursFrom: string } | null;
+  /** True when the times between the official first and last bus are worked out, not published. */
+  estimated?: boolean;
   /** id, name, lat, lon, station (1) or stop (0), wheelchair accessible (1) */
   stops: [string, string, number, number, 0 | 1, 0 | 1][];
   /** id, code, name, system */
@@ -36,6 +41,9 @@ export interface CityData {
    * outline. A place's last field indexes this list; without it (older files), the places list itself.
    */
   areas?: [string, ...string[]][];
+  /** City buses: code, company, the authority's number, way (A or B, or null), proposal (1) or not (0), encoded line. */
+  urban?: [string, string, string | null, string | null, 0 | 1, string][];
+  urbanSource?: { name: string; url: string; retrievedAt: string };
 }
 
 interface Pattern {
@@ -61,6 +69,8 @@ interface Index {
   places: (Omit<Place, "distanceM"> & { words: string; core: string })[];
   /** The neighbourhoods OpenStreetMap has an outline for, as lon/lat rings. */
   outlines: { name: string; rings: [number, number][][] }[];
+  /** City buses, by their line. */
+  urban: UrbanLine[];
   /** Each pattern's trips for one day, today's and then tomorrow's, kept for the day they were worked out for. */
   trips: { day: string; list: number[][] } | null;
 }
@@ -102,6 +112,9 @@ function cityClock(now: Date): { day: Day; tomorrow: Day; minute: number } {
 }
 
 /** Buses keep the Sunday timetable on Colombia's public holidays. */
+/** Which timetable runs at a moment in the city: a holiday runs Sunday's. */
+export const serviceDayAt = (at: Date): Day => cityClock(at).day;
+
 function serviceDay(date: Date): Day {
   const w = date.getUTCDay();
   if (w === 0 || holidays(date.getUTCFullYear()).has(date.getTime())) return "sunday";
@@ -172,8 +185,27 @@ function decode(text: string): [number, number][] {
 
 const hhmm = (minute: number) => `${String(Math.floor(minute / 60) % 24).padStart(2, "0")}:${String(minute % 60).padStart(2, "0")}`;
 
+/** "LA-CAROLINA" is La Carolina, "COOLITORAL" is Coolitoral: the way a rider reads the company on the bus. */
+function companyName(raw: string): string {
+  return raw
+    .replace(/^T_/, "T. ")
+    .split(/[-_\s]+/)
+    .map((w) => (w.length <= 2 ? w.toLowerCase() : w[0] + w.slice(1).toLowerCase()))
+    .join(" ")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
 function build(data: CityData): Index {
   const routes: RouteRef[] = data.routes.map(([id, code, name, system]) => ({ id, feedCode: code, code, aliases: [code], name, system, variant: null }));
+  // City buses join the routes a rider can search and open, by their code and company. The ones the authority still
+  // marks as a proposal stay out until it confirms them.
+  const urban = (data.urban ?? [])
+    .filter(([, , , , proposal]) => !proposal)
+    .map(([code, company, number, way, , line]) => {
+      const route: RouteRef = { id: `amb-${number ?? code}${way ? `-${way}` : ""}`, feedCode: code, code, aliases: [code], name: companyName(company), system: "zonal_urbano", variant: null };
+      routes.push(route);
+      return urbanLine(route, decode(line));
+    });
   const lines = (data.paths ?? []).map(decode);
   const patterns: Pattern[] = data.patterns.map(([route, stops, offsets, departures, path = -1]) => ({
     route,
@@ -197,11 +229,13 @@ function build(data: CityData): Index {
   const places = raw.map(([name, lat, lon, kind, area], i) => ({ id: `place-${i}`, name, lat, lon, kind, area: areaName(area), words: compact(name), core: core(name) }));
   const outlines = (data.areas ?? []).flatMap(([name, ...rings]) => (rings.length ? [{ name, rings: rings.map(decode) }] : []));
 
-  // The timetable's own date: shown as "last updated", so a rider can tell how old it is.
-  const asOf = data.validUntil ? `${data.validUntil}T00:00:00-05:00` : new Date(0).toISOString();
+  // The timetable's own date: shown as "last updated", so a rider can tell how old it is. Official hours count from
+  // the day they took effect.
+  const day = data.official?.hoursFrom ?? data.validUntil;
+  const asOf = day ? `${day}T00:00:00-05:00` : new Date(0).toISOString();
   return {
     data,
-    feed: { asOf, live: false },
+    feed: { asOf, live: false, ...(data.estimated ? { estimated: true } : {}) },
     stops,
     stopById: new Map(stops.map((s, i) => [s.id, i])),
     routes,
@@ -210,6 +244,7 @@ function build(data: CityData): Index {
     calls,
     places,
     outlines,
+    urban,
     trips: null,
   };
 }
@@ -399,7 +434,16 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
         { minute: clock.minute, at: (minute) => new Date(startOfMinute + (minute - clock.minute) * 60_000).toISOString() },
         map,
       );
-      return { feed: index.feed, journeys };
+      // City buses, apart: they have no timetable, so their times leave out the wait.
+      const urban = index.urban.length ? urbanJourneys(index.urban, from, to, now, (p) => map?.nameAt(p) ?? null) : [];
+      // Where each bus is boarded and left, and where the trip ends, by barrio: what a rider is warned about.
+      const endArea = neighbourhoodOf(index, to);
+      const withAreas = (j: Journey): Journey => ({
+        ...j,
+        endArea,
+        legs: j.legs.map((l) => (l.kind === "ride" ? { ...l, from: { ...l.from, area: neighbourhoodOf(index, l.from) }, to: { ...l.to, area: neighbourhoodOf(index, l.to) } } : l)),
+      });
+      return { feed: index.feed, journeys: journeys.map(withAreas), urban: urban.map(withAreas) };
     },
 
     async stop(id): Promise<StopDetail> {
@@ -414,6 +458,19 @@ export function localSource(read: () => Promise<CityData>, readStreets?: () => P
       const index = await load();
       const r = index.routeById.get(id);
       if (r === undefined) throw new ApiError(404, "not_found");
+      // A city bus: its line, and no stops or times, since it stops wherever it is hailed.
+      const city = index.urban.find((u) => u.route.id === id);
+      if (city) {
+        return {
+          feed: index.feed,
+          route: { ...index.routes[r], firstDeparture: null, lastDeparture: null, tripsPerWeek: 0 },
+          path: city.line,
+          patterns: [{ path: city.line, stops: [] }],
+          stops: [],
+          buses: [],
+          alerts: [],
+        };
+      }
       const own = index.patterns.filter((p) => p.route === r).sort((a, b) => b.perWeek - a.perWeek);
       const main = own[0];
       // First and last bus of each timetable, and today's (a holiday runs Sunday's).

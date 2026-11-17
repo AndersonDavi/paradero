@@ -14,6 +14,15 @@
  * A city can also pass a newer list of each route's stops in order, without times (for Barranquilla,
  * Transmetro's "Paraderos del Sistema" on datos.gov.co, 2020). Routes the timetable lacks are added from it with
  * their stops and no departures, so riders find them and see where they go, marked as having no timetable.
+ *
+ * Newer still, a city can pass its operator's own routes (scripts/transmetro-official.mjs) and official hours
+ * (scripts/barranquilla-hours.json) as the 8th and 9th arguments. Each route then runs the operator's stops, in its
+ * order and along its line, between the official first and last bus of each kind of day. How often it runs comes
+ * from the old timetable, which is the only place that says; the file is marked as estimated so the app says so.
+ * Routes the operator no longer lists are left out, except the ones the city keeps on purpose.
+ *
+ * Last, the city's buses outside the operator (scripts/amb-routes.mjs) as the 10th argument: each route's line,
+ * company and way, with no stops and no times, since a city bus stops wherever a rider hails it.
  */
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -26,8 +35,8 @@ const CITIES = {
       license: "CC BY-SA 4.0",
     },
     // Transmetro: the A and U routes feed the trunk from the neighbourhoods; R, S and B run on the trunk.
-    // Gran Malecón runs only on some days and hours: a special route, in its own colour.
-    system: (code) => (code === "GM" ? "zonal_especial" : /^[AU]/.test(code) ? "alimentador" : /^[RSB]/.test(code) ? "troncal" : "other"),
+    // Gran Malecón and Ruta Chévere run only on some days and hours: special routes, in their own colour.
+    system: (code) => (code === "GM" || code === "Chévere" ? "zonal_especial" : /^[AU]/.test(code) ? "alimentador" : /^[RSB]/.test(code) ? "troncal" : "other"),
     newer: {
       name: "Transmetro, Paraderos del Sistema (datos.gov.co, 2020)",
       url: "https://www.datos.gov.co/d/hxy3-94yh",
@@ -37,10 +46,26 @@ const CITIES = {
     },
     // Weekday, Saturday and Sunday timetables, as the feed names them.
     services: { H: "weekday", S: "saturday", D: "sunday" },
+    // Where the barrio outlines come from when the areas file is scripts/pot-barrios.mjs's.
+    areas: {
+      name: "Alcaldía de Barranquilla, Barrios de Barranquilla según POT (datos.gov.co), y OpenStreetMap fuera del distrito",
+      url: "https://www.datos.gov.co/d/qui6-qeux",
+      license: "CC BY-SA 4.0; ODbL",
+    },
+    official: {
+      name: "Transmetro, rutas y horarios publicados en transmetro.gov.co",
+      url: "https://transmetro.gov.co",
+      // A route the site has no map for runs another's stops the other way round: S40 is R40 back south.
+      mirror: { S40: "R40" },
+      // Gran Malecón is not in the site's route list but still runs on some days: kept from the 2020 list.
+      keep: ["GM"],
+      // When the old timetable has no departures for a route, how often it is taken to run, in minutes.
+      headway: { alimentador: 15, troncal: 10, zonal_especial: 30, other: 20 },
+    },
   },
 };
 
-const [cityId, folder, out, osmFile, placesFile, newerFile, areasFile] = process.argv.slice(2);
+const [cityId, folder, out, osmFile, placesFile, newerFile, areasFile, officialFile, hoursFile, urbanFile] = process.argv.slice(2);
 const city = CITIES[cityId];
 if (!city || !folder || !out) {
   console.error(`Usage: node scripts/gtfs-to-city.mjs <${Object.keys(CITIES).join("|")}> <gtfs folder> <out.json>`);
@@ -139,6 +164,171 @@ for (const [tripId, list] of timesByTrip) {
   patterns.set(key, pattern);
 }
 
+// ---- The operator's own routes and hours ----
+
+/** Metres between two [lat, lon]. */
+const metresBetween = (a, b) => Math.hypot((a[0] - b[0]) * 110_540, (a[1] - b[1]) * 111_320 * Math.cos((a[0] * Math.PI) / 180));
+const placeOf = (i) => [stops[i][2], stops[i][3]];
+/** "Est. Joe Arroyo", "Estacion Joe Arroyo" and "Joe Arroyo" are one name: the word for station is left out to compare. */
+const plainName = (text) =>
+  text
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/^(est|estacion) /, "");
+
+const officialLines = [];
+const officialCodes = new Set();
+let official = null;
+if (officialFile && hoursFile && city.official) {
+  const site = JSON.parse(readFileSync(officialFile, "utf8"));
+  const hours = JSON.parse(readFileSync(hoursFile, "utf8"));
+  official = { name: city.official.name, url: city.official.url, retrievedAt: site.retrievedAt, hoursFrom: hours.validFrom };
+
+  // What the old timetable knows about each route: how fast it goes between stops and how often it leaves.
+  const old = new Map();
+  for (const p of patterns.values()) {
+    const code = routes[p.route][1];
+    if (!old.has(code)) old.set(code, []);
+    old.get(code).push(p);
+  }
+  /** Straight-line metres a bus covers per minute between stops, from the old trips. */
+  const pace = (code) => {
+    let metres = 0;
+    let minutes = 0;
+    for (const p of old.get(code) ?? []) {
+      for (let i = 1; i < p.stops.length; i++) metres += metresBetween(placeOf(p.stops[i - 1]), placeOf(p.stops[i]));
+      minutes += p.offsets[p.offsets.length - 1];
+    }
+    return metres > 0 && minutes > 0 ? metres / minutes : null;
+  };
+  /** The usual gap between buses leaving the same first stop on a kind of day, from the old trips. */
+  const headway = (code, day) => {
+    const byStart = new Map();
+    for (const p of old.get(code) ?? []) {
+      const list = byStart.get(p.stops[0]) ?? [];
+      list.push(...(p.departures[day] ?? []));
+      byStart.set(p.stops[0], list);
+    }
+    const busiest = [...byStart.values()].sort((a, b) => b.length - a.length)[0];
+    if (!busiest || busiest.length < 3) return null;
+    const times = [...new Set(busiest)].sort((a, b) => a - b);
+    const gaps = times.slice(1).map((t, i) => t - times[i]).filter((g) => g > 0 && g <= 60).sort((a, b) => a - b);
+    return gaps.length ? gaps[Math.floor(gaps.length / 2)] : null;
+  };
+
+  // A stop is the timetable's own when it has its code, or the same name close by, or is a few steps away.
+  const byId = new Map(stops.map((s, i) => [s[0], i]));
+  const stopFor = (s, newId) => {
+    const at = [s.lat, s.lon];
+    const known = s.code ? byId.get(String(s.code)) : undefined;
+    if (known !== undefined && metresBetween(at, placeOf(known)) < 300) {
+      // Plain stops take the operator's current name; stations keep theirs ("Joe Arroyo", not "Est. Joe Arroyo").
+      if (!stops[known][4] && s.name) stops[known][1] = s.name;
+      return known;
+    }
+    const name = plainName(s.name);
+    let best = -1;
+    let bestM = Infinity;
+    stops.forEach((t, i) => {
+      const m = metresBetween(at, [t[2], t[3]]);
+      if (((plainName(t[1]) === name && m < 150) || m < 20) && m < bestM) [best, bestM] = [i, m];
+    });
+    if (best >= 0) return best;
+    const id = s.code ? String(s.code) : newId;
+    stops.push([id, s.name, round(s.lat), round(s.lon), 0, 0]);
+    byId.set(id, stops.length - 1);
+    stopIndex.set(id, stops.length - 1);
+    return stops.length - 1;
+  };
+
+  /** A route's stops in the order the bus reaches them: by their number, or, unnumbered, by where they fall on its line. */
+  const inOrder = (r) => {
+    const list = r.stops.filter((s) => !/omitid/i.test(s.status ?? ""));
+    if (list.every((s) => s.n !== null)) return [...list].sort((a, b) => a.n - b.n || a.order - b.order);
+    const line = r.lines.reduce((a, b) => (!a || b.coords.length > a.coords.length ? b : a), null)?.coords;
+    if (!line) return list;
+    const flat = ([lon, lat]) => [lon * 109_500, lat * 110_540];
+    const pts = line.map(flat);
+    const along = (s) => {
+      const q = flat([s.lon, s.lat]);
+      let best = { d: Infinity, at: 0 };
+      let walked = 0;
+      for (let i = 0; i < pts.length - 1; i++) {
+        const [a, b] = [pts[i], pts[i + 1]];
+        const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+        const t = len ? Math.max(0, Math.min(1, ((q[0] - a[0]) * (b[0] - a[0]) + (q[1] - a[1]) * (b[1] - a[1])) / (len * len))) : 0;
+        const d = Math.hypot(q[0] - (a[0] + t * (b[0] - a[0])), q[1] - (a[1] + t * (b[1] - a[1])));
+        if (d < best.d) best = { d, at: walked + t * len };
+        walked += len;
+      }
+      return best.at;
+    };
+    return [...list].sort((a, b) => along(a) - along(b));
+  };
+
+  const minuteOf = (hm) => {
+    const [h, m] = hm.split(":").map(Number);
+    return h * 60 + m;
+  };
+  for (const r of site.routes) {
+    if (r.suspended) continue;
+    const spans = hours.routes[r.code];
+    if (!spans) {
+      console.error(`${r.code}: not in the official hours, left out`);
+      continue;
+    }
+    const mirrored = !r.stops.length && city.official.mirror[r.code];
+    const from = mirrored ? site.routes.find((o) => o.code === mirrored) : r;
+    if (!from?.stops.length) {
+      console.error(`${r.code}: no stops, left out`);
+      continue;
+    }
+    const ordered = mirrored ? inOrder(from).reverse() : inOrder(from);
+    const seq = ordered.map((s, k) => stopFor(s, `tm-${r.code}-${k + 1}`)).filter((s, i, all) => i === 0 || all[i - 1] !== s);
+    if (seq.length < 2) continue;
+
+    const system = city.system(r.code);
+    // "A5-5 Manantial (opera con desvío)" is called Manantial; a trunk route listed by its code alone keeps its old name.
+    const label = r.name
+      .replace(/^\s*Ruta\s+/i, "")
+      .replace(/^\s*[A-Z]{1,2}-?\d+(-\d+)?\s*/i, "")
+      .replace(/\(([^)]*)\)/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    let index = routes.findIndex((x) => x[1] === r.code);
+    if (index < 0) {
+      index = routes.length;
+      // With no name of its own (R40, S40), a route is called by where it goes.
+      routes.push([`tm-${r.code}`, r.code, label || stops[seq[seq.length - 1]][1], system]);
+      routeIndex.set(`tm-${r.code}`, index);
+    } else if (label) routes[index][2] = label;
+
+    // An old route that waited long at its timepoints, or ran another way, would make the new one look like a crawl:
+    // the pace stays between a slow and a quick bus, in straight-line metres a minute.
+    const speed = Math.min(450, Math.max(170, pace(r.code) ?? (system === "troncal" ? 330 : 250)));
+    const offsets = [0];
+    for (let i = 1; i < seq.length; i++) offsets.push(offsets[i - 1] + Math.max(1, Math.round(metresBetween(placeOf(seq[i - 1]), placeOf(seq[i])) / speed)));
+
+    const departures = {};
+    for (const day of ["weekday", "saturday", "sunday"]) {
+      const every = headway(r.code, day) ?? headway(r.code, "weekday") ?? city.official.headway[system] ?? 15;
+      for (const [first, last] of spans[day] ?? []) {
+        const list = (departures[day] ??= []);
+        for (let t = minuteOf(first); t < minuteOf(last); t += every) list.push(t);
+        list.push(minuteOf(last));
+      }
+    }
+
+    for (const [key, p] of patterns) if (routes[p.route][1] === r.code) patterns.delete(key);
+    patterns.set(`tm-${r.code}`, { route: index, stops: seq, offsets, departures });
+    officialCodes.add(r.code);
+    for (const l of from.lines) officialLines.push({ ref: r.code, coords: mirrored ? [...l.coords].reverse() : l.coords });
+  }
+}
+
 // ---- Routes from a newer list of stops, without times ----
 
 let added = 0;
@@ -174,6 +364,8 @@ if (newerFile && city.newer) {
     const first = name.split(" ")[0];
     const code = city.newer.codes[first] ?? first;
     if (known.has(code)) continue;
+    // With the operator's own list at hand, the 2020 list only adds what the city keeps on purpose.
+    if (officialCodes.size && !city.official.keep.includes(code)) continue;
     list.sort((a, b) => Number(a.secuencia_parada) - Number(b.secuencia_parada));
     const id = `newer-${code}`;
     routeIndex.set(id, routes.length);
@@ -191,6 +383,29 @@ if (newerFile && city.newer) {
     patterns.set(`${id}|${seq.join(",")}`, { route: routeIndex.get(id), stops: seq, offsets, departures: {} });
     added++;
   }
+}
+
+// ---- Only what still runs ----
+
+// Routes the operator no longer lists (old variants, suspended services) go, unless the city keeps them.
+if (officialCodes.size) {
+  const keep = new Set([...officialCodes, ...city.official.keep]);
+  for (const [key, p] of patterns) if (!keep.has(routes[p.route][1])) patterns.delete(key);
+}
+// Stops and routes no pattern uses are left out, so the map and the search show only places a bus stops at.
+{
+  const usedStops = [...new Set([...patterns.values()].flatMap((p) => p.stops))].sort((a, b) => a - b);
+  const usedRoutes = [...new Set([...patterns.values()].map((p) => p.route))].sort((a, b) => a - b);
+  const stopTo = new Map(usedStops.map((old, now) => [old, now]));
+  const routeTo = new Map(usedRoutes.map((old, now) => [old, now]));
+  for (const p of patterns.values()) {
+    p.stops = p.stops.map((s) => stopTo.get(s));
+    p.route = routeTo.get(p.route);
+  }
+  const keptStops = usedStops.map((i) => stops[i]);
+  const keptRoutes = usedRoutes.map((i) => routes[i]);
+  stops.splice(0, stops.length, ...keptStops);
+  routes.splice(0, routes.length, ...keptRoutes);
 }
 
 // ---- Drawing patterns along the streets ----
@@ -271,6 +486,13 @@ const osmLines = osmFile
       return { ref: normalize(ref), line, points, cum: lengths(points) };
     })
   : [];
+
+/** The operator's own lines, tried before OpenStreetMap's for the route they belong to. */
+const ownLines = officialLines.map(({ ref, coords }) => {
+  const line = simplify(coords, 4);
+  const points = line.map(xy);
+  return { ref: normalize(ref), line, points, cum: lengths(points) };
+});
 
 /** A stop this close to the line is on it. */
 const ON_LINE_M = 60;
@@ -368,8 +590,9 @@ function streetPath(pattern) {
     }
     return best;
   };
-  // The route's own line first; another route's line only when it carries nearly the whole pattern.
-  const best = pick(osmLines.filter((l) => l.ref === code), 0.5) ?? pick(osmLines, 0.8);
+  // The operator's line for the route first, then the route's own line on OpenStreetMap; another route's line only
+  // when it carries nearly the whole pattern.
+  const best = pick(ownLines.filter((l) => l.ref === code), 0.5) ?? pick(osmLines.filter((l) => l.ref === code), 0.5) ?? pick(osmLines, 0.8);
   if (process.env.DEBUG_LINES) console.error(`${routes[pattern.route][1]}: ${best ? `${best.along}/${stretches}` : "none"}`);
   return best?.path ?? null;
 }
@@ -395,7 +618,7 @@ const paths = [];
 const pathIndex = new Map();
 let drawn = 0;
 function pathOf(pattern) {
-  if (!osmLines.length) return -1;
+  if (!osmLines.length && !ownLines.length) return -1;
   const key = `${pattern.route}|${pattern.stops.join(",")}`;
   if (!pathIndex.has(key)) {
     const line = streetPath(pattern);
@@ -411,6 +634,9 @@ const data = {
   city: cityId,
   source: city.source,
   newer: added ? { name: city.newer.name, url: city.newer.url, license: city.newer.license } : null,
+  // The operator's routes and official first and last buses; the times between them are worked out, not published.
+  official,
+  estimated: !!official,
   lines: osmLines.length ? { name: "OpenStreetMap", url: "https://www.openstreetmap.org/copyright", license: "ODbL" } : null,
   validUntil: (() => {
     const ends = table("calendar").map((c) => c.end_date).sort();
@@ -427,8 +653,22 @@ const data = {
     pathOf(p),
   ]),
   paths,
+  ...urbanRoutes(),
   ...placesAndAreas(),
 };
+
+/**
+ * City buses: code, company, way ("A" or "B" when a route is split in two files, else null), whether the authority
+ * marks it a proposal (1) or not (0), and its line as an encoded polyline, simplified to what a map shows.
+ */
+function urbanRoutes() {
+  if (!urbanFile) return {};
+  const amb = JSON.parse(readFileSync(urbanFile, "utf8"));
+  const urban = amb.routes
+    .filter((r) => r.lines.length)
+    .map((r) => [r.code, r.company, r.number, r.way, r.proposal ? 1 : 0, encode(simplify(r.lines.flat(), 8))]);
+  return { urban, urbanSource: { name: "Área Metropolitana de Barranquilla, rutas de buses", url: amb.source, retrievedAt: amb.retrievedAt } };
+}
 
 /**
  * Places a rider can ask how to get to, from scripts/osm-places.mjs: name, lat, lon, kind, and the neighbourhood
@@ -472,9 +712,9 @@ function placesAndAreas() {
     return byName.get(near);
   };
   const places = list.map((p) => [p[0], p[1], p[2], p[3], p[3] === "neighbourhood" ? -1 : areaOf(p)]);
-  return { places, areas };
+  return { places, areas, ...(city.areas ? { areasSource: city.areas } : {}) };
 }
 
 const json = JSON.stringify(data);
 writeFileSync(out, json);
-console.log(`${cityId}: ${stops.length} stops, ${added} routes added without times, ${data.places?.length ?? 0} places, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);
+console.log(`${cityId}: ${officialCodes.size} routes from the operator, ${stops.length} stops, ${added} routes added without times, ${data.places?.length ?? 0} places, ${data.urban?.length ?? 0} city bus routes, ${routes.length} routes, ${data.patterns.length} patterns from ${timesByTrip.size - skipped} trips (${skipped} skipped), ${drawn} drawn along streets, ${(json.length / 1024).toFixed(0)} KB`);

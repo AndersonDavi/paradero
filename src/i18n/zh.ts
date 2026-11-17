@@ -42,6 +42,8 @@ export const zh: Messages = {
   feed: {
     live: "实时",
     scheduled: "计划时刻",
+    estimated: "大致时刻",
+    estimatedSince: (operator, day) => `没有实时数据。首末班车来自 ${operator} 自 ${day} 起生效的时刻表，中间的时间是按发车间隔推算的。`,
     updated: (since) => `更新于${since}`,
     notPublishing: (operator) => `${operator} 目前没有发布车辆位置`,
     noLive: "暂无实时数据",
@@ -119,7 +121,7 @@ export const zh: Messages = {
         title: "巴兰基亚值得拥有最好的出行应用。",
         intro: "Paradero 免费、开放，属于每个人。Croma 为波哥大打造了它；这个版本用 Transmetro 公布的数据把它带到巴兰基亚。",
         live: "Transmetro 目前还没有公布车辆位置，所以每个时间都来自公布的时刻表，我们也会一直标明。",
-        data: "来自 Transmetro 公布的时刻表和它在 datos.gov.co 上 2020 年的站点列表，以及 OpenStreetMap 的街道和地点。一切都在你的手机上计算。",
+        data: "来自 Transmetro 公布的线路和时间、Área Metropolitana 的城市公交线路和 POT 的街区边界，以及 OpenStreetMap 的街道和地点。一切都在你的手机上计算。",
       },
       onboarding: {
         eyebrow: "为巴兰基亚打造的公共产品",
@@ -159,6 +161,8 @@ export const zh: Messages = {
   },
 
   route: {
+    cityBus: (company) => `${company} 运营的城市公交。沿线招手即停。都市区管理局公布了线路，但没有时刻表和站点。`,
+    fare: (amount, holiday) => `票价 ${amount} · 周日及节假日 ${holiday}`,
     failed: { title: "无法加载此线路", body: "请检查网络连接后重试。" },
     first: "首班车",
     last: "末班车",
@@ -217,6 +221,25 @@ export const zh: Messages = {
   placeKinds: { address: "地址", mall: "购物", health: "医疗", education: "学校或大学", park: "公园或运动", neighbourhood: "街区", transit: "客运站", other: "地点" },
 
   trip: {
+    theft: (areas) =>
+      `${areas.join("、")} 是抢劫行人最多的街区之一，尤其是工作日上午 10 点到 11 点和晚上 7 点到 8 点。等车和下车时请把手机收好。`,
+    theftSource: (source) => `数据：${source}。`,
+    modes: "显示哪些公交",
+    modeAll: "全部",
+    modeUrban: "城市公交",
+    urbanTitle: "城市公交",
+    urbanNote: "没有时刻表也没有固定站点：在它经过的地方招手即可。时间不含等车。",
+    about: (duration) => `约 ${duration}`,
+    noTimetable: "无时刻表",
+    hail: (code, company) => `招手乘坐 ${company} 的 ${code}`,
+    hailOn: (street) => `在 ${street}`,
+    hailOnRoute: "在它沿线经过的地方",
+    askStop: (street) => `在 ${street} 叫司机停车`,
+    askStopNear: "在目的地附近叫司机停车",
+    noWait: "不含等车时间",
+    nightTip: "晚上请在明亮、人多的地方等车，等车时把手机收好。",
+    fare: (amount) => `票价 ${amount}`,
+    fareFrom: (amount) => `票价 ${amount} 起`,
     title: "怎么去",
     stops: "途经点",
     addStop: "添加途经点",
@@ -297,6 +320,13 @@ export const zh: Messages = {
       code: { title: "开源", body: "任何人都可以查看、改进或拿去使用。MIT 许可证。" },
     },
     dataTitle: "数据来源",
+    credits: {
+      title: "来源与许可",
+      gives: { routes: "官方线路、站点和时间", timetable: "2016 年时刻表的发车间隔", stops: "2020 年的站点", cityBuses: "城市公交线路", barrios: "街区边界（POT）", streets: "地图、街道、地点和区外街区", theft: "各街区的抢劫案件，2024–2026", fares: "2026 年票价" },
+      license: (name: string) => `许可 ${name}`,
+      public: "公开信息",
+      hint: "打开来源",
+    },
     helpTitle: "和我们一起改进",
     help: "如果某条线路找不到、时间不对，或者你有让出行更方便的想法，请告诉我们。无需账号。",
     report: "报告问题或提出想法",

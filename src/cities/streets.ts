@@ -40,6 +40,8 @@ export interface Streets {
    * both have a Calle 30), so one address can name two corners far apart; each is offered.
    */
   addresses(query: string, near?: Point | null): Address[];
+  /** The street a point is on: the name of the nearest named stretch, or null when none is close. */
+  nameAt(point: Point): string | null;
 }
 
 export interface Corner {
@@ -432,5 +434,24 @@ export function buildStreets(data: StreetsData): Streets {
     return { lat: lat[v], lon: lon[v] };
   }
 
-  return { walkFrom, near, reach, line, addresses };
+  function nameAt(point: Point): string | null {
+    let best: { d: number; name: number } | null = null;
+    for (const c of near(point, 120)) {
+      for (let k = start[c.vertex]; k < start[c.vertex + 1]; k++) {
+        const e = adj[k];
+        if (ename[e] < 0 || !data.names[ename[e]]) continue;
+        // How far the point is from the stretch, drawn straight between its corners: enough to tell two streets apart.
+        const [ax, ay, bx, by] = [lon[eu[e]], lat[eu[e]], lon[ev[e]], lat[ev[e]]];
+        const dx = bx - ax;
+        const dy = by - ay;
+        const len = dx * dx + dy * dy;
+        const t = len ? Math.max(0, Math.min(1, ((point.lon - ax) * dx + (point.lat - ay) * dy) / len)) : 0;
+        const d = metres(point.lat, point.lon, ay + t * dy, ax + t * dx);
+        if (!best || d < best.d) best = { d, name: ename[e] };
+      }
+    }
+    return best && best.d < 60 ? data.names[best.name] : null;
+  }
+
+  return { walkFrom, near, reach, line, addresses, nameAt };
 }

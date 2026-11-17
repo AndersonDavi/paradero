@@ -145,7 +145,7 @@ export function useTrip(from: { lat: number; lon: number } | null, stops: TripSt
         then.push(leg);
         arrives = leg?.arrives ?? null;
       }
-      return { feed: first.feed, first: first.journeys, then };
+      return { feed: first.feed, first: first.journeys, urban: first.urban ?? [], then };
     },
     enabled: canPlan() && !!from && stops.length > 0,
     placeholderData: keepPreviousData,

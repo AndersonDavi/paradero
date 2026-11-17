@@ -46,6 +46,8 @@ export const pt: Messages = {
   feed: {
     live: "Ao vivo",
     scheduled: "Horário programado",
+    estimated: "Horário aproximado",
+    estimatedSince: (operator, day) => `Sem dados ao vivo. O primeiro e o último ônibus são do horário da ${operator} vigente desde ${day}. Os horários entre eles são um cálculo de cada quanto passa.`,
     updated: (since) => `Atualizado ${since}`,
     notPublishing: (operator) => `A ${operator} não está publicando as posições`,
     noLive: "sem dados ao vivo",
@@ -123,7 +125,7 @@ export const pt: Messages = {
         title: "Barranquilla merece o melhor app para se locomover.",
         intro: "O Paradero é gratuito, aberto e de todos. A Croma o fez para Bogotá; esta versão o leva a Barranquilla com os dados que o Transmetro publicou.",
         live: "O Transmetro ainda não publica onde estão seus ônibus, então cada horário vem da tabela publicada, e sempre dizemos isso.",
-        data: "Do horário que o Transmetro publicou e da sua lista de pontos de 2020 no datos.gov.co, com as ruas e os lugares do OpenStreetMap. Tudo é calculado no seu celular.",
+        data: "Das linhas e horários que o Transmetro publica, das linhas de ônibus urbanos da Área Metropolitana e dos bairros do POT, com as ruas e os lugares do OpenStreetMap. Tudo é calculado no seu celular.",
       },
       onboarding: {
         eyebrow: "Um bem público para Barranquilla",
@@ -163,6 +165,8 @@ export const pt: Messages = {
   },
 
   route: {
+    cityBus: (company) => `Ônibus urbano da ${company}. Para onde você der sinal ao longo do trajeto. A autoridade metropolitana publica o trajeto, mas não horários nem pontos.`,
+    fare: (amount, holiday) => `Passagem ${amount} · domingos e feriados ${holiday}`,
     failed: { title: "Não conseguimos carregar esta linha", body: "Verifique sua conexão e tente de novo." },
     first: "Primeiro ônibus",
     last: "Último ônibus",
@@ -221,6 +225,25 @@ export const pt: Messages = {
   placeKinds: { address: "Endereço", mall: "Comércio", health: "Saúde", education: "Escola ou universidade", park: "Parque ou esporte", neighbourhood: "Bairro", transit: "Terminal", other: "Lugar" },
 
   trip: {
+    theft: (areas) =>
+      `${areas.length === 1 ? `${areas[0]} é um dos bairros` : `${areas.slice(0, -1).join(", ")} e ${areas[areas.length - 1]} estão entre os bairros`} com mais assaltos a pessoas, sobretudo em dias úteis das 10 às 11h e das 19 às 20h. Guarde o celular enquanto espera e ao descer.`,
+    theftSource: (source) => `Dados: ${source}.`,
+    modes: "Quais ônibus mostrar",
+    modeAll: "Todos",
+    modeUrban: "Ônibus urbano",
+    urbanTitle: "Ônibus urbanos",
+    urbanNote: "Sem horário e sem pontos fixos: dê sinal onde ele passar. O tempo não conta a espera.",
+    about: (duration) => `Cerca de ${duration}`,
+    noTimetable: "Sem horário",
+    hail: (code, company) => `Dê sinal para o ${code} da ${company}`,
+    hailOn: (street) => `Na ${street}`,
+    hailOnRoute: "Onde ele passar no trajeto",
+    askStop: (street) => `Peça para descer na ${street}`,
+    askStopNear: "Peça para descer perto do destino",
+    noWait: "Sem contar a espera do ônibus",
+    nightTip: "À noite, espere o ônibus onde houver luz e mais gente, e guarde o celular enquanto espera.",
+    fare: (amount) => `Passagem ${amount}`,
+    fareFrom: (amount) => `Passagem a partir de ${amount}`,
     title: "Como chegar",
     stops: "Paradas",
     addStop: "Adicionar parada",
@@ -302,6 +325,13 @@ export const pt: Messages = {
       code: { title: "Código aberto", body: "Qualquer pessoa pode revisá-lo, melhorá-lo ou levá-lo. Licença MIT." },
     },
     dataTitle: "De onde vêm os dados",
+    credits: {
+      title: "Fontes e licenças",
+      gives: { routes: "Linhas, pontos e horários oficiais", timetable: "Frequências do horário de 2016", stops: "Pontos de 2020", cityBuses: "Linhas de ônibus urbanos", barrios: "Limites dos bairros (POT)", streets: "Mapa, ruas, lugares e bairros fora do distrito", theft: "Roubos a pessoas por bairro, 2024–2026", fares: "Tarifas de 2026" },
+      license: (name: string) => `Licença ${name}`,
+      public: "Informação pública",
+      hint: "Abre a fonte",
+    },
     helpTitle: "Melhore com a gente",
     help: "Se uma linha não aparece, um horário está errado ou você tem uma ideia que facilitaria seu dia, conte para nós. Não precisa de conta.",
     report: "Relatar um problema ou uma ideia",

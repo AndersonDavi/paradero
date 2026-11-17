@@ -1,3 +1,4 @@
+import { city } from "@/cities";
 import { t, tag } from "@/i18n";
 import { sayable } from "@/transit/codes";
 import type { Arrival, Feed } from "@/transit/types";
@@ -84,8 +85,16 @@ export function since(iso: string, now = Date.now()): string {
   return time.sinceDay(format(sameYear ? "day" : "year").format(then), clock(iso));
 }
 
+/** The day a timetable took effect, without the time: "3 de noviembre", with the year when it is not this one. */
+export function dayText(iso: string, now = Date.now()): string {
+  const then = new Date(iso);
+  const year = (d: Date) => format("year").formatToParts(d).find((p) => p.type === "year")?.value;
+  return format(year(then) === year(new Date(now)) ? "day" : "year").format(then);
+}
+
 export function feedText(feed: Feed): string {
-  return feed.live ? `${t().feed.live} · ${since(feed.asOf)}` : t().feed.noLiveSince(since(feed.asOf));
+  if (feed.live) return `${t().feed.live} · ${since(feed.asOf)}`;
+  return feed.estimated ? t().feed.estimatedSince(city.operator, dayText(feed.asOf)) : t().feed.noLiveSince(since(feed.asOf));
 }
 
 /** How long a trip takes: "44 min", "1 h 4 min". */

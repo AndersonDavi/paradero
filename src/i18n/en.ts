@@ -46,6 +46,8 @@ export const en: Messages = {
   feed: {
     live: "Live",
     scheduled: "Scheduled times",
+    estimated: "Approximate times",
+    estimatedSince: (operator, day) => `No live data. The first and last bus are from ${operator}'s timetable in effect since ${day}. The times in between are worked out from how often it runs.`,
     updated: (since) => `Updated ${since}`,
     notPublishing: (operator) => `${operator} is not publishing bus positions`,
     noLive: "no live data",
@@ -123,7 +125,7 @@ export const en: Messages = {
         title: "Barranquilla deserves the best app to get around.",
         intro: "Paradero is free, open and everyone's. Croma built it for Bogotá; this version brings it to Barranquilla with the data Transmetro has published.",
         live: "Transmetro does not publish where its buses are yet, so every time comes from the published schedule, and we always say so.",
-        data: "From the schedule Transmetro published and its 2020 list of stops on datos.gov.co, with streets and places from OpenStreetMap. Everything is worked out on your phone.",
+        data: "From the routes and hours Transmetro publishes, the Área Metropolitana's city bus routes and the POT's barrios, with streets and places from OpenStreetMap. Everything is worked out on your phone.",
       },
       onboarding: {
         eyebrow: "A public good for Barranquilla",
@@ -163,6 +165,8 @@ export const en: Messages = {
   },
 
   route: {
+    cityBus: (company) => `City bus run by ${company}. It stops wherever you hail it along its route. The metropolitan authority publishes the route, but no timetable or stops.`,
+    fare: (amount, holiday) => `Fare ${amount} · Sundays and holidays ${holiday}`,
     failed: { title: "We couldn't load this route", body: "Check your connection and try again." },
     first: "First bus",
     last: "Last bus",
@@ -221,6 +225,25 @@ export const en: Messages = {
   placeKinds: { address: "Address", mall: "Shopping", health: "Health", education: "School or university", park: "Park or sports", neighbourhood: "Neighbourhood", transit: "Terminal", other: "Place" },
 
   trip: {
+    theft: (areas) =>
+      `${areas.length === 1 ? `${areas[0]} is one of the barrios` : `${areas.slice(0, -1).join(", ")} and ${areas[areas.length - 1]} are among the barrios`} with the most street robberies, above all on weekdays from 10 to 11 a.m. and from 7 to 8 p.m. Keep your phone away while you wait and when you get off.`,
+    theftSource: (source) => `Data: ${source}.`,
+    modes: "Which buses to show",
+    modeAll: "All",
+    modeUrban: "City bus",
+    urbanTitle: "City buses",
+    urbanNote: "No timetable and no fixed stops: hail it wherever it passes. The time leaves out the wait.",
+    about: (duration) => `About ${duration}`,
+    noTimetable: "No timetable",
+    hail: (code, company) => `Hail the ${code} run by ${company}`,
+    hailOn: (street) => `On ${street}`,
+    hailOnRoute: "Wherever it passes on its route",
+    askStop: (street) => `Ask to get off on ${street}`,
+    askStopNear: "Ask to get off near your destination",
+    noWait: "Not counting the wait for the bus",
+    nightTip: "At night, wait for the bus where there is light and more people, and keep your phone away while you wait.",
+    fare: (amount) => `Fare ${amount}`,
+    fareFrom: (amount) => `Fare from ${amount}`,
     title: "How to get there",
     stops: "Stops",
     addStop: "Add a stop",
@@ -302,6 +325,13 @@ export const en: Messages = {
       code: { title: "Open source", body: "Anyone can review it, improve it or take it. MIT license." },
     },
     dataTitle: "Where the data comes from",
+    credits: {
+      title: "Sources and licenses",
+      gives: { routes: "Official routes, stops and hours", timetable: "Frequencies from the 2016 timetable", stops: "Stops from 2020", cityBuses: "City bus routes", barrios: "Barrio boundaries (POT)", streets: "Map, streets, places and barrios outside the district", theft: "Theft from persons by barrio, 2024–2026", fares: "2026 fares" },
+      license: (name: string) => `License ${name}`,
+      public: "Public information",
+      hint: "Opens the source",
+    },
     helpTitle: "Make it better with us",
     help: "If a route is missing, a time is wrong or you have an idea that would make your day easier, tell us. No account needed.",
     report: "Report a problem or an idea",
