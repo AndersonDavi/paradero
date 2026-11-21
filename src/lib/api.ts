@@ -22,7 +22,14 @@ if (Platform.OS !== "web") {
   AppState.addEventListener("change", (state) => focusManager.setFocused(state === "active"));
 }
 
-const LIVE = 20_000;
+/**
+ * How often an open stop or route asks again. Live positions are kept by the server for only a few seconds, so a new
+ * report shows up within moments; a timetable changes by the minute, so asking every few seconds would only spend
+ * battery working out the same times.
+ */
+const LIVE = 5_000;
+const SCHEDULED = 30_000;
+const every = (query: { state: { data?: { feed?: { live?: boolean } } } }) => (query.state.data?.feed?.live ? LIVE : SCHEDULED);
 
 // Every answer comes from the city's own source, read when asked so a change of city takes effect at once; its id
 // is in each key so two cities never share a cached answer.
@@ -58,8 +65,8 @@ export function useSearch(query: string, near?: { lat: number; lon: number } | n
   });
 }
 
-const stopQuery = (id: string) => ({ queryKey: ["stop", city.id, id], queryFn: () => source().stop(id), staleTime: 15_000 });
-const routeQuery = (id: string) => ({ queryKey: ["route", city.id, id], queryFn: () => source().route(id), staleTime: 15_000 });
+const stopQuery = (id: string) => ({ queryKey: ["stop", city.id, id], queryFn: () => source().stop(id), staleTime: LIVE });
+const routeQuery = (id: string) => ({ queryKey: ["route", city.id, id], queryFn: () => source().route(id), staleTime: LIVE });
 
 export function prefetchStop(id: string) {
   void queryClient.prefetchQuery(stopQuery(id));
@@ -80,11 +87,11 @@ export function knownStop(id: string | undefined): Stop | undefined {
 }
 
 export function useStop(id: string | undefined) {
-  return useQuery({ ...stopQuery(id ?? ""), enabled: !!id, refetchInterval: LIVE });
+  return useQuery({ ...stopQuery(id ?? ""), enabled: !!id, refetchInterval: every });
 }
 
 export function useRoute(id: string | undefined) {
-  return useQuery({ ...routeQuery(id ?? ""), enabled: !!id, refetchInterval: LIVE });
+  return useQuery({ ...routeQuery(id ?? ""), enabled: !!id, refetchInterval: every });
 }
 
 /** Every stop in the city, when its stops are on the phone; empty otherwise. Read once. */

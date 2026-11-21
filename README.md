@@ -2,6 +2,14 @@
 
 **Tu bus, sin adivinar.** La app abierta para moverse en Bogotá: TransMilenio, SITP, alimentadores y TransMiCable en un solo lugar.
 
+<p>
+  <a href="https://apps.apple.com/co/app/id6832336355"><img src=".github/assets/app-store-es.svg" alt="Descargar Paradero en el App Store" height="52"></a>
+  &nbsp;
+  <a href="https://play.google.com/store/apps/details?id=co.usecroma.paradero"><img src=".github/assets/google-play-es.png" alt="Descargar Paradero en Google Play" height="52"></a>
+</p>
+
+**Descárgala gratis y sin anuncios:** [iPhone](https://apps.apple.com/co/app/id6832336355) · [Android](https://play.google.com/store/apps/details?id=co.usecroma.paradero)
+
 Un bien público digital de [Croma](https://usecroma.com) · Datos abiertos de TransMilenio · Licencia MIT · [Privacidad](https://transmi.usecroma.com/paradero/privacidad) · No es una app oficial del Distrito.
 
 ![Paradero en cuatro pantallas: la bienvenida, los paraderos cercanos en el mapa, un paradero con su bus articulado acercándose en vivo y la ruta B10 con sus buses en camino](.github/assets/hero.jpg)
