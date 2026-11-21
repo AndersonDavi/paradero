@@ -93,8 +93,8 @@ interface Scene {
   data: Record<SourceId, Collection>;
 }
 
-type SourceId = "path" | "approach" | "trip" | "stops" | "buses" | "user";
-const SOURCES: SourceId[] = ["path", "approach", "trip", "stops", "buses", "user"];
+type SourceId = "path" | "approach" | "done" | "trip" | "stops" | "buses" | "user";
+const SOURCES: SourceId[] = ["path", "approach", "done", "trip", "stops", "buses", "user"];
 
 type ZoomWidth = ["interpolate", ["linear"], ["zoom"], number, number, number, number];
 const LINE_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 1.25, 16, 3];
@@ -102,6 +102,9 @@ const CASING_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 1
 const GLOW_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 6, 16, 14];
 const WALK_WIDTH: ZoomWidth = ["interpolate", ["linear"], ["zoom"], 10, 2.5, 16, 5];
 const ROUND = { "line-cap": "round", "line-join": "round" } as const;
+
+/** How long the camera takes to catch up with a rider it follows: under the time between two positions. */
+const FOLLOW_MS = 800;
 
 const FILL_MS = 1_600;
 const FILL_HOLD_MS = 900;
@@ -124,6 +127,8 @@ function layers({ p, quiet, showCodes, lit }: Scene): LayerSpecification[] {
     { id: "approach-glow", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.ink, "line-width": GLOW_WIDTH, "line-opacity": glow, "line-blur": 5 } },
     { id: "approach-casing", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": 0.9 } },
     { id: "approach-line", type: "line", source: "approach", layout: ROUND, paint: { "line-color": p.ink, "line-width": LINE_WIDTH, "line-gradient": fill(p, lit) } },
+    // The way already behind the rider on a trip, quieter than the way ahead.
+    { id: "done-line", type: "line", source: "done", layout: ROUND, paint: { "line-color": p.faint, "line-width": LINE_WIDTH } },
     // A trip: the buses as solid lines along their routes, the walks between them as dots.
     { id: "trip-casing", type: "line", source: "trip", filter: ["==", ["get", "kind"], "ride"], layout: ROUND, paint: { "line-color": p.background, "line-width": CASING_WIDTH, "line-opacity": 0.9 } },
     { id: "trip-ride", type: "line", source: "trip", filter: ["==", ["get", "kind"], "ride"], layout: ROUND, paint: { "line-color": p.ink, "line-width": LINE_WIDTH } },
@@ -249,7 +254,7 @@ function useFill(still: boolean, restartOn: string): number | null {
 }
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system, showUser = true, showCodes = false, focusBusId = null, padding: own, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, done, system, showUser = true, showCodes = false, focusBusId = null, padding: own, rider, onStopPress, onUserMove },
   ref,
 ) {
   // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
@@ -269,6 +274,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const hasApproach = !!approach && approach.length > 1;
   const approachData = useMemo(() => line(approach), [approach]);
   const tripLines = useMemo<Collection>(() => (legs?.length ? tripData(legs) : EMPTY), [legs]);
+  const doneData = useMemo(() => line(done), [done]);
 
   const fixes = useMemo(() => buses.map((b) => ({ id: b.id, lat: b.lat, lon: b.lon, reportedAt: b.reportedAt, code: b.code, system: b.system, onItsWay: b.id === focusBusId })), [buses, focusBusId]);
   const moving = useMovingBuses(fixes, path, still);
@@ -284,8 +290,8 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
     [moving, focusBusId],
   );
 
-  const userLat = location.status === "ready" ? location.lat : null;
-  const userLon = location.status === "ready" ? location.lon : null;
+  const userLat = rider?.lat ?? (location.status === "ready" ? location.lat : null);
+  const userLon = rider?.lon ?? (location.status === "ready" ? location.lon : null);
   const userData = useMemo(() => (showUser && userLat !== null && userLon !== null ? points([{ lat: userLat, lon: userLon }], () => ({})) : EMPTY), [showUser, userLat, userLon]);
 
   // As in the app, the fill plays each time a way in appears or the rider follows another bus.
@@ -294,11 +300,11 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   const colours = [p.dark, p.ink, p.background, p.faint, p.text].join("|");
 
   // The map lives outside React; it reads the latest scene and handlers from here whenever it needs them.
-  const scene: Scene = { p, quiet: hasApproach, showCodes, lit, data: { path: pathData, approach: approachData, trip: tripLines, stops: stopData, buses: busData, user: userData } };
+  const scene: Scene = { p, quiet: hasApproach, showCodes, lit, data: { path: pathData, approach: approachData, done: doneData, trip: tripLines, stops: stopData, buses: busData, user: userData } };
   const inset = padding ?? NO_INSET;
-  const latest = useRef({ scene, onStopPress, inset });
+  const latest = useRef({ scene, onStopPress, onUserMove, inset });
   useLayoutEffect(() => {
-    latest.current = { scene, onStopPress, inset };
+    latest.current = { scene, onStopPress, onUserMove, inset };
   });
 
   useEffect(() => {
@@ -343,6 +349,10 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
         const id = hit(e.point)?.properties?.id;
         if (typeof id === "string") latest.current.onStopPress?.(id);
       });
+      // Only a hand on the map has an original event; the camera moving on its own has none.
+      m.on("movestart", (e) => {
+        if ((e as { originalEvent?: unknown }).originalEvent) latest.current.onUserMove?.();
+      });
       m.on("mousemove", (e) => {
         m.getCanvas().style.cursor = latest.current.onStopPress && hit(e.point) ? "pointer" : "";
       });
@@ -386,6 +396,7 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
   useEffect(() => setData(mapRef.current, "stops", stopData), [stopData]);
   useEffect(() => setData(mapRef.current, "path", pathData), [pathData]);
   useEffect(() => setData(mapRef.current, "approach", approachData), [approachData]);
+  useEffect(() => setData(mapRef.current, "done", doneData), [doneData]);
   useEffect(() => setData(mapRef.current, "trip", tripLines), [tripLines]);
   useEffect(() => setData(mapRef.current, "buses", busData), [busData]);
   useEffect(() => setData(mapRef.current, "user", userData), [userData]);
@@ -449,6 +460,10 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
         if (coords.length < 2) return;
         framed.current = coords;
         camera((map, duration) => frame(map, coords, duration));
+      },
+      follow: (lat, lon) => {
+        framed.current = null;
+        camera((map, duration) => map.easeTo({ center: [lon, lat], duration: duration && FOLLOW_MS, essential: true }));
       },
     };
   });

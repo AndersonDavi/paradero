@@ -246,6 +246,7 @@ export const pt: Messages = {
     fareFrom: (amount) => `Passagem a partir de ${amount}`,
     title: "Como chegar",
     stops: "Paradas",
+    follow: "Me seguir no mapa",
     addStop: "Adicionar parada",
     showStop: "Mostrar no mapa",
     moveUp: (name) => `Subir ${name}`,

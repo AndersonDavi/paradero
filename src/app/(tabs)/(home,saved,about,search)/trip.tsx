@@ -1,7 +1,7 @@
 import * as Haptics from "expo-haptics";
 import { router, useLocalSearchParams, useNavigation } from "expo-router";
 import { PressableScale } from "pressto";
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 import { toast } from "sonner-native";
@@ -28,7 +28,8 @@ import { pickStop } from "@/lib/pick-stop";
 import { theftAreas } from "@/lib/warnings";
 import { useClock } from "@/lib/appearance";
 import { clock, durationText, spokenDuration } from "@/lib/format";
-import { useLocation } from "@/lib/location";
+import { useLocation, useWatchedPosition } from "@/lib/location";
+import { progressAlong } from "@/lib/progress";
 import { placeId, placesInOrder, setPlace, toggleTrip, tripId, useIsSaved, useSaved, type SavedPlace } from "@/lib/saved";
 import { photo, signal, systems, usePalette } from "@/theme/colors";
 import { layout, radius, size, space } from "@/theme/tokens";
@@ -36,6 +37,14 @@ import type { Journey, Leg } from "@/transit/types";
 
 /** The places themselves, drawn on the map among the bus stops. */
 const DESTINATION = "destination";
+
+/** A rider this far from the way, and as far from where they set out, gets a new way from where they are. */
+const OFF_WAY_M = 300;
+/** Once this far from where they set out, the rider is on their way: the camera starts following them. */
+const SET_OFF_M = 40;
+
+const metres = (a: { lat: number; lon: number }, b: { lat: number; lon: number }) =>
+  Math.hypot((a.lat - b.lat) * 111_320, (a.lon - b.lon) * 111_320 * Math.cos((a.lat * Math.PI) / 180));
 
 /** From this hour to this one, a city bus is waited for in the dark: the steps say where to wait. */
 const NIGHT_FROM = 19;
@@ -91,7 +100,13 @@ export default function TripScreen() {
     const point = { lat: Number(fromLat), lon: Number(fromLon) };
     return fromLat && Number.isFinite(point.lat) && Number.isFinite(point.lon) ? point : null;
   }, [fromLat, fromLon]);
-  const from = start ?? (here.status === "ready" ? { lat: here.lat, lon: here.lon } : null);
+  // From where they are: the place they set out from, kept while they go, so the way does not start again at every
+  // step they take. It is worked out anew only when they leave it far behind (another bus, a wrong turn).
+  const [origin, setOrigin] = useState<{ lat: number; lon: number } | null>(null);
+  if (!origin && here.status === "ready") setOrigin({ lat: here.lat, lon: here.lon });
+  const from = start ?? origin;
+  // Where they are as they go, read only while the trip is from where they are.
+  const rider = useWatchedPosition(!start && !!to);
   // Every stop in order: the first is the place the screen opened for, the rest were added.
   const later = useMemo(() => parseLater(then), [then]);
   const stops = useMemo(() => (to ? [{ name: name ?? "", ...to, stay: 0 }, ...later] : []), [to, name, later]);
@@ -122,15 +137,33 @@ export default function TripScreen() {
 
   const path = useMemo(() => chain.flatMap((j) => j.legs.flatMap((l) => l.path)), [chain]);
   const legs = useMemo(() => chain.flatMap((j) => j.legs.map((l) => ({ kind: l.kind, path: l.path }))), [chain]);
+  // On the way: the stretch behind the rider turns faint and the camera keeps them in view, until they move the map.
+  const progress = useMemo(() => (rider && legs.length ? progressAlong(legs, rider) : null), [legs, rider]);
+  const off = useMemo(() => (rider && legs.length ? (progressAlong(legs, rider, 0, Infinity)?.off ?? 0) : 0), [legs, rider]);
+  if (rider && origin && off > OFF_WAY_M && metres(rider, origin) > OFF_WAY_M) setOrigin(rider);
+  const moved = !!rider && !!origin && metres(rider, origin) > SET_OFF_M;
+  const [following, setFollowing] = useState(true);
+  const onTheWay = !!progress && moved;
+  useEffect(() => {
+    if (onTheWay && following && rider) map.current?.follow(rider.lat, rider.lon);
+  }, [onTheWay, following, rider]);
+  const keepFollowing = () => {
+    void Haptics.selectionAsync();
+    setFollowing(true);
+  };
   // The plan is worked out again every minute; the map only moves when the way itself changes.
   const way = chain.flatMap((j) => j.legs.map((l) => (l.kind === "ride" ? `${l.route.id}:${l.from.id}:${l.to.id}` : "walk"))).join("|");
   const latest = useRef(path);
   useEffect(() => {
     latest.current = path;
   }, [path]);
+  // A rider the camera follows keeps it on them; the whole way is framed again once they let it go.
+  const frameWay = useEffectEvent(() => {
+    if (!(onTheWay && following) && latest.current.length > 1) map.current?.fit(latest.current);
+  });
   useEffect(() => {
     if (!way) return;
-    const timer = setTimeout(() => latest.current.length > 1 && map.current?.fit(latest.current), reduceMotion ? 0 : 350);
+    const timer = setTimeout(frameWay, reduceMotion ? 0 : 350);
     return () => clearTimeout(timer);
   }, [way, reduceMotion]);
 
@@ -220,6 +253,8 @@ export default function TripScreen() {
   const leaveFrom = (place: SavedPlace | null) => {
     void Haptics.selectionAsync();
     setParams(place ? { fromName: place.name, fromLat: String(place.lat), fromLon: String(place.lon) } : { fromName: undefined, fromLat: undefined, fromLon: undefined });
+    // Leaving from where they are means from here, now.
+    if (!place) setOrigin(rider ?? (here.status === "ready" ? { lat: here.lat, lon: here.lon } : origin));
   };
   const origins = places.filter((p) => p.id !== destination?.id);
   const placeName = (p: SavedPlace) => (p.label === "home" ? t.saved.home : p.label === "work" ? t.saved.work : p.name);
@@ -248,7 +283,10 @@ export default function TripScreen() {
             ref={map}
             center={to ?? city.center}
             zoom={14}
-            legs={legs}
+            legs={progress ? progress.ahead : legs}
+            done={progress?.done}
+            rider={rider}
+            onUserMove={() => setFollowing(false)}
             system={system}
             stops={mapStops}
             padding={layout.mapInset}
@@ -297,6 +335,8 @@ export default function TripScreen() {
             ))}
           </View>
         )}
+
+        {onTheWay && !following && <Button variant="secondary" height="md" label={t.trip.follow} onPress={keepFollowing} />}
 
         {to && <Button variant="secondary" height="md" label={t.trip.addStop} onPress={addStop} />}
 

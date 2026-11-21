@@ -42,7 +42,7 @@ const points = <T extends { lat: number; lon: number }>(items: T[], props: (item
 });
 
 export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function TransitMap(
-  { center, zoom = 15, stops = [], buses = [], path, approach, legs, system = "other", showUser = true, showCodes = false, focusBusId = null, padding: own, onStopPress },
+  { center, zoom = 15, stops = [], buses = [], path, approach, legs, done, system = "other", showUser = true, showCodes = false, focusBusId = null, padding: own, onStopPress, onUserMove },
   ref,
 ) {
   // Under a sheet, what it covers is part of the inset: the map frames its route in the part left to see.
@@ -101,6 +101,11 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
       clearTimeout(settle.current ?? undefined);
       settle.current = setTimeout(() => framed.current === coords && frame(coords, glide), FIRST_FRAME_SETTLE_MS);
     },
+    follow: (lat, lon) => {
+      framed.current = null;
+      clearTimeout(settle.current ?? undefined);
+      camera.current?.easeTo({ center: [lon, lat], duration: reduceMotion ? 0 : FOLLOW_MS });
+    },
   }));
 
   const resized = (e: LayoutChangeEvent) => {
@@ -119,11 +124,13 @@ export const TransitMap = forwardRef<MapHandle, TransitMapProps>(function Transi
 
   return (
     <View style={StyleSheet.absoluteFill} pointerEvents="box-none" onLayout={resized}>
-      <Map style={StyleSheet.absoluteFill} mapStyle={p.dark ? STYLES.dark : STYLES.light} logo={false} attribution={false} compass={false} touchPitch={false} contentInset={padding}>
+      <Map style={StyleSheet.absoluteFill} mapStyle={p.dark ? STYLES.dark : STYLES.light} logo={false} attribution={false} compass={false} touchPitch={false} contentInset={padding}
+        onRegionWillChange={(e) => e.nativeEvent.userInteraction && onUserMove?.()}>
         <Camera ref={camera} initialViewState={{ center: [center.lon, center.lat], zoom }} minZoom={10} maxBounds={mapBounds()} />
 
         {path && path.length > 1 && <RouteLine path={path} quiet={!!approach} />}
         {approach && approach.length > 1 && <Approach key={focusBusId ?? "none"} path={approach} still={reduceMotion} />}
+        {done && done.length > 1 && <Done path={done} />}
         {legs && legs.length > 0 && <Trip legs={legs} />}
 
         <GeoJSONSource
@@ -199,6 +206,19 @@ function Trip({ legs }: { legs: TripLeg[] }) {
     </GeoJSONSource>
   );
 }
+
+/** The way already behind the rider on a trip: there to look back on, quieter than the way ahead. */
+function Done({ path }: { path: [number, number][] }) {
+  const p = usePalette();
+  return (
+    <GeoJSONSource id="done" data={{ type: "Feature", geometry: { type: "LineString", coordinates: path }, properties: {} }}>
+      <Layer id="done-line" type="line" beforeId={UNDER} layout={ROUND} paint={{ "line-color": p.faint, "line-width": LINE_WIDTH }} />
+    </GeoJSONSource>
+  );
+}
+
+/** How long the camera takes to catch up with a rider it follows: under the time between two positions. */
+const FOLLOW_MS = 800;
 
 const FILL_MS = 1_600;
 const FILL_HOLD_MS = 900;

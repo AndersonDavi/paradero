@@ -40,6 +40,8 @@ export interface TripLeg {
 export interface MapHandle {
   flyTo: (lat: number, lon: number, zoom?: number) => void;
   fit: (coords: [number, number][]) => void;
+  /** Keeps the camera on a point as it moves, at the zoom the rider left it. */
+  follow: (lat: number, lon: number) => void;
 }
 
 export interface TransitMapProps {
@@ -53,14 +55,20 @@ export interface TransitMapProps {
   approach?: [number, number][];
   /** A trip: each bus it takes drawn as a line along its route, and each walk dotted, since it is drawn straight. */
   legs?: TripLeg[];
+  /** The stretch of a trip already behind the rider: drawn faint, so the way they came stays in sight. */
+  done?: [number, number][];
   /** Draw each bus's route code beside it, for maps that hold more than one route. */
   showCodes?: boolean;
   /** The bus the rider is following: drawn larger, above the rest. */
   focusBusId?: string | null;
   system?: System;
   showUser?: boolean;
+  /** Where the rider is, when the screen keeps watching it; otherwise the map places them once. */
+  rider?: { lat: number; lon: number } | null;
   padding?: { top: number; right: number; bottom: number; left: number };
   onStopPress?: (id: string) => void;
+  /** The rider moved the map by hand: a screen that keeps the camera on them stops doing so. */
+  onUserMove?: () => void;
 }
 
 /** Walks are dots: a short dash with round ends, then a gap, both in line widths. */

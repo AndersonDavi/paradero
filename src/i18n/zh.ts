@@ -242,6 +242,7 @@ export const zh: Messages = {
     fareFrom: (amount) => `票价 ${amount} 起`,
     title: "怎么去",
     stops: "途经点",
+    follow: "在地图上跟随我",
     addStop: "添加途经点",
     showStop: "在地图上显示",
     moveUp: (name) => `上移 ${name}`,

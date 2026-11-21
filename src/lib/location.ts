@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import * as Location from "expo-location";
+import { useEffect, useState } from "react";
 import { Linking, Platform } from "react-native";
 
 import { inCity } from "@/cities";
@@ -65,4 +66,38 @@ export function useLocation() {
         ? { status: "ready", ...query.data }
         : { status: "outside" };
   return { state, retry: askForLocation };
+}
+
+/** A new position every few seconds or every few metres, whichever comes first: enough to follow a bus. */
+const WATCH = { accuracy: Location.Accuracy.High, timeInterval: 3_000, distanceInterval: 10 };
+
+/**
+ * Where the rider is now, kept up to date while `active` and the rider already said yes; null until the first fix.
+ * It only reads the position while the screen that asks is open.
+ */
+export function useWatchedPosition(active: boolean): { lat: number; lon: number } | null {
+  const [at, setAt] = useState<{ lat: number; lon: number } | null>(null);
+  useEffect(() => {
+    if (!active) return;
+    let gone = false;
+    let watch: Location.LocationSubscription | null = null;
+    void Location.getForegroundPermissionsAsync()
+      .then(({ granted }) =>
+        granted
+          ? Location.watchPositionAsync(WATCH, (p) => {
+              if (!gone) setAt({ lat: p.coords.latitude, lon: p.coords.longitude });
+            })
+          : null,
+      )
+      .then((w) => {
+        if (gone) w?.remove();
+        else watch = w;
+      })
+      .catch(() => undefined);
+    return () => {
+      gone = true;
+      watch?.remove();
+    };
+  }, [active]);
+  return active ? at : null;
 }

@@ -242,6 +242,7 @@ export const ja: Messages = {
     fareFrom: (amount) => `運賃 ${amount}から`,
     title: "行き方",
     stops: "立ち寄り先",
+    follow: "地図で現在地を追う",
     addStop: "立ち寄り先を追加",
     showStop: "地図で表示",
     moveUp: (name) => `${name}を上へ`,

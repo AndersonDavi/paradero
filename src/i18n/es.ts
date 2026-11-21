@@ -263,6 +263,7 @@ export const es = {
     fareFrom: (amount: string) => `Pasaje desde ${amount}`,
     title: "Cómo llegar",
     stops: "Paradas",
+    follow: "Seguirme en el mapa",
     addStop: "Agregar parada",
     showStop: "Muéstralo en el mapa",
     moveUp: (name: string) => `Subir ${name}`,

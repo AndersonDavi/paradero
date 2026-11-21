@@ -246,6 +246,7 @@ export const en: Messages = {
     fareFrom: (amount) => `Fare from ${amount}`,
     title: "How to get there",
     stops: "Stops",
+    follow: "Follow me on the map",
     addStop: "Add a stop",
     showStop: "Show it on the map",
     moveUp: (name) => `Move ${name} up`,
